@@ -2047,72 +2047,13 @@
                 alert('Access denied: Staff privileges required');
                 return;
             }
-            // Create a simple dropdown menu for drifter selection
-            const menu = document.createElement('div');
-            menu.id = 'drifter-selection-menu';
-            console.log('Menu element created:', menu);
-            menu.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(0, 0, 0, 0.95);
-                border: 2px solid #64b5f6;
-                border-radius: 10px;
-                padding: 20px;
-                z-index: 9999;
-                color: white;
-                text-align: center;
-                backdrop-filter: blur(10px);
-                min-width: 300px;
-                box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-            `;
             
-            menu.innerHTML = `
-                <h3 style="margin-bottom: 15px; color: #64b5f6;">Select Drifter</h3>
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button onclick="equipToDrifter(${gearItemId}, 1, '${gearType}'); closeMenu()" 
-                            style="padding: 10px 20px; background: #64b5f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        Drifter 1
-                    </button>
-                    <button onclick="equipToDrifter(${gearItemId}, 2, '${gearType}'); closeMenu()" 
-                            style="padding: 10px 20px; background: #64b5f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        Drifter 2
-                    </button>
-                    <button onclick="equipToDrifter(${gearItemId}, 3, '${gearType}'); closeMenu()" 
-                            style="padding: 10px 20px; background: #64b5f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        Drifter 3
-                    </button>
-                </div>
-                <button onclick="closeMenu()" 
-                        style="margin-top: 15px; padding: 8px 16px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                    Cancel
-                </button>
-            `;
-            
-            console.log('Menu created, appending to body');
-            document.body.appendChild(menu);
-            console.log('Menu appended to body');
-            
-            // Add a small delay before allowing the menu to be closed
-            setTimeout(() => {
-                console.log('Menu should now be visible and stable');
-            }, 100);
+            // For recommended builds, we only have 1 drifter, so equip directly
+            // No need to show the drifter selection modal
+            console.log('Equipping directly to build (single drifter mode)');
+            equipGear(gearItemId, 1, gearType);
         }
 
-        function equipToDrifter(gearItemId, drifterNum, gearType) {
-            equipGear(gearItemId, drifterNum, gearType);
-        }
-
-        function closeMenu() {
-            const menu = document.getElementById('drifter-selection-menu');
-            if (menu) {
-                console.log('Closing menu');
-                menu.remove();
-            } else {
-                console.log('Menu not found to close');
-            }
-        }
 
         // Notification Functions
         function showNotification(message, type = 'success') {
@@ -2142,22 +2083,6 @@
         }
 
 
-        // Close menu when clicking outside
-        document.addEventListener('click', function(event) {
-            // Don't close if clicking on the menu itself or its children
-            if (event.target.closest('#drifter-selection-menu')) {
-                return;
-            }
-            
-            // Don't close if clicking on equip buttons
-            if (event.target.closest('.action-btn.equip-btn')) {
-                return;
-            }
-            
-            if (event.target === document.body || event.target.closest('.container')) {
-                closeMenu();
-            }
-        });
 
         // Skill Modal Functions
         function showSkillModal(skillName, description, gameId) {
