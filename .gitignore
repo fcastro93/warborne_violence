@@ -18,6 +18,11 @@ develop-eggs/
 dist/
 downloads/
 eggs/
+
+# Local testing files
+test_bot_local.py
+check_db_connection.py
+simple_test_bot.py
 .eggs/
 lib/
 lib64/

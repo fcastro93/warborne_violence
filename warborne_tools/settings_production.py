@@ -3,6 +3,7 @@ Production settings for Warborne Guild Tools
 """
 from .settings import *
 import os
+import dj_database_url
 
 # Production environment
 DEBUG = False
@@ -69,7 +70,12 @@ LOGGING = {
 
 # Database configuration for production
 # Use PostgreSQL if environment variables are set, otherwise fallback to SQLite
-if os.environ.get('DB_HOST'):
+if os.environ.get('DATABASE_URL'):
+    # Parse DATABASE_URL for Neon/PostgreSQL
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+    }
+elif os.environ.get('DB_HOST'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',

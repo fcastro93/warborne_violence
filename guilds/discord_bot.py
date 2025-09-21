@@ -1,21 +1,113 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 import os
 import asyncio
 from django.conf import settings
 from .models import DiscordBotConfig, Player, Guild
 
-
 class WarborneBot(commands.Bot):
     def __init__(self):
+        # Get config first
+        self.config = self.get_bot_config()
+        
+        # Setup intents
         intents = discord.Intents.default()
         intents.message_content = True
         intents.guilds = True
-        intents.members = False  # Deshabilitar si no es necesario
-        intents.presences = False  # Deshabilitar si no es necesario
+        intents.members = False
+        intents.presences = False
         
-        super().__init__(command_prefix='!', intents=intents)
-        self.config = self.get_bot_config()
+        # Initialize bot with correct prefix
+        super().__init__(command_prefix=self.config.get('command_prefix', '!'), intents=intents)
+        
+        # Register commands after initialization
+        self.load_commands()
+    
+    def load_commands(self):
+        """Load custom commands"""
+        from asgiref.sync import sync_to_async
+        
+        # ---- DB helpers (sync) wrapped for async use ----
+        @sync_to_async
+        def _find_player_by_name(q: str):
+            return Player.objects.filter(in_game_name__icontains=q).first()
+
+        @sync_to_async
+        def _get_active_guilds():
+            # Force evaluation to detach from ORM before returning to async world
+            return list(Guild.objects.filter(is_active=True))
+
+        @self.command(name="ping")
+        async def ping_command(ctx):
+            """Simple ping command"""
+            print(f"🔥 PING COMMAND CALLED by {ctx.author.name}")
+            await ctx.send("🏓 Pong!")
+        
+        @self.command(name="buildplayer")
+        async def buildplayer(ctx, *, player_name):
+            """Get a player's loadout link"""
+            print(f"🔥 DEBUG: buildplayer command called by {ctx.author.name} with {player_name}")
+            try:
+                player = await _find_player_by_name(player_name)   # <-- await the wrapped call
+                if player:
+                    base_url = self.config.get('base_url', 'http://127.0.0.1:8000')
+                    loadout_url = f"{base_url}/guilds/player/{player.id}/loadout/"
+                    await ctx.send(f"🔗 **{player.in_game_name}** - {loadout_url}")
+                else:
+                    await ctx.send(f"❌ No se encontró el jugador '{player_name}'")
+            except Exception as e:
+                await ctx.send(f"❌ Error: {str(e)}")
+        
+        @self.command(name="guildinfo")
+        async def guildinfo(ctx):
+            """Get guild information"""
+            print(f"🔥 DEBUG: guildinfo command called by {ctx.author.name}")
+            try:
+                guilds = await _get_active_guilds()                # <-- await the wrapped call
+                if guilds:
+                    lines = [f"**{g.name}** - {g.member_count} miembros" for g in guilds]
+                    await ctx.send("🏰 **Guilds Activas:**\n" + "\n".join(lines))
+                else:
+                    await ctx.send("❌ No hay guilds activas")
+            except Exception as e:
+                await ctx.send(f"❌ Error: {str(e)}")
+    
+    async def on_ready(self):
+        print(f'{self.user} has connected to Discord!')
+        print('🤖 ¡Hola! Warborne Bot está listo para la acción!')
+        
+        # Commands are automatically loaded
+        print(f'✅ Bot ready with {len(self.commands)} commands')
+        for cmd in self.commands:
+            print(f'   - !{cmd.name}: {cmd.description}')
+        
+        # Send hello message to all guilds
+        for guild in self.guilds:
+            # Find a general channel or first available text channel
+            general_channel = None
+            for channel in guild.text_channels:
+                if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
+                    general_channel = channel
+                    break
+            
+            if not general_channel:
+                general_channel = guild.text_channels[0] if guild.text_channels else None
+            
+            if general_channel:
+                try:
+                    await general_channel.send("🤖 ¡Hola! Warborne Bot está listo para la acción! Usa `!help` para ver los comandos disponibles.")
+                except Exception as e:
+                    print(f"No se pudo enviar mensaje a {guild.name}: {e}")
+            
+        await self.update_bot_status(True)
+    
+    async def on_command_error(self, ctx, error):
+        """Handle command errors"""
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send("❌ Comando no encontrado. Usa `!help` para ver los comandos disponibles.")
+        else:
+            await ctx.send(f"❌ Error: {str(error)}")
     
     def get_bot_config(self):
         """Get bot configuration from database or environment variables"""
@@ -43,14 +135,6 @@ class WarborneBot(commands.Bot):
             'command_prefix': '/',
         }
     
-    async def on_ready(self):
-        print(f'{self.user} has connected to Discord!')
-        print(f'Bot commands loaded: {[cmd.name for cmd in self.commands]}')
-        print(f'Total commands: {len(self.commands)}')
-        for cmd in self.commands:
-            print(f'Command: {cmd.name} - {cmd.description}')
-        await self.update_bot_status(True)
-    
     async def update_bot_status(self, is_online):
         """Update bot status in database"""
         try:
@@ -71,133 +155,6 @@ class WarborneBot(commands.Bot):
         except Exception as e:
             print(f"Error updating bot status: {e}")
     
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandNotFound):
-            await ctx.send("❌ Comando no encontrado. Usa `!violence help` para ver los comandos disponibles.")
-        else:
-            await ctx.send(f"❌ Error: {str(error)}")
-    
-    @commands.group()
-    async def violence(self, ctx):
-        """Warborne Bot commands"""
-        if ctx.invoked_subcommand is None:
-            await ctx.send("❌ Por favor especifica un subcomando. Usa `!violence help` para más información.")
-    
-    @violence.command(name='buildplayer')
-    async def buildplayer(self, ctx, *, player_name):
-        """Get a player's loadout link"""
-        print(f"DEBUG: buildplayer command called with {player_name}")
-        try:
-            player = Player.objects.filter(name__icontains=player_name).first()
-            if player:
-                loadout_url = f"{self.config.get('base_url')}/guilds/player/{player.id}/loadout/"
-                await ctx.send(f"🔗 **{player.name}** - {loadout_url}")
-            else:
-                await ctx.send(f"❌ No se encontró el jugador '{player_name}'")
-        except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
-    
-    @violence.command(name='guildinfo')
-    async def guildinfo(self, ctx):
-        """Get guild information"""
-        print(f"DEBUG: guildinfo command called")
-        try:
-            guilds = Guild.objects.filter(is_active=True)
-            if guilds.exists():
-                guild_info = []
-                for guild in guilds:
-                    member_count = guild.member_count
-                    guild_info.append(f"**{guild.name}** - {member_count} miembros")
-                
-                await ctx.send(f"🏰 **Guilds Activas:**\n" + "\n".join(guild_info))
-            else:
-                await ctx.send("❌ No hay guilds activas")
-        except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
-    
-    @violence.command(name='playerlist')
-    async def playerlist(self, ctx, guild_name=None):
-        """List players, optionally filtered by guild"""
-        try:
-            if guild_name:
-                guild = Guild.objects.filter(name__icontains=guild_name).first()
-                if guild:
-                    players = guild.players.filter(is_active=True)
-                    if players.exists():
-                        player_list = [f"• {p.name}" for p in players]
-                        await ctx.send(f"👥 **Jugadores en {guild.name}:**\n" + "\n".join(player_list))
-                    else:
-                        await ctx.send(f"❌ No hay jugadores activos en {guild.name}")
-                else:
-                    await ctx.send(f"❌ No se encontró la guild '{guild_name}'")
-            else:
-                players = Player.objects.filter(is_active=True)
-                if players.exists():
-                    player_list = [f"• {p.name}" for p in players[:10]]  # Limit to 10 players
-                    await ctx.send(f"👥 **Todos los Jugadores:**\n" + "\n".join(player_list))
-                else:
-                    await ctx.send("❌ No hay jugadores activos")
-        except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
-    
-    @violence.command(name='drifters')
-    async def drifters(self, ctx):
-        """Get available drifters"""
-        try:
-            from .models import Drifter
-            drifters = Drifter.objects.all()
-            if drifters.exists():
-                drifter_list = [f"• {d.name}" for d in drifters]
-                await ctx.send(f"🎭 **Drifters Disponibles:**\n" + "\n".join(drifter_list))
-            else:
-                await ctx.send("❌ No hay drifters disponibles")
-        except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
-    
-    @violence.command(name='gear')
-    async def gear(self, ctx, gear_type=None):
-        """Get gear information"""
-        try:
-            from .models import GearItem
-            if gear_type:
-                gear_items = GearItem.objects.filter(gear_type__icontains=gear_type)
-            else:
-                gear_items = GearItem.objects.all()[:10]  # Limit to 10 items
-            
-            if gear_items.exists():
-                gear_list = [f"• {g.name} ({g.get_rarity_display()})" for g in gear_items]
-                await ctx.send(f"⚔️ **Gear Items:**\n" + "\n".join(gear_list))
-            else:
-                await ctx.send("❌ No se encontraron items de gear")
-        except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
-    
-    @violence.command(name='help')
-    async def help(self, ctx):
-        """Show available commands"""
-        help_text = """
-🤖 **Warborne Bot - Comandos Disponibles:**
-
-**Comandos de Jugadores:**
-• `!violence buildplayer <nombre>` - Obtener link del loadout de un jugador
-• `!violence playerlist [guild_name]` - Listar jugadores (opcionalmente por guild)
-
-**Comandos de Guild:**
-• `!violence guildinfo` - Información de guilds activas
-
-**Comandos de Juego:**
-• `!violence drifters` - Listar drifters disponibles
-• `!violence gear [tipo]` - Listar items de gear (opcionalmente por tipo)
-
-**Otros:**
-• `!violence help` - Mostrar esta ayuda
-
-**Ejemplos:**
-• `!violence buildplayer Charfire`
-• `!violence playerlist Emberwild`
-• `!violence gear weapon`
-        """
-        await ctx.send(help_text)
 
 
 def run_bot():
