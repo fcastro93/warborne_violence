@@ -58,16 +58,16 @@ class Command(BaseCommand):
                 self.style.WARNING('⚠ Superusuario ya existe')
             )
         
-        # Crear datos de muestra
-        self.stdout.write('Creando datos de muestra...')
+        # Importar datos del juego
+        self.stdout.write('Importando datos del juego...')
         try:
-            call_command('create_sample_data', verbosity=0)
+            call_command('import_complete_data', verbosity=0)
             self.stdout.write(
-                self.style.SUCCESS('✓ Datos de muestra creados')
+                self.style.SUCCESS('✓ Datos del juego importados')
             )
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'✗ Error creando datos de muestra: {e}')
+                self.style.WARNING(f'⚠ Error importando datos del juego: {e}')
             )
         
         # Mostrar información de la base de datos

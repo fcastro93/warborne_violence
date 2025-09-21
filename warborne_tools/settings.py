@@ -138,40 +138,72 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Logging configuration
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+if DEBUG:
+    # Development logging with file and console
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+                'style': '{',
+            },
         },
-    },
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
-            'formatter': 'verbose',
+        'handlers': {
+            'file': {
+                'level': 'INFO',
+                'class': 'logging.FileHandler',
+                'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+                'formatter': 'verbose',
+            },
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            },
         },
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-    },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
+        'root': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
-            'propagate': False,
         },
-    },
-}
+        'loggers': {
+            'django': {
+                'handlers': ['console', 'file'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+        },
+    }
+else:
+    # Production logging - console only
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+                'style': '{',
+            },
+        },
+        'handlers': {
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            },
+        },
+        'root': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+        },
+    }
 
 # Security settings for production
 if not DEBUG:

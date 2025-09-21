@@ -27,14 +27,11 @@ COPY . /app/
 # Create logs directory
 RUN mkdir -p logs
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-# Run database setup
-RUN python manage.py setup_database
+# Make start script executable
+RUN chmod +x start.sh
 
 # Expose port
 EXPOSE 8000
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "warborne_tools.wsgi:application"]
+CMD ["./start.sh"]
