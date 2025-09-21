@@ -1,0 +1,38 @@
+name: warborne-tools
+services:
+  - name: web
+    image:
+      dockerfile: Dockerfile
+    http_port: 8000
+    envs:
+      - key: SECRET_KEY
+        value: $SECRET_KEY
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: $ALLOWED_HOSTS
+      - key: DB_NAME
+        value: $KOYEB_POSTGRES_DB
+      - key: DB_USER
+        value: $KOYEB_POSTGRES_USER
+      - key: DB_PASSWORD
+        value: $KOYEB_POSTGRES_PASSWORD
+      - key: DB_HOST
+        value: $KOYEB_POSTGRES_HOST
+      - key: DB_PORT
+        value: $KOYEB_POSTGRES_PORT
+    regions:
+      - fra
+    scaling:
+      min_scale: 1
+      max_scale: 1
+    resources:
+      cpu: 1
+      memory: 1
+    healthcheck:
+      http:
+        path: /admin/
+        port: 8000
+        interval: 30s
+        timeout: 10s
+        retries: 3
