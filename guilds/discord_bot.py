@@ -583,20 +583,20 @@ class CommandMenuView(discord.ui.View):
         
         # Create a view with dropdown for event selection
         class EventSelectionView(discord.ui.View):
-            def __init__(self, bot_instance, event_options):
+            def __init__(self, command_menu_view, event_options):
                 super().__init__(timeout=300)
-                self.bot_instance = bot_instance
-                self.add_item(EventSelectDropdown(event_options, bot_instance))
+                self.command_menu_view = command_menu_view
+                self.add_item(EventSelectDropdown(event_options, command_menu_view))
         
         class EventSelectDropdown(discord.ui.Select):
-            def __init__(self, event_options, bot_instance):
+            def __init__(self, event_options, command_menu_view):
                 super().__init__(
                     placeholder="Choose an event to create parties for...",
                     min_values=1,
                     max_values=1,
                     options=event_options
                 )
-                self.bot_instance = bot_instance
+                self.command_menu_view = command_menu_view
             
             async def callback(self, interaction: discord.Interaction):
                 from asgiref.sync import sync_to_async
@@ -620,14 +620,14 @@ class CommandMenuView(discord.ui.View):
                     return
                 
                 # Create parties using the bot instance method
-                success, message = await self.bot_instance.create_balanced_parties(event)
+                success, message = await self.command_menu_view.bot_instance.create_balanced_parties(event)
                 
                 if success:
                     await interaction.response.send_message(f"✅ {message}", ephemeral=True)
                 else:
                     await interaction.response.send_message(f"❌ {message}", ephemeral=True)
         
-        view = EventSelectionView(self.bot_instance, event_options)
+        view = EventSelectionView(self, event_options)
         embed = discord.Embed(
             title="⚔️ Create Parties",
             description="Select an event from the dropdown below to create balanced parties:",
@@ -671,20 +671,20 @@ class CommandMenuView(discord.ui.View):
         
         # Create a view with dropdown for event selection
         class DeleteEventView(discord.ui.View):
-            def __init__(self, bot_instance, event_options):
+            def __init__(self, command_menu_view, event_options):
                 super().__init__(timeout=300)
-                self.bot_instance = bot_instance
-                self.add_item(DeleteEventDropdown(event_options, bot_instance))
+                self.command_menu_view = command_menu_view
+                self.add_item(DeleteEventDropdown(event_options, command_menu_view))
         
         class DeleteEventDropdown(discord.ui.Select):
-            def __init__(self, event_options, bot_instance):
+            def __init__(self, event_options, command_menu_view):
                 super().__init__(
                     placeholder="Choose an event to delete...",
                     min_values=1,
                     max_values=1,
                     options=event_options
                 )
-                self.bot_instance = bot_instance
+                self.command_menu_view = command_menu_view
             
             async def callback(self, interaction: discord.Interaction):
                 from asgiref.sync import sync_to_async
@@ -715,7 +715,7 @@ class CommandMenuView(discord.ui.View):
                 else:
                     await interaction.response.send_message(f"❌ {message}", ephemeral=True)
         
-        view = DeleteEventView(self.bot_instance, event_options)
+        view = DeleteEventView(self, event_options)
         embed = discord.Embed(
             title="🗑️ Delete Event",
             description="⚠️ **WARNING: This will cancel the selected event!**\n\nSelect an event from the dropdown below to delete:",
