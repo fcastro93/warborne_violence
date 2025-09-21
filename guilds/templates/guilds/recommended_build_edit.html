@@ -2251,9 +2251,15 @@
                 drifterSlot.classList.add('equipped');
                 drifterSlot.classList.remove('empty');
                 
-                // Update slot content to match the expected structure
+                // Get the iconId for this drifter
+                const drifterIconId = getDrifterIconId(drifterName);
+                
+                // Update slot content to match the expected structure with image
                 drifterSlot.innerHTML = `
-                    <div class="gear-slot-name">${drifterName}</div>
+                    <div class="gear-slot-name">
+                        <img src="/static/icons/${drifterIconId}.png" alt="${drifterName}" class="gear-icon" style="width: 24px; height: 24px; margin-right: 8px; vertical-align: middle;" onerror="this.style.display='none';">
+                        ${drifterName}
+                    </div>
                     <div class="slot-label">🎭 Drifter</div>
                 `;
             }
