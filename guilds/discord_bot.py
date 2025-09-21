@@ -1195,6 +1195,7 @@ class WarborneBot(commands.Bot):
             
             # Load guilds asynchronously
             await view._load_guilds_sync()
+            
             embed = discord.Embed(
                 title="👤 Create Player",
                 description="Use the dropdowns below to create your player:",
@@ -1208,7 +1209,14 @@ class WarborneBot(commands.Bot):
                     inline=False
                 )
             
-            await ctx.send(embed=embed, view=view)
+            embed.add_field(
+                name="Steps",
+                value="1. Enter your player name\n2. Select your faction\n3. Choose your guild (optional)\n4. Pick your role (optional)",
+                inline=False
+            )
+            
+            print(f"🔥 DEBUG: Sending view with {len(view.children)} dropdowns")
+            await ctx.send(embed=embed, view=view, ephemeral=True)
         
         @self.command(name="myplayer")
         async def myplayer(ctx):
