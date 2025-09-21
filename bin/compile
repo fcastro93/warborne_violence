@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Exit on any error
+set -e
+
+echo "Starting buildpack compile..."
+
+# Set production settings
+export DJANGO_SETTINGS_MODULE=warborne_tools.settings_production
+
+# Create logs directory
+mkdir -p logs
+
+# Run collectstatic with production settings
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
+echo "Buildpack compile completed successfully!"
