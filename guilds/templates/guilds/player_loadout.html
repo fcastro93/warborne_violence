@@ -803,6 +803,38 @@
                 width: 100%;
             }
         }
+        
+        /* Role selector styles */
+        .role-selector {
+            display: inline-block;
+        }
+        
+        .role-dropdown {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            border-radius: 5px;
+            color: white;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .role-dropdown:hover {
+            border-color: rgba(100, 181, 246, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .role-dropdown:focus {
+            outline: none;
+            border-color: #64b5f6;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .role-dropdown option {
+            background: #1a1a1a;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -845,15 +877,29 @@
                     <span class="info-value">{{ player.get_faction_display }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Role:</span>
+                    <span class="info-label">Guild Rank:</span>
                     <span class="info-value">{{ player.get_role_display }}</span>
                 </div>
-                {% if player.game_role %}
                 <div class="info-row">
-                    <span class="info-label">Game Role:</span>
-                    <span class="info-value">{{ player.get_game_role_display }}</span>
+                    <span class="info-label">Role:</span>
+                    {% if user.is_staff %}
+                    <div class="role-selector">
+                        <select id="game-role-select" onchange="updateGameRole(this.value)" class="role-dropdown">
+                            <option value="">Select Role</option>
+                            <option value="ranged_dps" {% if player.game_role == 'ranged_dps' %}selected{% endif %}>Ranged DPS</option>
+                            <option value="melee_dps" {% if player.game_role == 'melee_dps' %}selected{% endif %}>Melee DPS</option>
+                            <option value="tank" {% if player.game_role == 'tank' %}selected{% endif %}>Tank</option>
+                            <option value="healer" {% if player.game_role == 'healer' %}selected{% endif %}>Healer</option>
+                            <option value="defensive_tank" {% if player.game_role == 'defensive_tank' %}selected{% endif %}>Defensive Tank</option>
+                            <option value="offensive_tank" {% if player.game_role == 'offensive_tank' %}selected{% endif %}>Offensive Tank</option>
+                            <option value="offensive_support" {% if player.game_role == 'offensive_support' %}selected{% endif %}>Offensive Support</option>
+                            <option value="defensive_support" {% if player.game_role == 'defensive_support' %}selected{% endif %}>Defensive Support</option>
+                        </select>
+                    </div>
+                    {% else %}
+                    <span class="info-value">{{ player.get_game_role_display|default:"Not set" }}</span>
+                    {% endif %}
                 </div>
-                {% endif %}
                 <div class="info-row">
                     <span class="info-label">Total Gear:</span>
                     <span class="info-value">{{ total_gear }}</span>
@@ -875,7 +921,7 @@
             <!-- Tabs -->
             <div class="tabs">
                 {% for drifter_data in drifters_data %}
-                <button class="tab {% if forloop.first %}active{% endif %}" onclick="showTab({{ drifter_data.number }})">
+                <button class="tab {% if forloop.first %}active{% endif %}" data-drifter="{{ drifter_data.number }}" onclick="showTab({{ drifter_data.number }})">
                     {% if drifter_data.drifter %}
                         {{ drifter_data.drifter.name }}
                     {% else %}
@@ -1410,6 +1456,65 @@
             });
         }
         
+        function updateGameRole(roleValue) {
+            if (!roleValue) return;
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch('{% url "update_game_role" player.id %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    'game_role': roleValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showNotification('Role updated successfully!', 'success');
+                } else {
+                    // Show error message
+                    showNotification('Error updating role: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error updating role', 'error');
+            });
+        }
+        
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                transition: all 0.3s ease;
+                ${type === 'success' ? 'background: #4CAF50;' : 'background: #f44336;'}
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
         function filterByRarity(category, rarity, updateButtons = true) {
             console.log('filterByRarity called - category:', category, 'rarity:', rarity, 'updateButtons:', updateButtons);
             
@@ -1468,6 +1573,20 @@
             setTimeout(() => {
                 initializeGearFilters();
             }, 100);
+            
+            // Restore active drifter from session storage
+            const activeDrifter = sessionStorage.getItem('activeDrifter');
+            if (activeDrifter) {
+                // Wait a bit for the page to fully load
+                setTimeout(() => {
+                    const drifterTab = document.querySelector(`[data-drifter="${activeDrifter}"]`);
+                    if (drifterTab) {
+                        drifterTab.click();
+                    }
+                    // Clear the stored drifter after use
+                    sessionStorage.removeItem('activeDrifter');
+                }, 500);
+            }
             
             
         });
@@ -1604,6 +1723,12 @@
             .then(data => {
                 if (data.success) {
                     showNotification(data.message, 'success');
+                    // Store the active drifter before reload
+                    const activeDrifterTab = document.querySelector('.tab.active');
+                    if (activeDrifterTab) {
+                        const drifterNumber = activeDrifterTab.getAttribute('data-drifter');
+                        sessionStorage.setItem('activeDrifter', drifterNumber);
+                    }
                     setTimeout(() => location.reload(), 1000);
                 } else {
                     showNotification(data.error || 'Failed to equip item', 'error');
@@ -1639,6 +1764,12 @@
             .then(data => {
                 if (data.success) {
                     showNotification(data.message, 'success');
+                    // Store the active drifter before reload
+                    const activeDrifterTab = document.querySelector('.tab.active');
+                    if (activeDrifterTab) {
+                        const drifterNumber = activeDrifterTab.getAttribute('data-drifter');
+                        sessionStorage.setItem('activeDrifter', drifterNumber);
+                    }
                     setTimeout(() => location.reload(), 1000);
                 } else {
                     showNotification(data.error || 'Failed to unequip item', 'error');
@@ -2001,6 +2132,12 @@
             .then(data => {
                 if (data.success) {
                     console.log('Drifter assigned successfully');
+                    // Store the active drifter before reload
+                    const activeDrifterTab = document.querySelector('.tab.active');
+                    if (activeDrifterTab) {
+                        const drifterNumber = activeDrifterTab.getAttribute('data-drifter');
+                        sessionStorage.setItem('activeDrifter', drifterNumber);
+                    }
                     // Reload the page to show the new drifter
                     window.location.reload();
                 } else {

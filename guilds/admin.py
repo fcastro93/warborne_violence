@@ -48,6 +48,13 @@ class PlayerAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'joined_guild_at', 'loadout_link']
     actions = ['view_loadout']
     
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Add custom labels
+        form.base_fields['role'].label = 'Guild Rank'
+        form.base_fields['game_role'].label = 'Game Role'
+        return form
+    
     fieldsets = (
         ('Basic Information', {
             'fields': ('in_game_name', 'discord_name', 'guild', 'character_level')
@@ -56,7 +63,8 @@ class PlayerAdmin(admin.ModelAdmin):
             'fields': ('faction', 'drifter_1', 'drifter_2', 'drifter_3')
         }),
         ('Roles and Permissions', {
-            'fields': ('role', 'game_role')
+            'fields': ('role', 'game_role'),
+            'description': 'role = Guild Rank (Member, Officer, etc.) | game_role = Game Role (Healer, Tank, etc.)'
         }),
         ('Status', {
             'fields': ('is_active', 'joined_guild_at')

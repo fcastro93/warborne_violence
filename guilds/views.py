@@ -276,3 +276,29 @@ def drifter_details(request, drifter_id):
     }
     
     return render(request, 'guilds/drifter_details.html', context)
+
+
+@require_POST
+def update_game_role(request, player_id):
+    """AJAX view to update player's game role"""
+    try:
+        player = get_object_or_404(Player, id=player_id)
+        data = json.loads(request.body)
+        game_role = data.get('game_role')
+        
+        # Validate game role
+        valid_roles = [choice[0] for choice in Player.GAME_ROLE_CHOICES]
+        if game_role and game_role not in valid_roles:
+            return JsonResponse({'success': False, 'error': 'Invalid game role'})
+        
+        # Update player's game role
+        player.game_role = game_role if game_role else None
+        player.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Game role updated to {player.get_game_role_display() if player.game_role else "None"}'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
