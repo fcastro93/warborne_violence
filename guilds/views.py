@@ -6,7 +6,10 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from functools import wraps
-from .models import Player, PlayerGear, GearItem, Drifter, DiscordBotConfig
+from django.db.models import Count, Q
+from django.utils import timezone
+from datetime import datetime, timedelta
+from .models import Player, PlayerGear, GearItem, Drifter, DiscordBotConfig, Guild, Event, RecommendedBuild
 import threading
 import json
 
@@ -892,3 +895,220 @@ def update_recommended_build_equipment(request, build_id):
         return JsonResponse({'success': False, 'error': 'Build not found'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+@staff_member_required
+def staff_dashboard(request):
+    """Staff dashboard with overview statistics and management tools"""
+    try:
+        # Get basic statistics
+        total_players = Player.objects.count()
+        active_guilds = Guild.objects.filter(is_active=True).count()
+        total_events = Event.objects.count()
+        active_events = Event.objects.filter(
+            event_date__gte=timezone.now()
+        ).count()
+        total_builds = RecommendedBuild.objects.filter(is_active=True).count()
+        
+        # Get recent activity
+        recent_players = Player.objects.order_by('-created_at')[:5]
+        recent_events = Event.objects.order_by('-created_at')[:5]
+        
+        # Get guild statistics
+        guilds_with_members = Guild.objects.annotate(
+            member_count=Count('players')
+        ).order_by('-member_count')[:5]
+        
+        # Get role distribution
+        role_distribution = Player.objects.values('game_role').annotate(
+            count=Count('game_role')
+        ).order_by('-count')
+        
+        # Get faction distribution
+        faction_distribution = Player.objects.values('faction').annotate(
+            count=Count('faction')
+        ).order_by('-count')
+        
+        # Get bot status
+        try:
+            bot_config = DiscordBotConfig.objects.first()
+            bot_status = "Active" if bot_config and bot_config.is_active else "Inactive"
+        except:
+            bot_status = "Unknown"
+        
+        # Get system health metrics
+        players_with_loadouts = Player.objects.filter(
+            Q(weapon__isnull=False) | 
+            Q(helmet__isnull=False) | 
+            Q(chest__isnull=False) | 
+            Q(boots__isnull=False)
+        ).count()
+        
+        completion_rate = (players_with_loadouts / total_players * 100) if total_players > 0 else 0
+        
+        context = {
+            'total_players': total_players,
+            'active_guilds': active_guilds,
+            'total_events': total_events,
+            'active_events': active_events,
+            'total_builds': total_builds,
+            'recent_players': recent_players,
+            'recent_events': recent_events,
+            'guilds_with_members': guilds_with_members,
+            'role_distribution': role_distribution,
+            'faction_distribution': faction_distribution,
+            'bot_status': bot_status,
+            'completion_rate': round(completion_rate, 1),
+            'players_with_loadouts': players_with_loadouts,
+            
+            # For sidebar
+            'player_count': total_players,
+            'guild_count': active_guilds,
+            'event_count': active_events,
+        }
+        
+        return render(request, 'guilds/staff_dashboard.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading dashboard: {str(e)}')
+        return render(request, 'guilds/staff_dashboard.html', {
+            'total_players': 0,
+            'active_guilds': 0,
+            'total_events': 0,
+            'active_events': 0,
+            'total_builds': 0,
+            'bot_status': 'Unknown',
+            'error': str(e)
+        })
+
+
+@staff_member_required
+def guild_analytics(request):
+    """Guild analytics and statistics page"""
+    try:
+        # Get guild statistics
+        guilds = Guild.objects.annotate(
+            member_count=Count('players'),
+            players_with_loadouts=Count('players', filter=Q(
+                players__weapon__isnull=False
+            ))
+        ).order_by('-member_count')
+        
+        # Get role distribution by guild
+        guild_role_stats = {}
+        for guild in guilds:
+            role_stats = Player.objects.filter(guild=guild).values('game_role').annotate(
+                count=Count('game_role')
+            )
+            guild_role_stats[guild.id] = list(role_stats)
+        
+        context = {
+            'guilds': guilds,
+            'guild_role_stats': guild_role_stats,
+            'total_guilds': guilds.count(),
+            'total_members': sum(g.member_count for g in guilds),
+        }
+        
+        return render(request, 'guilds/guild_analytics.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading guild analytics: {str(e)}')
+        return render(request, 'guilds/guild_analytics.html', {
+            'guilds': [],
+            'total_guilds': 0,
+            'total_members': 0,
+            'error': str(e)
+        })
+
+
+@staff_member_required
+def event_analytics(request):
+    """Event analytics and statistics page"""
+    try:
+        # Get event statistics
+        events = Event.objects.annotate(
+            participant_count=Count('participants', filter=Q(
+                participants__is_active=True
+            ))
+        ).order_by('-event_date')
+        
+        # Get upcoming events
+        upcoming_events = events.filter(
+            event_date__gte=timezone.now()
+        )[:10]
+        
+        # Get past events
+        past_events = events.filter(
+            event_date__lt=timezone.now()
+        )[:10]
+        
+        # Get participation trends
+        participation_trends = Event.objects.filter(
+            event_date__gte=timezone.now() - timedelta(days=30)
+        ).annotate(
+            participant_count=Count('participants', filter=Q(
+                participants__is_active=True
+            ))
+        ).order_by('event_date')
+        
+        context = {
+            'events': events,
+            'upcoming_events': upcoming_events,
+            'past_events': past_events,
+            'participation_trends': participation_trends,
+            'total_events': events.count(),
+            'total_participants': sum(e.participant_count for e in events),
+        }
+        
+        return render(request, 'guilds/event_analytics.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading event analytics: {str(e)}')
+        return render(request, 'guilds/event_analytics.html', {
+            'events': [],
+            'total_events': 0,
+            'total_participants': 0,
+            'error': str(e)
+        })
+
+
+@staff_member_required
+def bot_analytics(request):
+    """Bot analytics and management page"""
+    try:
+        # Get bot configuration
+        bot_config = DiscordBotConfig.objects.first()
+        
+        # Get bot-related statistics
+        players_with_discord = Player.objects.filter(
+            discord_user_id__isnull=False
+        ).exclude(discord_user_id='').count()
+        
+        # Get recent bot activity (this would need to be implemented with logging)
+        # For now, we'll use player creation as a proxy
+        recent_discord_players = Player.objects.filter(
+            discord_user_id__isnull=False
+        ).exclude(discord_user_id='').order_by('-created_at')[:10]
+        
+        context = {
+            'bot_config': bot_config,
+            'players_with_discord': players_with_discord,
+            'recent_discord_players': recent_discord_players,
+            'total_players': Player.objects.count(),
+            'discord_integration_rate': round(
+                (players_with_discord / Player.objects.count() * 100) 
+                if Player.objects.count() > 0 else 0, 1
+            ),
+        }
+        
+        return render(request, 'guilds/bot_analytics.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading bot analytics: {str(e)}')
+        return render(request, 'guilds/bot_analytics.html', {
+            'bot_config': None,
+            'players_with_discord': 0,
+            'total_players': 0,
+            'discord_integration_rate': 0,
+            'error': str(e)
+        })

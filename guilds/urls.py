@@ -18,6 +18,12 @@ urlpatterns = [
     path('recommended-build/<str:build_id>/equipment/update/', views.update_recommended_build_equipment, name='update_recommended_build_equipment'),
     path('api/items/<str:slot_type>/', views.get_items_for_slot, name='get_items_for_slot'),
     
+    # Staff Dashboard URLs
+    path('dashboard/', views.staff_dashboard, name='staff_dashboard'),
+    path('guild-analytics/', views.guild_analytics, name='guild_analytics'),
+    path('event-analytics/', views.event_analytics, name='event_analytics'),
+    path('bot-analytics/', views.bot_analytics, name='bot_analytics'),
+    
     # Discord Bot Management URLs
     path('bot/management/', views.bot_management, name='bot_management'),
     path('bot/start/', views.start_bot, name='start_bot'),
