@@ -45,9 +45,9 @@ while attempt < max_attempts:
 echo "Running database migrations..."
 python manage.py migrate --noinput
 
-# Import game data (only if not already imported)
-echo "Setting up game data..."
-python manage.py import_complete_data || echo "Game data already imported or import failed"
+# Load game data from fixtures
+echo "Loading game data from fixtures..."
+python manage.py load_game_data || echo "Game data loading failed or already loaded"
 
 # Create superuser if it doesn't exist
 echo "Checking for admin user..."
