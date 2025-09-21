@@ -21,6 +21,11 @@ RUN apt-get update \
 COPY requirements-prod.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Set environment variables for build
+ENV DISABLE_COLLECTSTATIC=1
+ENV DEBUG=False
+ENV DJANGO_SETTINGS_MODULE=warborne_tools.settings_production
+
 # Copy project
 COPY . /app/
 

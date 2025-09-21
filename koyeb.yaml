@@ -11,6 +11,8 @@ services:
         value: "False"
       - key: ALLOWED_HOSTS
         value: $ALLOWED_HOSTS
+      - key: DJANGO_SETTINGS_MODULE
+        value: "warborne_tools.settings_production"
       - key: DB_NAME
         value: $KOYEB_POSTGRES_DB
       - key: DB_USER

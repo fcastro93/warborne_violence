@@ -5,6 +5,9 @@ set -e
 
 echo "Starting Warborne Guild Tools..."
 
+# Set production settings
+export DJANGO_SETTINGS_MODULE=warborne_tools.settings_production
+
 # Run migrations
 echo "Running database migrations..."
 python manage.py migrate --noinput
