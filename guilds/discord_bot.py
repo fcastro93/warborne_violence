@@ -80,6 +80,7 @@ class WarborneBot(commands.Bot):
     @commands.command(name='buildplayer')
     async def buildplayer(self, ctx, *, player_name):
         """Get a player's loadout link"""
+        print(f"DEBUG: buildplayer command called with {player_name}")
         try:
             player = Player.objects.filter(name__icontains=player_name).first()
             if player:
@@ -93,6 +94,7 @@ class WarborneBot(commands.Bot):
     @commands.command(name='guildinfo')
     async def guildinfo(self, ctx):
         """Get guild information"""
+        print(f"DEBUG: guildinfo command called")
         try:
             guilds = Guild.objects.filter(is_active=True)
             if guilds.exists():
