@@ -19,7 +19,7 @@ def _get_bot_config():
         return None
 
 
-class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
+class CreateEventModal(discord.ui.Modal, title="Create Guild Event (Date: YYYY-MM-DD HH:MM)"):
     """Modal for creating guild events"""
     def __init__(self, bot_instance):
         super().__init__()
@@ -49,9 +49,9 @@ class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
     
     timezone_input = discord.ui.TextInput(
         label="Timezone",
-        placeholder="e.g., UTC, EST, PST, CET, etc.",
+        placeholder="UTC, EST, PST, CST, MST, CET, GMT, JST, AEST",
         default="UTC",
-        max_length=50,
+        max_length=10,
         required=True
     )
     
@@ -67,45 +67,24 @@ class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
         try:
             # Parse datetime with timezone
             try:
-                from zoneinfo import ZoneInfo
-                import pytz
-                
                 # Parse the datetime string
                 event_datetime = datetime.strptime(self.datetime_input.value, "%Y-%m-%d %H:%M")
                 
                 # Get timezone
                 timezone_str = self.timezone_input.value.strip().upper()
                 
-                # Common timezone mappings
-                timezone_mapping = {
-                    'UTC': 'UTC',
-                    'EST': 'US/Eastern',
-                    'PST': 'US/Pacific',
-                    'CST': 'US/Central',
-                    'MST': 'US/Mountain',
-                    'CET': 'Europe/Berlin',
-                    'GMT': 'Europe/London',
-                    'JST': 'Asia/Tokyo',
-                    'AEST': 'Australia/Sydney'
-                }
+                # For now, just store the timezone string and use UTC for datetime
+                # This ensures the bot works even if timezone libraries aren't available
+                event_datetime = event_datetime.replace(tzinfo=timezone.utc)
                 
-                # Use mapping if available, otherwise try the input directly
-                if timezone_str in timezone_mapping:
-                    tz = ZoneInfo(timezone_mapping[timezone_str])
-                else:
-                    try:
-                        tz = ZoneInfo(timezone_str)
-                    except:
-                        # Fallback to UTC if timezone is invalid
-                        tz = ZoneInfo('UTC')
-                        timezone_str = 'UTC'
+                # Validate timezone string (basic validation)
+                valid_timezones = ['UTC', 'EST', 'PST', 'CST', 'MST', 'CET', 'GMT', 'JST', 'AEST', 'PDT', 'EDT', 'CDT', 'MDT']
+                if timezone_str not in valid_timezones:
+                    timezone_str = 'UTC'  # Default to UTC if invalid
                 
-                # Apply timezone to datetime
-                event_datetime = event_datetime.replace(tzinfo=tz)
-                
-            except (ValueError, ImportError) as e:
+            except ValueError as e:
                 await interaction.response.send_message(
-                    "❌ Invalid date format or timezone. Please use YYYY-MM-DD HH:MM format and a valid timezone (UTC, EST, PST, etc.).",
+                    "❌ Invalid date format. Please use YYYY-MM-DD HH:MM format (e.g., 2025-09-21 09:40).",
                     ephemeral=True
                 )
                 return
