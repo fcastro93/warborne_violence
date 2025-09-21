@@ -79,8 +79,15 @@ class CreateEventModal(discord.ui.Modal, title="Create Guild Event (Date: YYYY-M
                 
                 # Validate timezone string (basic validation)
                 valid_timezones = ['UTC', 'EST', 'PST', 'CST', 'MST', 'CET', 'GMT', 'JST', 'AEST', 'PDT', 'EDT', 'CDT', 'MDT']
+                print(f"DEBUG: Parsed timezone_str: '{timezone_str}'")
+                print(f"DEBUG: Valid timezones: {valid_timezones}")
+                
                 if timezone_str not in valid_timezones:
-                    timezone_str = 'UTC'  # Default to UTC if invalid
+                    await interaction.response.send_message(
+                        f"❌ Invalid timezone '{timezone_str}'. Valid options: UTC, EST, PST, CST, MST, CET, GMT, JST, AEST, PDT, EDT, CDT, MDT",
+                        ephemeral=True
+                    )
+                    return
                 
             except ValueError as e:
                 await interaction.response.send_message(
