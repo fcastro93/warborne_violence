@@ -34,8 +34,36 @@ class CreatePlayerView(discord.ui.View):
         self.add_item(self.FactionSelect(self))
         self.add_item(self.RoleSelect(self))
         
-        # Guild dropdown will be loaded when needed
-        self.guilds_loaded = False
+        # Add hardcoded guild dropdown
+        self._add_hardcoded_guilds()
+    
+    def _add_hardcoded_guilds(self):
+        """Add hardcoded guild dropdown with Violence 1 and Violence 2"""
+        print("🔥 DEBUG: Adding hardcoded guild dropdown")
+        
+        guild_options = [
+            discord.SelectOption(
+                label="No Guild",
+                value="none",
+                description="No guild selected",
+                default=True
+            ),
+            discord.SelectOption(
+                label="Violence",
+                value="Violence",
+                description="Guild Violence"
+            ),
+            discord.SelectOption(
+                label="Violence 2",
+                value="Violence 2",
+                description="Guild Violence 2"
+            )
+        ]
+        
+        guild_select = self.GuildSelect(self)
+        guild_select.options = guild_options
+        self.add_item(guild_select)
+        print(f"🔥 DEBUG: Added hardcoded guild dropdown with {len(guild_options)} options")
     
     async def _load_guilds_sync(self):
         """Load guilds from database and create guild select dropdown (async version with sync_to_async)"""
@@ -1192,9 +1220,6 @@ class WarborneBot(commands.Bot):
             
             # Create a view with dropdowns for player creation
             view = CreatePlayerView(self)
-            
-            # Load guilds asynchronously
-            await view._load_guilds_sync()
             
             embed = discord.Embed(
                 title="👤 Create Player",
