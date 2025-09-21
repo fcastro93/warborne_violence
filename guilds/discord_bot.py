@@ -620,7 +620,11 @@ class CommandMenuView(discord.ui.View):
                     return
                 
                 # Create parties using the bot instance method
-                success, message = await self.command_menu_view.bot_instance.create_balanced_parties(event)
+                try:
+                    success, message = await self.command_menu_view.bot_instance.create_balanced_parties(event)
+                except AttributeError as e:
+                    await interaction.response.send_message(f"❌ Error: Method not found - {str(e)}", ephemeral=True)
+                    return
                 
                 if success:
                     await interaction.response.send_message(f"✅ {message}", ephemeral=True)
