@@ -36,7 +36,8 @@ class Command(BaseCommand):
             'gear_types.json',
             'drifters.json', 
             'gear_items.json',
-            'gear_mods.json'
+            'gear_mods.json',
+            'consumables.json'
         ]
         
         # Also import consumables if they don't exist
