@@ -792,6 +792,8 @@ def get_items_for_slot(request, slot_type):
 
 def update_recommended_build_equipment(request, build_id):
     """AJAX endpoint to update recommended build equipment (similar to player loadout update)"""
+    from .models import RecommendedBuild
+    
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
     
