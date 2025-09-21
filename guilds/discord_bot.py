@@ -41,7 +41,16 @@ class CreatePlayerView(discord.ui.View):
         """Load guilds from database and create guild select dropdown"""
         try:
             from .models import Guild
+            
+            print("DEBUG: Loading guilds from database...")
             guilds = Guild.objects.filter(is_active=True)
+            print(f"DEBUG: Found {guilds.count()} active guilds")
+            
+            # If no active guilds found, try to get all guilds (fallback)
+            if not guilds.exists():
+                print("DEBUG: No active guilds found, trying all guilds...")
+                guilds = Guild.objects.all()
+                print(f"DEBUG: Found {guilds.count()} total guilds")
             
             guild_options = []
             
@@ -54,24 +63,35 @@ class CreatePlayerView(discord.ui.View):
                     default=True
                 )
             )
+            print("DEBUG: Added 'No Guild' option")
             
             # Add existing guilds if any
             if guilds.exists():
+                print(f"DEBUG: Adding {guilds.count()} guilds to dropdown")
                 for guild in guilds:
+                    member_count = guild.players.count()
+                    print(f"DEBUG: Adding guild '{guild.name}' with {member_count} members")
                     guild_options.append(
                         discord.SelectOption(
                             label=guild.name,
                             value=guild.name,
-                            description=f"Members: {guild.players.count()}"
+                            description=f"Members: {member_count}"
                         )
                     )
+            else:
+                print("DEBUG: No active guilds found in database")
             
             # Always create and add the guild select dropdown
+            print(f"DEBUG: Creating guild dropdown with {len(guild_options)} options")
             guild_select = self.GuildSelect(self)
             guild_select.options = guild_options
             self.add_item(guild_select)
+            print("DEBUG: Guild dropdown added to view")
+            
         except Exception as e:
             print(f"Error loading guilds: {e}")
+            import traceback
+            traceback.print_exc()
             # Even if there's an error, create a basic guild dropdown
             guild_select = self.GuildSelect(self)
             guild_select.options = [
@@ -83,6 +103,7 @@ class CreatePlayerView(discord.ui.View):
                 )
             ]
             self.add_item(guild_select)
+            print("DEBUG: Fallback guild dropdown created")
     
     # Faction Select
     class FactionSelect(discord.ui.Select):
