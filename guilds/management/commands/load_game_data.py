@@ -13,6 +13,15 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write('Loading game data from fixtures...')
         
+        # Check if data already exists
+        from guilds.models import Drifter, GearType, GearItem, GearMod
+        
+        if Drifter.objects.exists() and GearType.objects.exists():
+            self.stdout.write(
+                self.style.SUCCESS('✓ Game data already exists, skipping load')
+            )
+            return
+        
         # Get the fixtures directory
         fixtures_dir = os.path.join(settings.BASE_DIR, 'guilds', 'fixtures')
         

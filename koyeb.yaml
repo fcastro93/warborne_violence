@@ -14,15 +14,15 @@ services:
       - key: DJANGO_SETTINGS_MODULE
         value: "warborne_tools.settings_production"
       - key: DB_NAME
-        value: $KOYEB_POSTGRES_DB
+        value: "neondb"
       - key: DB_USER
-        value: $KOYEB_POSTGRES_USER
+        value: "neondb_owner"
       - key: DB_PASSWORD
-        value: $KOYEB_POSTGRES_PASSWORD
+        value: "npg_UplStky0JD9E"
       - key: DB_HOST
-        value: $KOYEB_POSTGRES_HOST
+        value: "ep-broad-salad-adbzgcjy-pooler.c-2.us-east-1.aws.neon.tech"
       - key: DB_PORT
-        value: $KOYEB_POSTGRES_PORT
+        value: "5432"
     regions:
       - fra
     scaling:
