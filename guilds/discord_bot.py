@@ -260,11 +260,25 @@ class CreatePlayerView(discord.ui.View):
             
             # Find guild if specified
             guild = None
-            if guild_name:
+            if guild_name and guild_name != "none":
                 try:
+                    # Debug: List all guilds in database
+                    all_guilds = Guild.objects.all()
+                    print(f"🔥 DEBUG: All guilds in database:")
+                    for g in all_guilds:
+                        print(f"  - ID: {g.id}, Name: '{g.name}', Active: {g.is_active}")
+                    
+                    # Search for guild with exact name match (case insensitive)
                     guild = Guild.objects.filter(name__iexact=guild_name.strip()).first()
+                    print(f"🔥 DEBUG: Searching for guild '{guild_name.strip()}' -> Found: {guild}")
+                    
                     if not guild:
-                        return None, f"No se encontró la guild '{guild_name}'. Verifica el nombre."
+                        # Try alternative search methods
+                        guild = Guild.objects.filter(name__icontains=guild_name.strip()).first()
+                        print(f"🔥 DEBUG: Alternative search (icontains) -> Found: {guild}")
+                        
+                        if not guild:
+                            return None, f"No se encontró la guild '{guild_name}'. Verifica el nombre."
                 except Exception as e:
                     return None, f"Error buscando guild: {str(e)}"
             
