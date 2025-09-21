@@ -2,7 +2,7 @@ name: warborne-tools
 services:
   - name: web
     image:
-      dockerfile: Dockerfile
+      buildpack: heroku/python
     http_port: 8000
     envs:
       - key: SECRET_KEY
