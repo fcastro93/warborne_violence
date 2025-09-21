@@ -938,11 +938,8 @@ def staff_dashboard(request):
         
         # Get system health metrics
         players_with_loadouts = Player.objects.filter(
-            Q(weapon__isnull=False) | 
-            Q(helmet__isnull=False) | 
-            Q(chest__isnull=False) | 
-            Q(boots__isnull=False)
-        ).count()
+            gear_items__isnull=False
+        ).distinct().count()
         
         completion_rate = (players_with_loadouts / total_players * 100) if total_players > 0 else 0
         
