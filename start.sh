@@ -45,6 +45,10 @@ while attempt < max_attempts:
 echo "Running database migrations..."
 python manage.py migrate --noinput
 
+# Collect static files
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
 # Load game data from fixtures
 echo "Loading game data from fixtures..."
 python manage.py load_game_data || echo "Game data loading failed or already loaded"
