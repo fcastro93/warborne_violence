@@ -568,31 +568,31 @@ def edit_recommended_build(request, build_id=None):
     # Get weapons
     weapons = GearItem.objects.filter(
         gear_type__category='weapon'
-    ).order_by('rarity', 'name')
+    ).order_by('rarity', 'base_name')
     gear_by_type['weapon'] = weapons
     
     # Get helmets
     helmets = GearItem.objects.filter(
         gear_type__category='helmet'
-    ).order_by('rarity', 'name')
+    ).order_by('rarity', 'base_name')
     gear_by_type['helmet'] = helmets
     
     # Get chest pieces
     chests = GearItem.objects.filter(
         gear_type__category='chest'
-    ).order_by('rarity', 'name')
+    ).order_by('rarity', 'base_name')
     gear_by_type['chest'] = chests
     
     # Get boots
     boots = GearItem.objects.filter(
         gear_type__category='boots'
-    ).order_by('rarity', 'name')
+    ).order_by('rarity', 'base_name')
     gear_by_type['boots'] = boots
     
     # Get consumables
     consumables = GearItem.objects.filter(
         gear_type__category='consumable'
-    ).order_by('rarity', 'name')
+    ).order_by('rarity', 'base_name')
     gear_by_type['consumable'] = consumables
     
     # Get mods
