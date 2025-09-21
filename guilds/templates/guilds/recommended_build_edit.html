@@ -2240,6 +2240,11 @@
         }
         
         function equipDrifterToBuild(drifterId, drifterName) {
+            console.log('equipDrifterToBuild called with:', drifterId, drifterName);
+            
+            // Call the equipGear function to save to database via AJAX
+            equipGear(drifterId, 1, 'drifter');
+            
             // Update drifter slot display
             const drifterSlot = document.querySelector('[data-slot-type="drifter"]');
             if (drifterSlot) {
