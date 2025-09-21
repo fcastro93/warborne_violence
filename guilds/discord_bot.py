@@ -34,24 +34,43 @@ class CreatePlayerView(discord.ui.View):
         self.add_item(self.FactionSelect(self))
         self.add_item(self.RoleSelect(self))
         
-        # Load guilds dynamically
-        self._load_guilds_sync()
+        # Guild dropdown will be loaded when needed
+        self.guilds_loaded = False
     
-    def _load_guilds_sync(self):
-        """Load guilds from database and create guild select dropdown (synchronous version)"""
+    async def _load_guilds_sync(self):
+        """Load guilds from database and create guild select dropdown (async version with sync_to_async)"""
         try:
             from .models import Guild
+            from asgiref.sync import sync_to_async
             
             print("DEBUG: Loading guilds from database...")
-            guilds = Guild.objects.filter(is_active=True)
-            print(f"DEBUG: Found {guilds.count()} active guilds")
             
-            # If no active guilds found, try to get all guilds (fallback)
-            if not guilds.exists():
-                print("DEBUG: No active guilds found, trying all guilds...")
-                guilds = Guild.objects.all()
-                print(f"DEBUG: Found {guilds.count()} total guilds")
+            # Use sync_to_async to handle Django ORM calls from async context
+            @sync_to_async
+            def get_guilds_data():
+                guilds = Guild.objects.filter(is_active=True)
+                guild_count = guilds.count()
+                print(f"DEBUG: Found {guild_count} active guilds")
+                
+                # If no active guilds found, try to get all guilds (fallback)
+                if guild_count == 0:
+                    print("DEBUG: No active guilds found, trying all guilds...")
+                    guilds = Guild.objects.all()
+                    guild_count = guilds.count()
+                    print(f"DEBUG: Found {guild_count} total guilds")
+                
+                # Convert to list to avoid async iteration issues
+                guilds_list = []
+                for guild in guilds:
+                    member_count = guild.players.count()
+                    guilds_list.append({
+                        'name': guild.name,
+                        'member_count': member_count
+                    })
+                
+                return guilds_list
             
+            guilds_data = await get_guilds_data()
             guild_options = []
             
             # Always add "No Guild" option
@@ -66,16 +85,15 @@ class CreatePlayerView(discord.ui.View):
             print("DEBUG: Added 'No Guild' option")
             
             # Add existing guilds if any
-            if guilds.exists():
-                print(f"DEBUG: Adding {guilds.count()} guilds to dropdown")
-                for guild in guilds:
-                    member_count = guild.players.count()
-                    print(f"DEBUG: Adding guild '{guild.name}' with {member_count} members")
+            if guilds_data:
+                print(f"DEBUG: Adding {len(guilds_data)} guilds to dropdown")
+                for guild_data in guilds_data:
+                    print(f"DEBUG: Adding guild '{guild_data['name']}' with {guild_data['member_count']} members")
                     guild_options.append(
                         discord.SelectOption(
-                            label=guild.name,
-                            value=guild.name,
-                            description=f"Members: {member_count}"
+                            label=guild_data['name'],
+                            value=guild_data['name'],
+                            description=f"Members: {guild_data['member_count']}"
                         )
                     )
             else:
@@ -1174,6 +1192,9 @@ class WarborneBot(commands.Bot):
             
             # Create a view with dropdowns for player creation
             view = CreatePlayerView(self)
+            
+            # Load guilds asynchronously
+            await view._load_guilds_sync()
             embed = discord.Embed(
                 title="👤 Create Player",
                 description="Use the dropdowns below to create your player:",
