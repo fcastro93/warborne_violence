@@ -14,7 +14,7 @@ class WarborneBot(commands.Bot):
         intents.members = False  # Deshabilitar si no es necesario
         intents.presences = False  # Deshabilitar si no es necesario
         
-        super().__init__(command_prefix='/', intents=intents)
+        super().__init__(command_prefix='!violence ', intents=intents)
         self.config = self.get_bot_config()
     
     def get_bot_config(self):
@@ -167,23 +167,23 @@ class WarborneBot(commands.Bot):
 🤖 **Warborne Bot - Comandos Disponibles:**
 
 **Comandos de Jugadores:**
-• `/buildplayer <nombre>` - Obtener link del loadout de un jugador
-• `/playerlist [guild_name]` - Listar jugadores (opcionalmente por guild)
+• `!violence buildplayer <nombre>` - Obtener link del loadout de un jugador
+• `!violence playerlist [guild_name]` - Listar jugadores (opcionalmente por guild)
 
 **Comandos de Guild:**
-• `/guildinfo` - Información de guilds activas
+• `!violence guildinfo` - Información de guilds activas
 
 **Comandos de Juego:**
-• `/drifters` - Listar drifters disponibles
-• `/gear [tipo]` - Listar items de gear (opcionalmente por tipo)
+• `!violence drifters` - Listar drifters disponibles
+• `!violence gear [tipo]` - Listar items de gear (opcionalmente por tipo)
 
 **Otros:**
-• `/help` - Mostrar esta ayuda
+• `!violence help` - Mostrar esta ayuda
 
 **Ejemplos:**
-• `/buildplayer Charfire`
-• `/playerlist Emberwild`
-• `/gear weapon`
+• `!violence buildplayer Charfire`
+• `!violence playerlist Emberwild`
+• `!violence gear weapon`
         """
         await ctx.send(help_text)
 
