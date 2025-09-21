@@ -13,6 +13,7 @@ urlpatterns = [
     # Recommended Builds URLs
     path('recommended-builds/', views.recommended_builds, name='recommended_builds'),
     path('recommended-build/<str:build_id>/edit/', views.edit_recommended_build, name='edit_recommended_build'),
+    path('recommended-build/<str:build_id>/view/', views.view_recommended_build, name='view_recommended_build'),
     path('recommended-build/<str:build_id>/save/', views.save_recommended_build, name='save_recommended_build'),
     path('api/items/<str:slot_type>/', views.get_items_for_slot, name='get_items_for_slot'),
     

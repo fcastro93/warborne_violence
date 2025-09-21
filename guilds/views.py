@@ -539,8 +539,18 @@ def recommended_builds(request):
 
 
 def edit_recommended_build(request, build_id=None):
-    """View for editing recommended builds"""
+    """View for editing recommended builds - Staff only"""
+    from django.contrib.admin.views.decorators import staff_member_required
     from .models import RecommendedBuild, Drifter, GearItem, GearMod, Player
+    from django.db.models import Q
+    
+    # Check if user is staff
+    if not request.user.is_authenticated or not request.user.is_staff:
+        # Redirect non-staff users to view-only page
+        if build_id and build_id != 'new':
+            return redirect(f'/guilds/recommended-build/{build_id}/view/')
+        else:
+            return redirect('/guilds/recommended-builds/')
     
     build = None
     if build_id and build_id != 'new':
@@ -552,15 +562,81 @@ def edit_recommended_build(request, build_id=None):
         except RecommendedBuild.DoesNotExist:
             return render(request, 'guilds/error.html', {'error': 'Build not found'})
     
+    # Get all available gear items organized by type for the items section
+    gear_by_type = {}
+    
+    # Get weapons
+    weapons = GearItem.objects.filter(
+        gear_type__category='weapon'
+    ).order_by('rarity', 'name')
+    gear_by_type['weapon'] = weapons
+    
+    # Get helmets
+    helmets = GearItem.objects.filter(
+        gear_type__category='helmet'
+    ).order_by('rarity', 'name')
+    gear_by_type['helmet'] = helmets
+    
+    # Get chest pieces
+    chests = GearItem.objects.filter(
+        gear_type__category='chest'
+    ).order_by('rarity', 'name')
+    gear_by_type['chest'] = chests
+    
+    # Get boots
+    boots = GearItem.objects.filter(
+        gear_type__category='boots'
+    ).order_by('rarity', 'name')
+    gear_by_type['boots'] = boots
+    
+    # Get consumables
+    consumables = GearItem.objects.filter(
+        gear_type__category='consumable'
+    ).order_by('rarity', 'name')
+    gear_by_type['consumable'] = consumables
+    
+    # Get mods
+    mods = GearMod.objects.all().order_by('rarity', 'name')
+    gear_by_type['mod'] = mods
+    
+    # Get drifters
+    drifters = Drifter.objects.all().order_by('name')
+    gear_by_type['drifter'] = drifters
+    
     # Get role choices without database queries
     role_choices = Player.GAME_ROLE_CHOICES
     
     context = {
         'build': build,
         'role_choices': role_choices,
+        'gear_by_type': gear_by_type,
     }
     
     return render(request, 'guilds/recommended_build_edit.html', context)
+
+
+def view_recommended_build(request, build_id):
+    """View for viewing recommended builds - Read only for all users"""
+    from .models import RecommendedBuild, Drifter, GearItem, GearMod, Player
+    
+    try:
+        build = RecommendedBuild.objects.select_related(
+            'drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable',
+            'mod1', 'mod2', 'mod3', 'mod4'
+        ).get(id=build_id)
+    except RecommendedBuild.DoesNotExist:
+        return render(request, 'guilds/error.html', {'error': 'Build not found'})
+    
+    # Get role choices without database queries
+    role_choices = Player.GAME_ROLE_CHOICES
+    
+    context = {
+        'build': build,
+        'role_choices': role_choices,
+        'read_only': True,  # Flag to indicate this is read-only mode
+    }
+    
+    return render(request, 'guilds/recommended_build_view.html', context)
 
 
 @require_POST

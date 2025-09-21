@@ -274,6 +274,13 @@
             color: #888;
         }
         
+        .equipment-slot.selected,
+        .mod-slot.selected {
+            border-color: #64b5f6;
+            background: rgba(100, 181, 246, 0.2);
+            box-shadow: 0 0 15px rgba(100, 181, 246, 0.5);
+        }
+        
         .slot-label {
             font-size: 0.9rem;
             color: #b0b0b0;
@@ -516,6 +523,305 @@
             box-shadow: 0 8px 25px rgba(74, 158, 255, 0.6);
         }
         
+        /* Game Items Section Styles */
+        .section-title {
+            color: #64b5f6;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(100, 181, 246, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: #b0bec5;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            min-width: 80px;
+        }
+        
+        .tab.active {
+            background: rgba(100, 181, 246, 0.2);
+            color: #64b5f6;
+            box-shadow: 0 0 15px rgba(100, 181, 246, 0.3);
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        
+        .item-tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        
+        .item-tab-content.active {
+            display: block;
+        }
+        
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            padding: 10px 0;
+            flex: 1;
+            overflow-y: auto;
+            align-content: start;
+        }
+        
+        .gear-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        
+        .gear-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Rarity colors */
+        .gear-item.rarity-common {
+            border-color: #9e9e9e;
+            background: rgba(158, 158, 158, 0.1);
+        }
+        
+        .gear-item.rarity-rare {
+            border-color: #2196f3;
+            background: rgba(33, 150, 243, 0.1);
+        }
+        
+        .gear-item.rarity-epic {
+            border-color: #9c27b0;
+            background: rgba(156, 39, 176, 0.1);
+        }
+        
+        .gear-item.rarity-legendary {
+            border-color: #ff9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+        
+        .gear-icon-small {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        
+        .item-icon {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .item-fallback {
+            font-size: 24px;
+            color: #64b5f6;
+        }
+        
+        .item-details {
+            text-align: center;
+            flex: 1;
+            width: 100%;
+        }
+        
+        .item-name {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+        
+        .item-skill {
+            color: #64b5f6;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        
+        .item-type {
+            color: #b0bec5;
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+        }
+        
+        .item-stats {
+            color: #e0e0e0;
+            font-size: 0.7rem;
+            line-height: 1.3;
+        }
+        
+        .item-stats div {
+            margin-bottom: 2px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+            width: 100%;
+        }
+        
+        .equip-btn {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .equip-btn:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+        
+        .rarity-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .rarity-filter {
+            padding: 8px 16px;
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 6px;
+            background: rgba(30, 30, 30, 0.8);
+            color: #64b5f6;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .rarity-filter:hover {
+            background: rgba(100, 181, 246, 0.1);
+            border-color: #64b5f6;
+        }
+        
+        .rarity-filter.active {
+            background: #64b5f6;
+            color: white;
+            border-color: #64b5f6;
+        }
+        
+        .stat-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .stat-filter {
+            padding: 6px 12px;
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            border-radius: 6px;
+            background: rgba(30, 30, 30, 0.8);
+            color: #64b5f6;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .stat-filter:hover {
+            background: rgba(100, 181, 246, 0.1);
+            border-color: #64b5f6;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 40px 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #64b5f6;
+            box-shadow: 0 0 10px rgba(100, 181, 246, 0.3);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64b5f6;
+            pointer-events: none;
+        }
+        
+        .mod-search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .mod-search-input {
+            width: 100%;
+            padding: 10px 40px 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .mod-search-input:focus {
+            outline: none;
+            border-color: #64b5f6;
+            box-shadow: 0 0 10px rgba(100, 181, 246, 0.3);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -531,6 +837,18 @@
             
             .mods-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .items-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                margin-bottom: 2px;
             }
         }
     </style>
@@ -696,24 +1014,207 @@
         </div>
         
         <div class="middle-panel">
-            <h3 style="color: #64b5f6; margin-bottom: 20px; text-align: center;">Available Items</h3>
+            <div class="section-title">Available Items</div>
             
-            <div class="filter-tabs">
-                <div class="filter-tab active" onclick="filterItems('all')">All</div>
-                <div class="filter-tab" onclick="filterItems('weapon')">Weapon</div>
-                <div class="filter-tab" onclick="filterItems('helmet')">Helmet</div>
-                <div class="filter-tab" onclick="filterItems('chest')">Chest</div>
-                <div class="filter-tab" onclick="filterItems('boots')">Boots</div>
-                <div class="filter-tab" onclick="filterItems('consumable')">Consumable</div>
-                <div class="filter-tab" onclick="filterItems('mod')">Mod</div>
-                <div class="filter-tab" onclick="filterItems('drifter')">Drifter</div>
-            </div>
-            
-            <input type="text" class="search-box" placeholder="Search items..." onkeyup="searchItems(this.value)">
-            
-            <div class="items-list" id="items-list">
-                <!-- Items will be loaded here via JavaScript -->
-            </div>
+            {% if gear_by_type %}
+                <!-- Item Type Tabs -->
+                <div class="tabs">
+                    {% for category, items in gear_by_type.items %}
+                    <button class="tab {% if forloop.first %}active{% endif %}" onclick="showItemTab('{{ category }}')" data-category="{{ category }}">
+                        {{ category|title }} ({{ items|length }})
+                    </button>
+                    {% endfor %}
+                </div>
+                
+                <!-- Item Tab Content -->
+                {% for category, items in gear_by_type.items %}
+                <div class="item-tab-content {% if forloop.first %}active{% endif %}" id="item-tab-{{ category }}">
+                    {% if category == 'mod' %}
+                        <!-- Search filter for mods -->
+                        <div class="mod-search-container">
+                            <input type="text" class="mod-search-input" 
+                                   placeholder="Search mods..." 
+                                   onkeyup="filterMods(this.value)"
+                                   oninput="filterMods(this.value)">
+                            <span class="search-icon">🔍</span>
+                        </div>
+                        
+                        <!-- All mods content -->
+                        <div class="items-grid mod-items-grid" id="all-mods">
+                            {% for item in items %}
+                             <div class="gear-item rarity-{{ item.rarity|lower }}" 
+                                  data-item-id="{{ item.id }}"
+                                  data-item-type="mod"
+                                  onclick="equipToBuild('{{ item.id }}', 'mod')">
+                                <div class="gear-icon-small">
+                                    {% if item.icon_url %}
+                                        <img src="{{ item.icon_url }}" alt="{{ item.name }}" class="item-icon">
+                                    {% else %}
+                                        <img src="/static/icons/{{ item.game_id }}.png" alt="{{ item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <span class="item-fallback" style="display:none;">⚔️</span>
+                                    {% endif %}
+                                </div>
+                                <div class="item-details">
+                                    <div class="item-name">{{ item.name }}</div>
+                                    {% if item.skill_name %}
+                                    <div class="item-skill">{{ item.skill_name }}</div>
+                                    {% endif %}
+                                    <div class="item-type">{{ item.rarity|title }}</div>
+                                    {% if item.damage > 0 or item.health_bonus > 0 or item.mana_recovery > 0 or item.armor > 0 or item.magic_resistance > 0 %}
+                                    <div class="item-stats">
+                                        {% if item.damage > 0 %}
+                                        <div>Damage & Heal bonus: {{ item.damage }}%</div>
+                                        {% endif %}
+                                        {% if item.health_bonus > 0 %}
+                                        <div>HP: {{ item.health_bonus }}</div>
+                                        {% endif %}
+                                        {% if item.mana_recovery > 0 %}
+                                        <div>Mana recovery bonus: {{ item.mana_recovery }}%</div>
+                                        {% endif %}
+                                        {% if item.armor > 0 %}
+                                        <div>Armor: {{ item.armor }}</div>
+                                        {% endif %}
+                                        {% if item.magic_resistance > 0 %}
+                                        <div>Magic resistance: {{ item.magic_resistance }}</div>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="action-btn equip-btn">Equip</div>
+                             </div>
+                            {% endfor %}
+                        </div>
+                    {% elif category == 'drifter' %}
+                        <!-- Drifters content -->
+                        <div class="items-grid drifter-items-grid">
+                            {% for item in items %}
+                             <div class="gear-item drifter-item" 
+                                  data-item-id="{{ item.id }}"
+                                  data-item-type="drifter"
+                                  onclick="equipToBuild('{{ item.id }}', 'drifter')">
+                                <div class="gear-icon-small">
+                                    {% if item.icon_url %}
+                                        <img src="{{ item.icon_url }}" alt="{{ item.name }}" class="item-icon">
+                                    {% else %}
+                                        <img src="/static/icons/{{ item.game_id }}.png" alt="{{ item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <span class="item-fallback" style="display:none;">🎭</span>
+                                    {% endif %}
+                                </div>
+                                <div class="item-details">
+                                    <div class="item-name">{{ item.name }}</div>
+                                    <div class="item-type">Level {{ item.level|default:"1" }}</div>
+                                    {% if item.health > 0 or item.energy > 0 or item.damage > 0 or item.defense > 0 or item.speed > 0 %}
+                                    <div class="item-stats">
+                                        {% if item.health > 0 %}
+                                        <div>Health: {{ item.health }}</div>
+                                        {% endif %}
+                                        {% if item.energy > 0 %}
+                                        <div>Energy: {{ item.energy }}</div>
+                                        {% endif %}
+                                        {% if item.damage > 0 %}
+                                        <div>Damage: {{ item.damage }}</div>
+                                        {% endif %}
+                                        {% if item.defense > 0 %}
+                                        <div>Defense: {{ item.defense }}</div>
+                                        {% endif %}
+                                        {% if item.speed > 0 %}
+                                        <div>Speed: {{ item.speed }}</div>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="action-btn equip-btn">Equip</div>
+                             </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <!-- Gear items content with filters -->
+                        <!-- Rarity filters -->
+                        <div class="rarity-filters">
+                            <button class="rarity-filter active" onclick="filterByRarity('all', '{{ category }}')">All</button>
+                            <button class="rarity-filter" onclick="filterByRarity('rare', '{{ category }}')">Rare</button>
+                            <button class="rarity-filter" onclick="filterByRarity('epic', '{{ category }}')">Epic</button>
+                            <button class="rarity-filter" onclick="filterByRarity('legendary', '{{ category }}')">Legendary</button>
+                        </div>
+                        
+                        <!-- Stat filters -->
+                        <div class="stat-filters">
+                            <span class="stat-filter" onclick="filterByStat('strength', '{{ category }}')">
+                                💪 Strength ({{ items|length }})
+                            </span>
+                            <span class="stat-filter" onclick="filterByStat('agility', '{{ category }}')">
+                                🏃 Agility ({{ items|length }})
+                            </span>
+                            <span class="stat-filter" onclick="filterByStat('intelligence', '{{ category }}')">
+                                🧠 Intelligence ({{ items|length }})
+                            </span>
+                        </div>
+                        
+                        <!-- Search bar -->
+                        <div class="search-container">
+                            <input type="text" class="search-input" 
+                                   placeholder="Search {{ category }}..." 
+                                   onkeyup="searchInCategory(this.value, '{{ category }}')">
+                            <span class="search-icon">🔍</span>
+                        </div>
+                        
+                        <!-- Items grid -->
+                        <div class="items-grid gear-items-grid" id="gear-items-{{ category }}">
+                            {% for item in items %}
+                             <div class="gear-item rarity-{{ item.rarity|lower }}" 
+                                  data-item-id="{{ item.id }}"
+                                  data-item-type="{{ category }}"
+                                  data-rarity="{{ item.rarity|lower }}"
+                                  onclick="equipToBuild('{{ item.id }}', '{{ category }}')">
+                                <div class="gear-icon-small">
+                                    {% if item.icon_url %}
+                                        <img src="{{ item.icon_url }}" alt="{{ item.name }}" class="item-icon">
+                                    {% else %}
+                                        <img src="/static/icons/{{ item.game_id }}.png" alt="{{ item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <span class="item-fallback" style="display:none;">⚔️</span>
+                                    {% endif %}
+                                </div>
+                                <div class="item-details">
+                                    <div class="item-name">{{ item.name }}</div>
+                                    {% if item.skill_name %}
+                                    <div class="item-skill">{{ item.skill_name }}</div>
+                                    {% endif %}
+                                    <div class="item-type">{{ item.gear_type.name }} • {{ item.rarity|title }}</div>
+                                    {% if item.damage > 0 or item.health_bonus > 0 or item.mana_recovery > 0 or item.armor > 0 or item.magic_resistance > 0 %}
+                                    <div class="item-stats">
+                                        {% if item.damage > 0 %}
+                                        <div>Damage & Heal bonus: {{ item.damage }}%</div>
+                                        {% endif %}
+                                        {% if item.health_bonus > 0 %}
+                                        <div>HP: {{ item.health_bonus }}</div>
+                                        {% endif %}
+                                        {% if item.mana_recovery > 0 %}
+                                        <div>Mana recovery bonus: {{ item.mana_recovery }}%</div>
+                                        {% endif %}
+                                        {% if item.armor > 0 %}
+                                        <div>Armor: {{ item.armor }}</div>
+                                        {% endif %}
+                                        {% if item.magic_resistance > 0 %}
+                                        <div>Magic resistance: {{ item.magic_resistance }}</div>
+                                        {% endif %}
+                                        {% if item.speed > 0 %}
+                                        <div>Speed: {{ item.speed }}</div>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="action-btn equip-btn">Equip</div>
+                             </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No items available</p>
+                </div>
+            {% endif %}
         </div>
         
         <div class="right-panel">
@@ -790,8 +1291,8 @@
             });
             event.currentTarget.classList.add('selected');
             
-            // Filter items for this slot type
-            filterItems(slotType);
+            // Show the corresponding item tab
+            showItemTab(slotType);
         }
         
         function removeItem(slotType, event) {
@@ -816,20 +1317,103 @@
             }
         }
         
-        function filterItems(type) {
-            // Update filter tabs
-            document.querySelectorAll('.filter-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
+        function showItemTab(category) {
+            // Hide all item tab contents
+            const contents = document.querySelectorAll('.item-tab-content');
+            contents.forEach(content => content.classList.remove('active'));
             
-            // Filter items - this would need to be implemented with actual item loading
-            console.log('Filtering items by type:', type);
+            // Remove active class from all item tabs
+            const tabs = document.querySelectorAll('.tabs .tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            const tabContent = document.getElementById(`item-tab-${category}`);
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            
+            // Add active class to clicked tab
+            const tab = document.querySelector(`[data-category="${category}"]`);
+            if (tab) {
+                tab.classList.add('active');
+            }
         }
         
-        function searchItems(query) {
-            // Implement item search - this would need to be implemented with actual item loading
-            console.log('Searching for:', query);
+        function equipToBuild(itemId, itemType) {
+            if (!selectedSlot) {
+                alert('Please select a slot first by clicking on an empty equipment slot.');
+                return;
+            }
+            
+            // Update build data
+            buildData[selectedSlot] = parseInt(itemId);
+            
+            // Update slot display
+            updateSlotDisplay(selectedSlot);
+            
+            // Clear selection
+            selectedSlot = null;
+            document.querySelectorAll('.equipment-slot, .mod-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            
+            console.log('Equipped item:', itemId, 'to slot:', selectedSlot);
+        }
+        
+        function filterByRarity(rarity, category) {
+            const gearItems = document.querySelectorAll(`#gear-items-${category} .gear-item`);
+            
+            gearItems.forEach(item => {
+                if (rarity === 'all' || item.classList.contains(`rarity-${rarity}`)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Update active filter button
+            const filters = document.querySelectorAll(`#item-tab-${category} .rarity-filter`);
+            filters.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        
+        function filterByStat(stat, category) {
+            // This would need to be implemented based on actual stat filtering logic
+            console.log('Filtering by stat:', stat, 'in category:', category);
+        }
+        
+        function searchInCategory(query, category) {
+            const gearItems = document.querySelectorAll(`#gear-items-${category} .gear-item`);
+            const searchLower = query.toLowerCase();
+            
+            gearItems.forEach(item => {
+                const itemName = item.querySelector('.item-name').textContent.toLowerCase();
+                const itemSkill = item.querySelector('.item-skill');
+                const itemSkillText = itemSkill ? itemSkill.textContent.toLowerCase() : '';
+                
+                if (itemName.includes(searchLower) || itemSkillText.includes(searchLower)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        function filterMods(searchTerm) {
+            const modItems = document.querySelectorAll('#all-mods .gear-item');
+            const searchLower = searchTerm.toLowerCase();
+            
+            modItems.forEach(item => {
+                const itemName = item.querySelector('.item-name').textContent.toLowerCase();
+                const itemSkill = item.querySelector('.item-skill');
+                const itemSkillText = itemSkill ? itemSkill.textContent.toLowerCase() : '';
+                
+                if (itemName.includes(searchLower) || itemSkillText.includes(searchLower)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
         }
         
         function openEditNameModal() {
