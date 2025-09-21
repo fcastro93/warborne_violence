@@ -417,7 +417,9 @@ class CommandMenuView(discord.ui.View):
         )
         
         for event in events[:10]:  # Show first 10 events
-            participants_text = f"{event.participant_count} participantes"
+            # Get participant count safely using sync method
+            participant_count = event.get_participant_count_sync()
+            participants_text = f"{participant_count} participantes"
             if event.max_participants:
                 participants_text += f" / {event.max_participants} máx"
             
@@ -944,10 +946,10 @@ class WarborneBot(commands.Bot):
             
             # Fallback to finding a general channel or first available text channel
             if not general_channel:
-                for channel in guild.text_channels:
-                    if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
-                        general_channel = channel
-                        break
+            for channel in guild.text_channels:
+                if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
+                    general_channel = channel
+                    break
             
             if not general_channel:
                 general_channel = guild.text_channels[0] if guild.text_channels else None

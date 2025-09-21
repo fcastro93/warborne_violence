@@ -518,6 +518,10 @@ class Event(models.Model):
         """Get the number of participants"""
         return self.participants.filter(is_active=True).count()
     
+    def get_participant_count_sync(self):
+        """Sync version of participant count for use with sync_to_async"""
+        return self.participants.filter(is_active=True).count()
+    
     @property
     def discord_timestamp(self):
         """Generate Discord timestamp for the event datetime"""
