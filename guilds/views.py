@@ -906,7 +906,7 @@ def staff_dashboard(request):
         active_guilds = Guild.objects.filter(is_active=True).count()
         total_events = Event.objects.count()
         active_events = Event.objects.filter(
-            event_date__gte=timezone.now()
+            event_datetime__gte=timezone.now()
         ).count()
         total_builds = RecommendedBuild.objects.filter(is_active=True).count()
         
@@ -946,20 +946,61 @@ def staff_dashboard(request):
         
         completion_rate = (players_with_loadouts / total_players * 100) if total_players > 0 else 0
         
+        # Get more detailed statistics
+        players_with_discord = Player.objects.filter(
+            discord_user_id__isnull=False
+        ).exclude(discord_user_id='').count()
+        
+        discord_integration_rate = (players_with_discord / total_players * 100) if total_players > 0 else 0
+        
+        # Get gear statistics
+        total_gear_items = GearItem.objects.count()
+        total_drifters = Drifter.objects.count()
+        total_gear_mods = GearMod.objects.count()
+        
+        # Get party statistics
+        total_parties = Party.objects.count()
+        total_party_members = PartyMember.objects.count()
+        
+        # Get recent activity (last 7 days)
+        week_ago = timezone.now() - timedelta(days=7)
+        recent_players_week = Player.objects.filter(created_at__gte=week_ago).count()
+        recent_events_week = Event.objects.filter(created_at__gte=week_ago).count()
+        
         context = {
+            # Basic statistics
             'total_players': total_players,
             'active_guilds': active_guilds,
             'total_events': total_events,
             'active_events': active_events,
             'total_builds': total_builds,
+            
+            # Recent activity
             'recent_players': recent_players,
             'recent_events': recent_events,
+            'recent_players_week': recent_players_week,
+            'recent_events_week': recent_events_week,
+            
+            # Guild and role statistics
             'guilds_with_members': guilds_with_members,
             'role_distribution': role_distribution,
             'faction_distribution': faction_distribution,
+            
+            # System health
             'bot_status': bot_status,
             'completion_rate': round(completion_rate, 1),
             'players_with_loadouts': players_with_loadouts,
+            'discord_integration_rate': round(discord_integration_rate, 1),
+            'players_with_discord': players_with_discord,
+            
+            # Gear and equipment statistics
+            'total_gear_items': total_gear_items,
+            'total_drifters': total_drifters,
+            'total_gear_mods': total_gear_mods,
+            
+            # Party statistics
+            'total_parties': total_parties,
+            'total_party_members': total_party_members,
             
             # For sidebar
             'player_count': total_players,
@@ -1030,26 +1071,26 @@ def event_analytics(request):
             participant_count=Count('participants', filter=Q(
                 participants__is_active=True
             ))
-        ).order_by('-event_date')
+        ).order_by('-event_datetime')
         
         # Get upcoming events
         upcoming_events = events.filter(
-            event_date__gte=timezone.now()
+            event_datetime__gte=timezone.now()
         )[:10]
         
         # Get past events
         past_events = events.filter(
-            event_date__lt=timezone.now()
+            event_datetime__lt=timezone.now()
         )[:10]
         
         # Get participation trends
         participation_trends = Event.objects.filter(
-            event_date__gte=timezone.now() - timedelta(days=30)
+            event_datetime__gte=timezone.now() - timedelta(days=30)
         ).annotate(
             participant_count=Count('participants', filter=Q(
                 participants__is_active=True
             ))
-        ).order_by('event_date')
+        ).order_by('event_datetime')
         
         context = {
             'events': events,

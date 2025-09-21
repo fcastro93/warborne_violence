@@ -67,6 +67,19 @@
                     <small class="text-muted">Status</small>
                 </div>
             </div>
+            <hr>
+            <div class="row">
+                <div class="col-6">
+                    <h5 class="text-info">{{ discord_integration_rate }}%</h5>
+                    <p class="mb-0">Discord Integration</p>
+                    <small class="text-muted">{{ players_with_discord }} players linked</small>
+                </div>
+                <div class="col-6">
+                    <h5 class="text-warning">{{ recent_players_week }}</h5>
+                    <p class="mb-0">New Players (7d)</p>
+                    <small class="text-muted">This week</small>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -206,6 +219,39 @@
 </div>
 
 <div class="row">
+    <!-- Equipment Statistics -->
+    <div class="col-lg-6 mb-4">
+        <div class="stats-card">
+            <h4><i class="fas fa-sword text-danger"></i> Equipment Database</h4>
+            <hr>
+            <div class="row">
+                <div class="col-4 text-center">
+                    <h5 class="text-danger">{{ total_gear_items }}</h5>
+                    <p class="mb-0 small">Gear Items</p>
+                </div>
+                <div class="col-4 text-center">
+                    <h5 class="text-warning">{{ total_gear_mods }}</h5>
+                    <p class="mb-0 small">Gear Mods</p>
+                </div>
+                <div class="col-4 text-center">
+                    <h5 class="text-info">{{ total_drifters }}</h5>
+                    <p class="mb-0 small">Drifters</p>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-6 text-center">
+                    <h5 class="text-success">{{ total_parties }}</h5>
+                    <p class="mb-0 small">Total Parties</p>
+                </div>
+                <div class="col-6 text-center">
+                    <h5 class="text-primary">{{ total_party_members }}</h5>
+                    <p class="mb-0 small">Party Members</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Guild Statistics -->
     <div class="col-lg-6 mb-4">
         <div class="stats-card">
@@ -233,6 +279,9 @@
             {% endif %}
         </div>
     </div>
+</div>
+
+<div class="row">
 
     <!-- Role Distribution -->
     <div class="col-lg-6 mb-4">
