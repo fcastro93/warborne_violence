@@ -2242,30 +2242,64 @@
         function equipDrifterToBuild(drifterId, drifterName) {
             console.log('equipDrifterToBuild called with:', drifterId, drifterName);
             
-            // Call the equipGear function to save to database via AJAX
-            equipGear(drifterId, 1, 'drifter');
-            
-            // Update drifter slot display
-            const drifterSlot = document.querySelector('[data-slot-type="drifter"]');
-            if (drifterSlot) {
-                drifterSlot.classList.add('equipped');
-                drifterSlot.classList.remove('empty');
-                
-                // Get the iconId for this drifter
-                const drifterIconId = getDrifterIconId(drifterName);
-                
-                // Update slot content to match the expected structure with image
-                drifterSlot.innerHTML = `
-                    <div class="gear-slot-name">
-                        <img src="/static/icons/${drifterIconId}.png" alt="${drifterName}" class="gear-icon" style="width: 24px; height: 24px; margin-right: 8px; vertical-align: middle;" onerror="this.style.display='none';">
-                        ${drifterName}
-                    </div>
-                    <div class="slot-label">🎭 Drifter</div>
-                `;
+            // Check if user is staff
+            const isStaff = {{ user.is_staff|yesno:"true,false" }};
+            if (!isStaff) {
+                console.error('Access denied: Staff privileges required');
+                alert('Access denied: Staff privileges required');
+                return;
             }
             
-            // Store drifter selection for saving
-            window.selectedDrifter = { id: drifterId, name: drifterName };
+            // Make AJAX call to save drifter without page reload
+            const csrfToken = getCookie('csrftoken');
+            fetch(`/guilds/recommended-build/{{ build.id }}/equipment/update/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    action: 'equip',
+                    gear_item_id: drifterId,
+                    slot_type: 'drifter'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    
+                    // Update drifter slot display
+                    const drifterSlot = document.querySelector('[data-slot-type="drifter"]');
+                    if (drifterSlot) {
+                        drifterSlot.classList.add('equipped');
+                        drifterSlot.classList.remove('empty');
+                        
+                        // Get the iconId for this drifter
+                        const drifterIconId = getDrifterIconId(drifterName);
+                        
+                        // Update slot content to match the expected structure with image
+                        drifterSlot.innerHTML = `
+                            <div class="gear-slot-name">
+                                <img src="/static/icons/${drifterIconId}.png" alt="${drifterName}" class="gear-icon" style="width: 48px; height: 48px; margin-right: 12px; vertical-align: middle; border-radius: 4px;" onerror="this.style.display='none';">
+                                ${drifterName}
+                            </div>
+                            <div class="slot-label">🎭 Drifter</div>
+                        `;
+                    }
+                    
+                    // Store drifter selection for saving
+                    window.selectedDrifter = { id: drifterId, name: drifterName };
+                    
+                    // No page reload needed - everything is updated visually
+                } else {
+                    showNotification(data.error || 'Failed to equip drifter', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error equipping drifter', 'error');
+            });
         }
         
         function getDrifterIconId(drifterName) {
