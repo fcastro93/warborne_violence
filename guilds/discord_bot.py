@@ -37,6 +37,34 @@ class WarborneBot(commands.Bot):
         def _get_active_guilds():
             # Force evaluation to detach from ORM before returning to async world
             return list(Guild.objects.filter(is_active=True))
+        
+        @sync_to_async
+        def _create_player(in_game_name, discord_user_id, discord_name, level=1, faction='none'):
+            """Create a new player with Discord owner"""
+            # Check if player already exists
+            if Player.objects.filter(in_game_name__iexact=in_game_name).exists():
+                return None, "Ya existe un jugador con ese nombre"
+            
+            # Check if user already has a player
+            if Player.objects.filter(discord_user_id=discord_user_id).exists():
+                return None, "Ya tienes un jugador registrado. Usa !myplayer para ver tu jugador actual."
+            
+            try:
+                player = Player.objects.create(
+                    in_game_name=in_game_name,
+                    discord_user_id=discord_user_id,
+                    discord_name=discord_name,
+                    character_level=level,
+                    faction=faction
+                )
+                return player, None
+            except Exception as e:
+                return None, f"Error creando jugador: {str(e)}"
+        
+        @sync_to_async
+        def _get_player_by_discord_user(discord_user_id):
+            """Get player by Discord user ID"""
+            return Player.objects.filter(discord_user_id=discord_user_id).first()
 
         @self.command(name="ping")
         async def ping_command(ctx):
@@ -72,6 +100,66 @@ class WarborneBot(commands.Bot):
                     await ctx.send("❌ No hay guilds activas")
             except Exception as e:
                 await ctx.send(f"❌ Error: {str(e)}")
+        
+        @self.command(name="createplayer")
+        async def createplayer(ctx, *, player_name=None):
+            """Create a new player linked to your Discord account"""
+            # Use Discord username as default if no name provided
+            if not player_name:
+                player_name = ctx.author.name
+                
+            print(f"🔥 DEBUG: createplayer command called by {ctx.author.name} with {player_name}")
+            try:
+                # Validate player name
+                if len(player_name) < 3 or len(player_name) > 50:
+                    await ctx.send("❌ El nombre del jugador debe tener entre 3 y 50 caracteres")
+                    return
+                
+                # Create player
+                player, error = await _create_player(
+                    in_game_name=player_name,
+                    discord_user_id=ctx.author.id,
+                    discord_name=str(ctx.author),
+                    level=1,
+                    faction='none'
+                )
+                
+                if error:
+                    await ctx.send(f"❌ {error}")
+                else:
+                    base_url = self.config.get('base_url', 'http://127.0.0.1:8000')
+                    loadout_url = f"{base_url}/guilds/player/{player.id}/loadout/"
+                    await ctx.send(f"✅ **¡Jugador creado exitosamente!**\n"
+                                 f"**Nombre:** {player.in_game_name}\n"
+                                 f"**Nivel:** {player.character_level}\n"
+                                 f"**Facción:** {player.get_faction_display()}\n"
+                                 f"**Link del Loadout:** {loadout_url}\n"
+                                 f"💡 Ahora puedes modificar tu equipamiento desde la página web!")
+            except Exception as e:
+                await ctx.send(f"❌ Error: {str(e)}")
+        
+        @self.command(name="myplayer")
+        async def myplayer(ctx):
+            """Show your registered player information"""
+            print(f"🔥 DEBUG: myplayer command called by {ctx.author.name}")
+            try:
+                player = await _get_player_by_discord_user(ctx.author.id)
+                if player:
+                    base_url = self.config.get('base_url', 'http://127.0.0.1:8000')
+                    loadout_url = f"{base_url}/guilds/player/{player.id}/loadout/"
+                    
+                    guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
+                    
+                    await ctx.send(f"🎮 **Tu Jugador:**\n"
+                                 f"**Nombre:** {player.in_game_name}\n"
+                                 f"**Nivel:** {player.character_level}\n"
+                                 f"**Facción:** {player.get_faction_display()}\n"
+                                 f"{guild_info}\n"
+                                 f"**Link del Loadout:** {loadout_url}")
+                else:
+                    await ctx.send("❌ No tienes un jugador registrado. Usa `!createplayer <nombre>` para crear uno.")
+            except Exception as e:
+                await ctx.send(f"❌ Error: {str(e)}")
     
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -96,7 +184,13 @@ class WarborneBot(commands.Bot):
             
             if general_channel:
                 try:
-                    await general_channel.send("🤖 ¡Hola! Warborne Bot está listo para la acción! Usa `!help` para ver los comandos disponibles.")
+                    await general_channel.send("🤖 ¡Hola! Warborne Bot está listo para la acción!\n"
+                                              "**Comandos disponibles:**\n"
+                                              "`!createplayer [nombre]` - Crear tu jugador (usa tu nombre de Discord por defecto)\n"
+                                              "`!myplayer` - Ver tu jugador\n"
+                                              "`!buildplayer <nombre>` - Ver loadout de jugador\n"
+                                              "`!guildinfo` - Información de guilds\n"
+                                              "`!ping` - Probar bot")
                 except Exception as e:
                     print(f"No se pudo enviar mensaje a {guild.name}: {e}")
             
@@ -105,7 +199,12 @@ class WarborneBot(commands.Bot):
     async def on_command_error(self, ctx, error):
         """Handle command errors"""
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send("❌ Comando no encontrado. Usa `!help` para ver los comandos disponibles.")
+            await ctx.send("❌ Comando no encontrado. Comandos disponibles:\n"
+                          "`!createplayer [nombre]` - Crear tu jugador\n"
+                          "`!myplayer` - Ver tu jugador\n"
+                          "`!buildplayer <nombre>` - Ver loadout de jugador\n"
+                          "`!guildinfo` - Información de guilds\n"
+                          "`!ping` - Probar bot")
         else:
             await ctx.send(f"❌ Error: {str(error)}")
     

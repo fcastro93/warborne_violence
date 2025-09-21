@@ -23,6 +23,11 @@ eggs/
 test_bot_local.py
 check_db_connection.py
 simple_test_bot.py
+
+# Development documentation
+DEVELOPMENT_CONTEXT.md
+check_db_connection.py
+simple_test_bot.py
 .eggs/
 lib/
 lib64/

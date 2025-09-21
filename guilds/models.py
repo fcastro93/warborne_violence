@@ -72,6 +72,7 @@ class Player(models.Model):
     # Player information
     in_game_name = models.CharField(max_length=100, unique=True)
     discord_name = models.CharField(max_length=100, default="", help_text="Discord username (e.g., PlayerName#1234)")
+    discord_user_id = models.BigIntegerField(null=True, blank=True, help_text="Discord User ID of the player owner")
     character_level = models.IntegerField(default=1)
     faction = models.CharField(
         max_length=50,
@@ -142,6 +143,14 @@ class Player(models.Model):
             from django.utils import timezone
             self.joined_guild_at = timezone.now()
         super().save(*args, **kwargs)
+    
+    def is_owner(self, discord_user_id):
+        """Check if a Discord user is the owner of this player"""
+        return self.discord_user_id == discord_user_id
+    
+    def can_modify(self, discord_user_id, is_staff=False):
+        """Check if a Discord user can modify this player (owner or staff)"""
+        return is_staff or self.is_owner(discord_user_id)
 
 
 class GearType(models.Model):

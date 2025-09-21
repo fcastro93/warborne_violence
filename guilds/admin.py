@@ -41,11 +41,11 @@ class PlayerInline(admin.TabularInline):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ['in_game_name', 'discord_name', 'guild', 'character_level', 'role', 'game_role', 'faction', 'loadout_link', 'is_active']
-    list_filter = ['guild', 'role', 'game_role', 'faction', 'is_active', 'created_at']
-    search_fields = ['in_game_name', 'discord_name', 'notes']
+    list_display = ['in_game_name', 'discord_name', 'discord_owner', 'guild', 'character_level', 'role', 'game_role', 'faction', 'loadout_link', 'is_active']
+    list_filter = ['guild', 'role', 'game_role', 'faction', 'is_active', 'created_at', 'discord_user_id']
+    search_fields = ['in_game_name', 'discord_name', 'notes', 'discord_user_id']
     ordering = ['in_game_name']
-    readonly_fields = ['created_at', 'updated_at', 'joined_guild_at', 'loadout_link']
+    readonly_fields = ['created_at', 'updated_at', 'joined_guild_at', 'loadout_link', 'discord_owner']
     actions = ['view_loadout']
     
     def get_form(self, request, obj=None, **kwargs):
@@ -57,7 +57,7 @@ class PlayerAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('in_game_name', 'discord_name', 'guild', 'character_level')
+            'fields': ('in_game_name', 'discord_name', 'discord_owner', 'guild', 'character_level')
         }),
         ('Game Information', {
             'fields': ('faction', 'drifter_1', 'drifter_2', 'drifter_3')
@@ -65,6 +65,11 @@ class PlayerAdmin(admin.ModelAdmin):
         ('Roles and Permissions', {
             'fields': ('role', 'game_role'),
             'description': 'role = Guild Rank (Member, Officer, etc.) | game_role = Game Role (Healer, Tank, etc.)'
+        }),
+        ('Discord Integration', {
+            'fields': ('discord_user_id',),
+            'description': 'Discord User ID of the player owner (set automatically when player is created via Discord bot)',
+            'classes': ('collapse',)
         }),
         ('Status', {
             'fields': ('is_active', 'joined_guild_at')
@@ -94,6 +99,13 @@ class PlayerAdmin(admin.ModelAdmin):
         return '-'
     loadout_link.short_description = 'Loadout'
     loadout_link.allow_tags = True
+    
+    def discord_owner(self, obj):
+        """Display Discord owner information"""
+        if obj.discord_user_id:
+            return format_html('<span style="color: #5865F2; font-weight: bold;">🔗 {}</span>', obj.discord_user_id)
+        return format_html('<span style="color: #888;">Sin propietario</span>')
+    discord_owner.short_description = 'Discord Owner'
     
     def view_loadout(self, request, queryset):
         """Admin action to view loadout for selected players"""

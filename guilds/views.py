@@ -1,13 +1,51 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from functools import wraps
 from .models import Player, PlayerGear, GearItem, Drifter, DiscordBotConfig
 import threading
 import json
+
+
+def discord_owner_or_staff_required(view_func):
+    """
+    Decorator that checks if the request is from the Discord owner of the player or staff.
+    Expects discord_user_id in request.GET or request.POST
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, player_id, *args, **kwargs):
+        # Get Discord user ID from request parameters
+        discord_user_id = request.GET.get('discord_user_id') or request.POST.get('discord_user_id')
+        
+        if not discord_user_id:
+            return JsonResponse({'error': 'Discord user ID required'}, status=400)
+        
+        try:
+            discord_user_id = int(discord_user_id)
+        except ValueError:
+            return JsonResponse({'error': 'Invalid Discord user ID'}, status=400)
+        
+        # Get the player
+        player = get_object_or_404(Player, id=player_id)
+        
+        # Check permissions
+        is_staff = request.user.is_staff if hasattr(request, 'user') and request.user.is_authenticated else False
+        can_modify = player.can_modify(discord_user_id, is_staff)
+        
+        if not can_modify:
+            return JsonResponse({'error': 'Permission denied. Only the player owner or staff can modify this loadout.'}, status=403)
+        
+        # Add player and discord_user_id to request for use in the view
+        request.player = player
+        request.discord_user_id = discord_user_id
+        
+        return view_func(request, player_id, *args, **kwargs)
+    
+    return _wrapped_view
 
 
 def player_loadout(request, player_id):
@@ -139,18 +177,35 @@ def player_loadout(request, player_id):
             else:
                 gear_by_type[gear_type]['Other'].append(item_data)
     
+    # Check if current request can modify this player (for display purposes)
+    discord_user_id = request.GET.get('discord_user_id')
+    can_modify = False
+    is_owner = False
+    
+    if discord_user_id:
+        try:
+            discord_user_id = int(discord_user_id)
+            is_owner = player.is_owner(discord_user_id)
+            is_staff = request.user.is_staff if hasattr(request, 'user') and request.user.is_authenticated else False
+            can_modify = player.can_modify(discord_user_id, is_staff)
+        except (ValueError, TypeError):
+            pass
+
     context = {
         'player': player,
         'player_gear': player_gear,
         'gear_by_type': gear_by_type,
         'drifters_data': drifters_data,
         'image_base_url': image_base_url,
+        'can_modify': can_modify,
+        'is_owner': is_owner,
+        'discord_user_id': discord_user_id,
     }
     
     return render(request, 'guilds/player_loadout.html', context)
 
 
-@staff_member_required
+@discord_owner_or_staff_required
 @require_POST
 def assign_drifter(request, player_id):
     """AJAX view to assign a drifter to a player slot"""
@@ -190,13 +245,11 @@ def assign_drifter(request, player_id):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
-@staff_member_required
+@discord_owner_or_staff_required
 @require_POST
 @csrf_exempt
 def update_loadout(request, player_id):
     """AJAX view to update player's loadout"""
-    if not request.user.is_staff:
-        return JsonResponse({'error': 'Permission denied'}, status=403)
     
     try:
         data = json.loads(request.body)
@@ -279,6 +332,7 @@ def drifter_details(request, drifter_id):
     return render(request, 'guilds/drifter_details.html', context)
 
 
+@discord_owner_or_staff_required
 @require_POST
 def update_game_role(request, player_id):
     """AJAX view to update player's game role"""
@@ -299,6 +353,37 @@ def update_game_role(request, player_id):
         return JsonResponse({
             'success': True,
             'message': f'Game role updated to {player.get_game_role_display() if player.game_role else "None"}'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+def check_player_permissions(request, player_id):
+    """Check if a Discord user can modify a specific player"""
+    discord_user_id = request.GET.get('discord_user_id')
+    
+    if not discord_user_id:
+        return JsonResponse({'error': 'Discord user ID required'}, status=400)
+    
+    try:
+        discord_user_id = int(discord_user_id)
+    except ValueError:
+        return JsonResponse({'error': 'Invalid Discord user ID'}, status=400)
+    
+    try:
+        player = get_object_or_404(Player, id=player_id)
+        is_owner = player.is_owner(discord_user_id)
+        is_staff = request.user.is_staff if hasattr(request, 'user') and request.user.is_authenticated else False
+        can_modify = player.can_modify(discord_user_id, is_staff)
+        
+        return JsonResponse({
+            'success': True,
+            'player_name': player.in_game_name,
+            'is_owner': is_owner,
+            'is_staff': is_staff,
+            'can_modify': can_modify,
+            'discord_user_id': discord_user_id
         })
         
     except Exception as e:
