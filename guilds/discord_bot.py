@@ -1552,61 +1552,6 @@ class WarborneBot(commands.Bot):
         except Exception as e:
             print(f"Error updating bot status: {e}")
     
-
-
-def run_bot():
-    """Run the Discord bot"""
-    try:
-        # Setup Django
-        import django
-        from django.conf import settings
-        if not settings.configured:
-            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warborne.settings')
-            django.setup()
-        
-        # Get bot configuration
-        config = DiscordBotConfig.objects.first()
-        if not config:
-            print("❌ No bot configuration found. Please create one in Django Admin.")
-            return
-        
-        if not config.is_active:
-            print("❌ Bot is not active. Please activate it in Django Admin.")
-            return
-        
-        # Get token from config or environment
-        token = config.bot_token or os.getenv('DISCORD_BOT_TOKEN')
-        if not token:
-            print("❌ No bot token found. Please set DISCORD_BOT_TOKEN environment variable.")
-            return
-        
-        # Create and run bot
-        bot = WarborneBot()
-        bot.run(token)
-        
-    except Exception as e:
-        print(f"❌ Error running bot: {e}")
-        # Update error in database
-        try:
-            config = DiscordBotConfig.objects.first()
-            if config:
-                config.error_message = str(e)
-                config.is_online = False
-                config.save()
-        except:
-            pass
-    
-    async def close(self):
-        """Override close to clean up monitoring task"""
-        if hasattr(self, 'status_monitor_task'):
-            self.status_monitor_task.cancel()
-            try:
-                await self.status_monitor_task
-            except asyncio.CancelledError:
-                pass
-        
-        await super().close()
-    
     async def create_balanced_parties(self, event):
         """Create balanced parties for an event"""
         from asgiref.sync import sync_to_async
@@ -1710,3 +1655,58 @@ def run_bot():
             return True, f"Parties created successfully: {num_parties} parties with {party_members_created} participants distributed"
         
         return await create_parties()
+
+
+def run_bot():
+    """Run the Discord bot"""
+    try:
+        # Setup Django
+        import django
+        from django.conf import settings
+        if not settings.configured:
+            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warborne.settings')
+            django.setup()
+        
+        # Get bot configuration
+        config = DiscordBotConfig.objects.first()
+        if not config:
+            print("❌ No bot configuration found. Please create one in Django Admin.")
+            return
+        
+        if not config.is_active:
+            print("❌ Bot is not active. Please activate it in Django Admin.")
+            return
+        
+        # Get token from config or environment
+        token = config.bot_token or os.getenv('DISCORD_BOT_TOKEN')
+        if not token:
+            print("❌ No bot token found. Please set DISCORD_BOT_TOKEN environment variable.")
+            return
+        
+        # Create and run bot
+        bot = WarborneBot()
+        bot.run(token)
+        
+    except Exception as e:
+        print(f"❌ Error running bot: {e}")
+        # Update error in database
+        try:
+            config = DiscordBotConfig.objects.first()
+            if config:
+                config.error_message = str(e)
+                config.is_online = False
+                config.save()
+        except:
+            pass
+    
+    async def close(self):
+        """Override close to clean up monitoring task"""
+        if hasattr(self, 'status_monitor_task'):
+            self.status_monitor_task.cancel()
+            try:
+                await self.status_monitor_task
+            except asyncio.CancelledError:
+                pass
+        
+        await super().close()
+    
