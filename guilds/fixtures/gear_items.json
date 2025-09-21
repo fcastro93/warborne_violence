@@ -3,10 +3,12 @@
     "model": "guilds.gearitem",
     "pk": 2384,
     "fields": {
-      "name": "Blinkstep Boots (Flash Step)",
+      "base_name": "Blinkstep Boots",
+      "skill_name": "Flash Step",
       "gear_type": 127,
       "game_id": "Shoes_Int_1",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -22,19 +24,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Blinkstep Boots",
-      "skill_name": "Flash Step"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2370,
     "fields": {
-      "name": "Bulwark Striders (Guardian)",
+      "base_name": "Bulwark Striders",
+      "skill_name": "Guardian",
       "gear_type": 127,
       "game_id": "Shoes_Str_2",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -53,19 +55,19 @@
         "hp": "714",
         "dmgBonus": "9.8%"
       },
-      "is_craftable": true,
-      "base_name": "Bulwark Striders",
-      "skill_name": "Guardian"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2378,
     "fields": {
-      "name": "Deathwalker Boots (Assassinate)",
+      "base_name": "Deathwalker Boots",
+      "skill_name": "Assassinate",
       "gear_type": 127,
       "game_id": "Shoes_Dex_4",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -81,19 +83,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Deathwalker Boots",
-      "skill_name": "Assassinate"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2377,
     "fields": {
-      "name": "Fleeting Steps (Grace)",
+      "base_name": "Fleeting Steps",
+      "skill_name": "Grace",
       "gear_type": 127,
       "game_id": "Shoes_Dex_2",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -109,19 +111,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Fleeting Steps",
-      "skill_name": "Grace"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2385,
     "fields": {
-      "name": "Frostwalker Boots (Frost)",
+      "base_name": "Frostwalker Boots",
+      "skill_name": "Frost",
       "gear_type": 127,
       "game_id": "Shoes_Int_3",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -137,19 +139,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Frostwalker Boots",
-      "skill_name": "Frost"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2386,
     "fields": {
-      "name": "Miasma Stompers (Decay)",
+      "base_name": "Miasma Stompers",
+      "skill_name": "Decay",
       "gear_type": 127,
       "game_id": "Shoes_Int_5",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -165,19 +167,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Miasma Stompers",
-      "skill_name": "Decay"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2379,
     "fields": {
-      "name": "Shadeveil Slippers (Vanish)",
+      "base_name": "Shadeveil Slippers",
+      "skill_name": "Vanish",
       "gear_type": 127,
       "game_id": "Shoes_Dex_7",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -193,19 +195,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Shadeveil Slippers",
-      "skill_name": "Vanish"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2387,
     "fields": {
-      "name": "Shifter's Strides (Displacement)",
+      "base_name": "Shifter's Strides",
+      "skill_name": "Displacement",
       "gear_type": 127,
       "game_id": "Shoes_Int_6",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -221,19 +223,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Shifter's Strides",
-      "skill_name": "Displacement"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2376,
     "fields": {
-      "name": "Swiftstride Boots (Attack Speed)",
+      "base_name": "Swiftstride Boots",
+      "skill_name": "Attack Speed",
       "gear_type": 127,
       "game_id": "Shoes_Dex_1",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -249,19 +251,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Swiftstride Boots",
-      "skill_name": "Attack Speed"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2371,
     "fields": {
-      "name": "Titan Walkers (Titanic Growth)",
+      "base_name": "Titan Walkers",
+      "skill_name": "Titanic Growth",
       "gear_type": 127,
       "game_id": "Shoes_Str_1",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -280,19 +282,19 @@
         "hp": "714",
         "dmgBonus": "9.8%"
       },
-      "is_craftable": true,
-      "base_name": "Titan Walkers",
-      "skill_name": "Titanic Growth"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2372,
     "fields": {
-      "name": "Vanguard's March (Vanguard)",
+      "base_name": "Vanguard's March",
+      "skill_name": "Vanguard",
       "gear_type": 127,
       "game_id": "Shoes_Str_6",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -311,19 +313,19 @@
         "hp": "714",
         "dmgBonus": "9.8%"
       },
-      "is_craftable": true,
-      "base_name": "Vanguard's March",
-      "skill_name": "Vanguard"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2380,
     "fields": {
-      "name": "Whirlwind Boots (Cyclone)",
+      "base_name": "Whirlwind Boots",
+      "skill_name": "Cyclone",
       "gear_type": 127,
       "game_id": "Shoes_Dex_9",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -343,19 +345,19 @@
         "dmgBonus": "",
         "mpRecovery": ""
       },
-      "is_craftable": true,
-      "base_name": "Whirlwind Boots",
-      "skill_name": "Cyclone"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2369,
     "fields": {
-      "name": "Wrathstep (Vengeance)",
+      "base_name": "Wrathstep",
+      "skill_name": "Vengeance",
       "gear_type": 127,
       "game_id": "Shoes_Str_5",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -374,19 +376,19 @@
         "hp": "714",
         "dmgBonus": "9.8%"
       },
-      "is_craftable": true,
-      "base_name": "Wrathstep",
-      "skill_name": "Vengeance"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2374,
     "fields": {
-      "name": "Avalanche Boots (Mountain Crash)",
+      "base_name": "Avalanche Boots",
+      "skill_name": "Mountain Crash",
       "gear_type": 127,
       "game_id": "Shoes_Str_7",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -405,19 +407,19 @@
         "hp": "755",
         "dmgBonus": "9.9%"
       },
-      "is_craftable": true,
-      "base_name": "Avalanche Boots",
-      "skill_name": "Mountain Crash"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2381,
     "fields": {
-      "name": "Evasion Striders (Escape)",
+      "base_name": "Evasion Striders",
+      "skill_name": "Escape",
       "gear_type": 127,
       "game_id": "Shoes_Dex_5",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -437,19 +439,19 @@
         "dmgBonus": "9.9%",
         "mpRecovery": "5"
       },
-      "is_craftable": true,
-      "base_name": "Evasion Striders",
-      "skill_name": "Escape"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2382,
     "fields": {
-      "name": "Exodrift Slippers (Phase Shift)",
+      "base_name": "Exodrift Slippers",
+      "skill_name": "Phase Shift",
       "gear_type": 127,
       "game_id": "Shoes_Dex_8",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -469,19 +471,19 @@
         "dmgBonus": "9.9%",
         "mpRecovery": "5"
       },
-      "is_craftable": true,
-      "base_name": "Exodrift Slippers",
-      "skill_name": "Phase Shift"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2373,
     "fields": {
-      "name": "Impact Heavy Boots (Lunge)",
+      "base_name": "Impact Heavy Boots",
+      "skill_name": "Lunge",
       "gear_type": 127,
       "game_id": "Shoes_Str_3",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -500,19 +502,19 @@
         "hp": "755",
         "dmgBonus": "9.9%"
       },
-      "is_craftable": true,
-      "base_name": "Impact Heavy Boots",
-      "skill_name": "Lunge"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2388,
     "fields": {
-      "name": "Phantomstep Boots (Ghost)",
+      "base_name": "Phantomstep Boots",
+      "skill_name": "Ghost",
       "gear_type": 127,
       "game_id": "Shoes_Int_7",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -532,19 +534,19 @@
         "dmgBonus": "9.9%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Phantomstep Boots",
-      "skill_name": "Ghost"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2389,
     "fields": {
-      "name": "Savagefoot Boots (Berserk)",
+      "base_name": "Savagefoot Boots",
+      "skill_name": "Berserk",
       "gear_type": 127,
       "game_id": "Shoes_Int_2",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -564,19 +566,19 @@
         "dmgBonus": "9.9%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Savagefoot Boots",
-      "skill_name": "Berserk"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2390,
     "fields": {
-      "name": "Shoes_Int_8 (Shoes_Int_8)",
+      "base_name": "Shoes_Int_8",
+      "skill_name": "Shoes_Int_8",
       "gear_type": 127,
       "game_id": "Shoes_Int_8",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -596,19 +598,19 @@
         "dmgBonus": "",
         "mpRecovery": ""
       },
-      "is_craftable": true,
-      "base_name": "Shoes_Int_8",
-      "skill_name": "Shoes_Int_8"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2383,
     "fields": {
-      "name": "Arcaneflow Boots (Abundance)",
+      "base_name": "Arcaneflow Boots",
+      "skill_name": "Abundance",
       "gear_type": 127,
       "game_id": "Shoes_Int_4",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 9.6,
       "defense": 0,
       "health_bonus": 675,
@@ -628,19 +630,19 @@
         "dmgBonus": "9.6%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Arcaneflow Boots",
-      "skill_name": "Abundance"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2368,
     "fields": {
-      "name": "Energizer Boots (Vitality)",
+      "base_name": "Energizer Boots",
+      "skill_name": "Vitality",
       "gear_type": 127,
       "game_id": "Shoes_Str_4",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 9.6,
       "defense": 0,
       "health_bonus": 675,
@@ -659,19 +661,19 @@
         "hp": "675",
         "dmgBonus": "9.6%"
       },
-      "is_craftable": true,
-      "base_name": "Energizer Boots",
-      "skill_name": "Vitality"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2375,
     "fields": {
-      "name": "Rallystep Boots (Sidestep)",
+      "base_name": "Rallystep Boots",
+      "skill_name": "Sidestep",
       "gear_type": 127,
       "game_id": "Shoes_Dex_3",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 9.6,
       "defense": 0,
       "health_bonus": 675,
@@ -691,19 +693,19 @@
         "dmgBonus": "9.6%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Rallystep Boots",
-      "skill_name": "Sidestep"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2346,
     "fields": {
-      "name": "Aegis Plate (Shield)",
+      "base_name": "Aegis Plate",
+      "skill_name": "Shield",
       "gear_type": 126,
       "game_id": "Cloth_Str_1",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -719,19 +721,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Aegis Plate",
-      "skill_name": "Shield"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2367,
     "fields": {
-      "name": "Aegis Robe (Warding)",
+      "base_name": "Aegis Robe",
+      "skill_name": "Warding",
       "gear_type": 126,
       "game_id": "Cloth_Int_10",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -751,19 +753,19 @@
         "dmgBonus": "",
         "mpRecovery": ""
       },
-      "is_craftable": true,
-      "base_name": "Aegis Robe",
-      "skill_name": "Warding"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2362,
     "fields": {
-      "name": "Archaneweaver (Mana Font)",
+      "base_name": "Archaneweaver",
+      "skill_name": "Mana Font",
       "gear_type": 126,
       "game_id": "Cloth_Int_4",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -779,19 +781,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Archaneweaver",
-      "skill_name": "Mana Font"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2357,
     "fields": {
-      "name": "Beastcaller's Coat (Snarl)",
+      "base_name": "Beastcaller's Coat",
+      "skill_name": "Snarl",
       "gear_type": 126,
       "game_id": "Cloth_Dex_7",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -807,19 +809,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Beastcaller's Coat",
-      "skill_name": "Snarl"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2361,
     "fields": {
-      "name": "Cleansing Robe (Purify)",
+      "base_name": "Cleansing Robe",
+      "skill_name": "Purify",
       "gear_type": 126,
       "game_id": "Cloth_Int_1",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -835,19 +837,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Cleansing Robe",
-      "skill_name": "Purify"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2347,
     "fields": {
-      "name": "Dazzling Guard (Stun)",
+      "base_name": "Dazzling Guard",
+      "skill_name": "Stun",
       "gear_type": 126,
       "game_id": "Cloth_Str_2",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -863,19 +865,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Dazzling Guard",
-      "skill_name": "Stun"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2354,
     "fields": {
-      "name": "Deathmantle (Finisher)",
+      "base_name": "Deathmantle",
+      "skill_name": "Finisher",
       "gear_type": 126,
       "game_id": "Cloth_Dex_3",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -891,19 +893,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Deathmantle",
-      "skill_name": "Finisher"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2363,
     "fields": {
-      "name": "Exorcist's Robe (Dispel)",
+      "base_name": "Exorcist's Robe",
+      "skill_name": "Dispel",
       "gear_type": 126,
       "game_id": "Cloth_Int_5",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -919,19 +921,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Exorcist's Robe",
-      "skill_name": "Dispel"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2356,
     "fields": {
-      "name": "Mistshroud (Smoke Screen)",
+      "base_name": "Mistshroud",
+      "skill_name": "Smoke Screen",
       "gear_type": 126,
       "game_id": "Cloth_Dex_5",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -947,19 +949,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Mistshroud",
-      "skill_name": "Smoke Screen"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2364,
     "fields": {
-      "name": "Repulsor Mantle (Repulse)",
+      "base_name": "Repulsor Mantle",
+      "skill_name": "Repulse",
       "gear_type": 126,
       "game_id": "Cloth_Int_7",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -975,19 +977,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Repulsor Mantle",
-      "skill_name": "Repulse"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2355,
     "fields": {
-      "name": "Retaliation Coat (Reflect)",
+      "base_name": "Retaliation Coat",
+      "skill_name": "Reflect",
       "gear_type": 126,
       "game_id": "Cloth_Dex_4",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1003,19 +1005,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Retaliation Coat",
-      "skill_name": "Reflect"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2349,
     "fields": {
-      "name": "Tangle Guard (Root Grip)",
+      "base_name": "Tangle Guard",
+      "skill_name": "Root Grip",
       "gear_type": 126,
       "game_id": "Cloth_Str_8",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1031,19 +1033,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Tangle Guard",
-      "skill_name": "Root Grip"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2348,
     "fields": {
-      "name": "Tempest Charge (Charge)",
+      "base_name": "Tempest Charge",
+      "skill_name": "Charge",
       "gear_type": 126,
       "game_id": "Cloth_Str_6",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1059,19 +1061,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Tempest Charge",
-      "skill_name": "Charge"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2352,
     "fields": {
-      "name": "Cloth_Str_9 (Cloth_Str_9)",
+      "base_name": "Cloth_Str_9",
+      "skill_name": "Cloth_Str_9",
       "gear_type": 126,
       "game_id": "Cloth_Str_9",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1091,19 +1093,19 @@
         "dmgBonus": "",
         "mpRecovery": ""
       },
-      "is_craftable": true,
-      "base_name": "Cloth_Str_9",
-      "skill_name": "Cloth_Str_9"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2366,
     "fields": {
-      "name": "Dreadcloak (Panic)",
+      "base_name": "Dreadcloak",
+      "skill_name": "Panic",
       "gear_type": 126,
       "game_id": "Cloth_Int_2",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 56.0,
       "defense": 0,
       "health_bonus": 755,
@@ -1124,19 +1126,19 @@
         "armor": "64",
         "magicResi": "119"
       },
-      "is_craftable": true,
-      "base_name": "Dreadcloak",
-      "skill_name": "Panic"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2359,
     "fields": {
-      "name": "Hero's Embrace (Rally)",
+      "base_name": "Hero's Embrace",
+      "skill_name": "Rally",
       "gear_type": 126,
       "game_id": "Cloth_Dex_2",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 25.0,
       "defense": 0,
       "health_bonus": 0,
@@ -1156,19 +1158,19 @@
         "armor": "181",
         "magicResi": "181"
       },
-      "is_craftable": true,
-      "base_name": "Hero's Embrace",
-      "skill_name": "Rally"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2351,
     "fields": {
-      "name": "Magsurge Armor (Converge)",
+      "base_name": "Magsurge Armor",
+      "skill_name": "Converge",
       "gear_type": 126,
       "game_id": "Cloth_Str_5",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1187,19 +1189,19 @@
         "armor": "331",
         "magicResi": "251"
       },
-      "is_craftable": true,
-      "base_name": "Magsurge Armor",
-      "skill_name": "Converge"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2358,
     "fields": {
-      "name": "Ranger's Hide (Armor Breaker)",
+      "base_name": "Ranger's Hide",
+      "skill_name": "Armor Breaker",
       "gear_type": 126,
       "game_id": "Cloth_Dex_1",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 25.0,
       "defense": 0,
       "health_bonus": 0,
@@ -1219,19 +1221,19 @@
         "armor": "181",
         "magicResi": "181"
       },
-      "is_craftable": true,
-      "base_name": "Ranger's Hide",
-      "skill_name": "Armor Breaker"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2350,
     "fields": {
-      "name": "Warden's Shell (Vulnerability)",
+      "base_name": "Warden's Shell",
+      "skill_name": "Vulnerability",
       "gear_type": 126,
       "game_id": "Cloth_Str_3",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1250,19 +1252,19 @@
         "armor": "331",
         "magicResi": "251"
       },
-      "is_craftable": true,
-      "base_name": "Warden's Shell",
-      "skill_name": "Vulnerability"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2365,
     "fields": {
-      "name": "Warding Shroud (Barrier)",
+      "base_name": "Warding Shroud",
+      "skill_name": "Barrier",
       "gear_type": 126,
       "game_id": "Cloth_Int_8",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 56.0,
       "defense": 0,
       "health_bonus": 755,
@@ -1283,19 +1285,19 @@
         "armor": "64",
         "magicResi": "119"
       },
-      "is_craftable": true,
-      "base_name": "Warding Shroud",
-      "skill_name": "Barrier"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2345,
     "fields": {
-      "name": "Guardian's Blessing (Block)",
+      "base_name": "Guardian's Blessing",
+      "skill_name": "Block",
       "gear_type": 126,
       "game_id": "Cloth_Str_4",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1311,19 +1313,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Guardian's Blessing",
-      "skill_name": "Block"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2353,
     "fields": {
-      "name": "Recovery Vest (Bandage)",
+      "base_name": "Recovery Vest",
+      "skill_name": "Bandage",
       "gear_type": 126,
       "game_id": "Cloth_Dex_6",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1339,19 +1341,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Recovery Vest",
-      "skill_name": "Bandage"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2360,
     "fields": {
-      "name": "Vigorcloak (Heal)",
+      "base_name": "Vigorcloak",
+      "skill_name": "Heal",
       "gear_type": 126,
       "game_id": "Cloth_Int_3",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1367,19 +1369,19 @@
       "skill_type": "skill",
       "tier_unlock": "1",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Vigorcloak",
-      "skill_name": "Heal"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2340,
     "fields": {
-      "name": "Crimson Breeze (Grievous Wounds)",
+      "base_name": "Crimson Breeze",
+      "skill_name": "Grievous Wounds",
       "gear_type": 125,
       "game_id": "Helm_Int_2",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1399,19 +1401,19 @@
         "dmgBonus": "9.8%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Crimson Breeze",
-      "skill_name": "Grievous Wounds"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2341,
     "fields": {
-      "name": "Earth Vein Hood (Miasma)",
+      "base_name": "Earth Vein Hood",
+      "skill_name": "Miasma",
       "gear_type": 125,
       "game_id": "Helm_Int_3",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1431,19 +1433,19 @@
         "dmgBonus": "9.8%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Earth Vein Hood",
-      "skill_name": "Miasma"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2339,
     "fields": {
-      "name": "Healer's Hood (Swift Aid)",
+      "base_name": "Healer's Hood",
+      "skill_name": "Swift Aid",
       "gear_type": 125,
       "game_id": "Helm_Int_1",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1463,19 +1465,19 @@
         "dmgBonus": "9.8%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Healer's Hood",
-      "skill_name": "Swift Aid"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2324,
     "fields": {
-      "name": "Hellfire Visor (Flame Star)",
+      "base_name": "Hellfire Visor",
+      "skill_name": "Flame Star",
       "gear_type": 125,
       "game_id": "Helm_Str_3",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1494,19 +1496,19 @@
         "hp": "714",
         "dmgBonus": "9.8%"
       },
-      "is_craftable": true,
-      "base_name": "Hellfire Visor",
-      "skill_name": "Flame Star"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2323,
     "fields": {
-      "name": "Ironclad Helm (Iron Wall)",
+      "base_name": "Ironclad Helm",
+      "skill_name": "Iron Wall",
       "gear_type": 125,
       "game_id": "Helm_Str_4",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1525,19 +1527,19 @@
         "hp": "714",
         "dmgBonus": "9.8%"
       },
-      "is_craftable": true,
-      "base_name": "Ironclad Helm",
-      "skill_name": "Iron Wall"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2342,
     "fields": {
-      "name": "Mystic Surge (Overflow)",
+      "base_name": "Mystic Surge",
+      "skill_name": "Overflow",
       "gear_type": 125,
       "game_id": "Helm_Int_4",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1557,19 +1559,19 @@
         "dmgBonus": "9.8%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Mystic Surge",
-      "skill_name": "Overflow"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2333,
     "fields": {
-      "name": "Purifier's Shroud (Dodge)",
+      "base_name": "Purifier's Shroud",
+      "skill_name": "Dodge",
       "gear_type": 125,
       "game_id": "Helm_Dex_8",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1589,19 +1591,19 @@
         "dmgBonus": "9.8%",
         "mpRecovery": "5"
       },
-      "is_craftable": true,
-      "base_name": "Purifier's Shroud",
-      "skill_name": "Dodge"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2325,
     "fields": {
-      "name": "Reptilian Helm (Scale Armor)",
+      "base_name": "Reptilian Helm",
+      "skill_name": "Scale Armor",
       "gear_type": 125,
       "game_id": "Helm_Str_1",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1620,19 +1622,19 @@
         "hp": "714",
         "dmgBonus": "9.8%"
       },
-      "is_craftable": true,
-      "base_name": "Reptilian Helm",
-      "skill_name": "Scale Armor"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2329,
     "fields": {
-      "name": "Riposte-Helm (Hardened Guard)",
+      "base_name": "Riposte-Helm",
+      "skill_name": "Hardened Guard",
       "gear_type": 125,
       "game_id": "Helm_Str_9",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1652,19 +1654,19 @@
         "dmgBonus": "",
         "mpRecovery": ""
       },
-      "is_craftable": true,
-      "base_name": "Riposte-Helm",
-      "skill_name": "Hardened Guard"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2326,
     "fields": {
-      "name": "Savage Helm (EMP Blast)",
+      "base_name": "Savage Helm",
+      "skill_name": "EMP Blast",
       "gear_type": 125,
       "game_id": "Helm_Str_6",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1683,19 +1685,19 @@
         "hp": "714",
         "dmgBonus": "9.8%"
       },
-      "is_craftable": true,
-      "base_name": "Savage Helm",
-      "skill_name": "EMP Blast"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2332,
     "fields": {
-      "name": "Shadeveil Mask (Fade Out)",
+      "base_name": "Shadeveil Mask",
+      "skill_name": "Fade Out",
       "gear_type": 125,
       "game_id": "Helm_Dex_5",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1715,19 +1717,19 @@
         "dmgBonus": "9.8%",
         "mpRecovery": "5"
       },
-      "is_craftable": true,
-      "base_name": "Shadeveil Mask",
-      "skill_name": "Fade Out"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2331,
     "fields": {
-      "name": "Stormcaller's Hood (Electrified Strike)",
+      "base_name": "Stormcaller's Hood",
+      "skill_name": "Electrified Strike",
       "gear_type": 125,
       "game_id": "Helm_Dex_3",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1747,19 +1749,19 @@
         "dmgBonus": "9.8%",
         "mpRecovery": "5"
       },
-      "is_craftable": true,
-      "base_name": "Stormcaller's Hood",
-      "skill_name": "Electrified Strike"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2334,
     "fields": {
-      "name": "Wrathveil Shade (Rage)",
+      "base_name": "Wrathveil Shade",
+      "skill_name": "Rage",
       "gear_type": 125,
       "game_id": "Helm_Dex_7",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -1779,19 +1781,19 @@
         "dmgBonus": "9.8%",
         "mpRecovery": "5"
       },
-      "is_craftable": true,
-      "base_name": "Wrathveil Shade",
-      "skill_name": "Rage"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2336,
     "fields": {
-      "name": "Folly Helm (Break Free)",
+      "base_name": "Folly Helm",
+      "skill_name": "Break Free",
       "gear_type": 125,
       "game_id": "Helm_Dex_4",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -1811,19 +1813,19 @@
         "dmgBonus": "9.9%",
         "mpRecovery": "5"
       },
-      "is_craftable": true,
-      "base_name": "Folly Helm",
-      "skill_name": "Break Free"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2337,
     "fields": {
-      "name": "Helm_Dex_9 (Helm_Dex_9)",
+      "base_name": "Helm_Dex_9",
+      "skill_name": "Helm_Dex_9",
       "gear_type": 125,
       "game_id": "Helm_Dex_9",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -1843,19 +1845,19 @@
         "dmgBonus": "",
         "mpRecovery": ""
       },
-      "is_craftable": true,
-      "base_name": "Helm_Dex_9",
-      "skill_name": "Helm_Dex_9"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2335,
     "fields": {
-      "name": "Ironwill veil (Defiance)",
+      "base_name": "Ironwill veil",
+      "skill_name": "Defiance",
       "gear_type": 125,
       "game_id": "Helm_Dex_1",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -1875,19 +1877,19 @@
         "dmgBonus": "9.9%",
         "mpRecovery": "5"
       },
-      "is_craftable": true,
-      "base_name": "Ironwill veil",
-      "skill_name": "Defiance"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2343,
     "fields": {
-      "name": "Sanctum Shroud (Repulsion)",
+      "base_name": "Sanctum Shroud",
+      "skill_name": "Repulsion",
       "gear_type": 125,
       "game_id": "Helm_Int_5",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -1907,19 +1909,19 @@
         "dmgBonus": "9.9%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Sanctum Shroud",
-      "skill_name": "Repulsion"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2327,
     "fields": {
-      "name": "Stormveil Mask (Sandstorm)",
+      "base_name": "Stormveil Mask",
+      "skill_name": "Sandstorm",
       "gear_type": 125,
       "game_id": "Helm_Str_7",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -1938,19 +1940,19 @@
         "hp": "755",
         "dmgBonus": "9.9%"
       },
-      "is_craftable": true,
-      "base_name": "Stormveil Mask",
-      "skill_name": "Sandstorm"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2344,
     "fields": {
-      "name": "Twilight Mantle (Last Stand)",
+      "base_name": "Twilight Mantle",
+      "skill_name": "Last Stand",
       "gear_type": 125,
       "game_id": "Helm_Int_8",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -1970,19 +1972,19 @@
         "dmgBonus": "9.9%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Twilight Mantle",
-      "skill_name": "Last Stand"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2328,
     "fields": {
-      "name": "Warden's Gaze (Forward Guard)",
+      "base_name": "Warden's Gaze",
+      "skill_name": "Forward Guard",
       "gear_type": 125,
       "game_id": "Helm_Str_8",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 9.9,
       "defense": 0,
       "health_bonus": 755,
@@ -2001,19 +2003,19 @@
         "hp": "755",
         "dmgBonus": "9.9%"
       },
-      "is_craftable": true,
-      "base_name": "Warden's Gaze",
-      "skill_name": "Forward Guard"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2338,
     "fields": {
-      "name": "Breezeweaver (Amplify)",
+      "base_name": "Breezeweaver",
+      "skill_name": "Amplify",
       "gear_type": 125,
       "game_id": "Helm_Int_7",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 9.6,
       "defense": 0,
       "health_bonus": 675,
@@ -2033,19 +2035,19 @@
         "dmgBonus": "9.6%",
         "mpRecovery": "10"
       },
-      "is_craftable": true,
-      "base_name": "Breezeweaver",
-      "skill_name": "Amplify"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2322,
     "fields": {
-      "name": "Furor's Helm (Enrage)",
+      "base_name": "Furor's Helm",
+      "skill_name": "Enrage",
       "gear_type": 125,
       "game_id": "Helm_Str_5",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 9.6,
       "defense": 0,
       "health_bonus": 675,
@@ -2064,19 +2066,19 @@
         "hp": "675",
         "dmgBonus": "9.6%"
       },
-      "is_craftable": true,
-      "base_name": "Furor's Helm",
-      "skill_name": "Enrage"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2330,
     "fields": {
-      "name": "Vital Mantle (Life Flash)",
+      "base_name": "Vital Mantle",
+      "skill_name": "Life Flash",
       "gear_type": 125,
       "game_id": "Helm_Dex_2",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 9.8,
       "defense": 0,
       "health_bonus": 714,
@@ -2096,19 +2098,19 @@
         "dmgBonus": "9.8%",
         "mpRecovery": "5"
       },
-      "is_craftable": true,
-      "base_name": "Vital Mantle",
-      "skill_name": "Life Flash"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1083,
     "fields": {
-      "name": "Absorb",
+      "base_name": "Absorb",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic9",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2124,19 +2126,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Absorb",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1084,
     "fields": {
-      "name": "Aggression",
+      "base_name": "Aggression",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic10",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2152,19 +2154,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Aggression",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1100,
     "fields": {
-      "name": "Armor Breaker",
+      "base_name": "Armor Breaker",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic1",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2180,19 +2182,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Armor Breaker",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1082,
     "fields": {
-      "name": "Barrier",
+      "base_name": "Barrier",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic8",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2208,19 +2210,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Barrier",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1107,
     "fields": {
-      "name": "Charge",
+      "base_name": "Charge",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic8",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2236,19 +2238,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Charge",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1102,
     "fields": {
-      "name": "Dominate",
+      "base_name": "Dominate",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic3",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2264,19 +2266,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Dominate",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1111,
     "fields": {
-      "name": "Drain",
+      "base_name": "Drain",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic12",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2292,19 +2294,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Drain",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1080,
     "fields": {
-      "name": "Emulation",
+      "base_name": "Emulation",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic6",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2320,19 +2322,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Emulation",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1086,
     "fields": {
-      "name": "Footwork",
+      "base_name": "Footwork",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic12",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2348,19 +2350,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Footwork",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1101,
     "fields": {
-      "name": "Fortify",
+      "base_name": "Fortify",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic2",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2376,19 +2378,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Fortify",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1079,
     "fields": {
-      "name": "Frenzy",
+      "base_name": "Frenzy",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic5",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2404,19 +2406,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Frenzy",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1108,
     "fields": {
-      "name": "Haste",
+      "base_name": "Haste",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic9",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2432,19 +2434,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Haste",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1106,
     "fields": {
-      "name": "Magic Break",
+      "base_name": "Magic Break",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic7",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2460,19 +2462,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Magic Break",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1081,
     "fields": {
-      "name": "Magic Resistance",
+      "base_name": "Magic Resistance",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic7",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2488,19 +2490,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Magic Resistance",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1109,
     "fields": {
-      "name": "Nimbleness",
+      "base_name": "Nimbleness",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic10",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2516,19 +2518,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Nimbleness",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1076,
     "fields": {
-      "name": "Physical Resistance",
+      "base_name": "Physical Resistance",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic2",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2544,19 +2546,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Physical Resistance",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1110,
     "fields": {
-      "name": "Piercing Chill",
+      "base_name": "Piercing Chill",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic11",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2572,19 +2574,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Piercing Chill",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1075,
     "fields": {
-      "name": "Punish",
+      "base_name": "Punish",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic1",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2600,19 +2602,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Punish",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1104,
     "fields": {
-      "name": "Pursuit",
+      "base_name": "Pursuit",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic5",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2628,19 +2630,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Pursuit",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1105,
     "fields": {
-      "name": "Ravage",
+      "base_name": "Ravage",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic6",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2656,19 +2658,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Ravage",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1078,
     "fields": {
-      "name": "Rebound",
+      "base_name": "Rebound",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic4",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2684,19 +2686,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Rebound",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1085,
     "fields": {
-      "name": "Relentlessness",
+      "base_name": "Relentlessness",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic11",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2712,19 +2714,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Relentlessness",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1103,
     "fields": {
-      "name": "Upperhand",
+      "base_name": "Upperhand",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponEpic4",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2740,19 +2742,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Upperhand",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1077,
     "fields": {
-      "name": "Valor Force",
+      "base_name": "Valor Force",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorEpic3",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2768,19 +2770,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Valor Force",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1117,
     "fields": {
-      "name": "Annihilate",
+      "base_name": "Annihilate",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr6",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2796,19 +2798,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Annihilate",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1121,
     "fields": {
-      "name": "Blessing",
+      "base_name": "Blessing",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr10",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2824,19 +2826,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Blessing",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1127,
     "fields": {
-      "name": "Bloodgrudge",
+      "base_name": "Bloodgrudge",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponLgdr4",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2852,19 +2854,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Bloodgrudge",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1088,
     "fields": {
-      "name": "Charge Up",
+      "base_name": "Charge Up",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorExclusiveLgdr2",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2880,19 +2882,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Charge Up",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1094,
     "fields": {
-      "name": "Counter",
+      "base_name": "Counter",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorLgdr2",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2908,19 +2910,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Counter",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1122,
     "fields": {
-      "name": "Curse",
+      "base_name": "Curse",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr11",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2936,19 +2938,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Curse",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1091,
     "fields": {
-      "name": "Deception",
+      "base_name": "Deception",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorExclusiveLgdr5",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2964,19 +2966,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Deception",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1115,
     "fields": {
-      "name": "Detonate",
+      "base_name": "Detonate",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr4",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -2992,19 +2994,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Detonate",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1113,
     "fields": {
-      "name": "Disrupt",
+      "base_name": "Disrupt",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr2",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3020,19 +3022,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Disrupt",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1092,
     "fields": {
-      "name": "Divine Blessing",
+      "base_name": "Divine Blessing",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorExclusiveLgdr6",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3048,19 +3050,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Divine Blessing",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1124,
     "fields": {
-      "name": "EarthQuake",
+      "base_name": "EarthQuake",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponLgdr1",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3076,19 +3078,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "EarthQuake",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1120,
     "fields": {
-      "name": "Flame Blast",
+      "base_name": "Flame Blast",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr9",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3104,19 +3106,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Flame Blast",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1096,
     "fields": {
-      "name": "Fortune",
+      "base_name": "Fortune",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorLgdr4",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3132,19 +3134,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Fortune",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1119,
     "fields": {
-      "name": "Ice Blast",
+      "base_name": "Ice Blast",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr8",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3160,19 +3162,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Ice Blast",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1087,
     "fields": {
-      "name": "Intimidate",
+      "base_name": "Intimidate",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorExclusiveLgdr1",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3188,19 +3190,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Intimidate",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1095,
     "fields": {
-      "name": "Muzzle",
+      "base_name": "Muzzle",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorLgdr3",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3216,19 +3218,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Muzzle",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1089,
     "fields": {
-      "name": "Pain Relief",
+      "base_name": "Pain Relief",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorExclusiveLgdr3",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3244,19 +3246,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Pain Relief",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1090,
     "fields": {
-      "name": "Protection",
+      "base_name": "Protection",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorExclusiveLgdr4",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3272,19 +3274,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Protection",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1125,
     "fields": {
-      "name": "Rend",
+      "base_name": "Rend",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponLgdr2",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3300,19 +3302,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Rend",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1097,
     "fields": {
-      "name": "Resolve",
+      "base_name": "Resolve",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorLgdr5",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3328,19 +3330,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Resolve",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1126,
     "fields": {
-      "name": "Retribution",
+      "base_name": "Retribution",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponLgdr3",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3356,19 +3358,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Retribution",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1123,
     "fields": {
-      "name": "Retrofit",
+      "base_name": "Retrofit",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr12",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3384,19 +3386,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Retrofit",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1093,
     "fields": {
-      "name": "Roar",
+      "base_name": "Roar",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorLgdr1",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3412,19 +3414,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Roar",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1114,
     "fields": {
-      "name": "Seize Chance",
+      "base_name": "Seize Chance",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr3",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3440,19 +3442,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Seize Chance",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1128,
     "fields": {
-      "name": "Shadowstep",
+      "base_name": "Shadowstep",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponLgdr5",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3468,19 +3470,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Shadowstep",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1116,
     "fields": {
-      "name": "Synergy",
+      "base_name": "Synergy",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr5",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3496,19 +3498,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Synergy",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1112,
     "fields": {
-      "name": "Valor",
+      "base_name": "Valor",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr1",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3524,19 +3526,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Valor",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1118,
     "fields": {
-      "name": "Wild Growth",
+      "base_name": "Wild Growth",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponExclusiveLgdr7",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3552,19 +3554,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Wild Growth",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1098,
     "fields": {
-      "name": "Advance",
+      "base_name": "Advance",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponRare1",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3580,19 +3582,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Advance",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1072,
     "fields": {
-      "name": "Armor",
+      "base_name": "Armor",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorRare2",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3608,19 +3610,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Armor",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1073,
     "fields": {
-      "name": "Magic Armor",
+      "base_name": "Magic Armor",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorRare3",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3636,19 +3638,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Magic Armor",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1074,
     "fields": {
-      "name": "Psyche",
+      "base_name": "Psyche",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorRare4",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3664,19 +3666,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Psyche",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1099,
     "fields": {
-      "name": "Tactics",
+      "base_name": "Tactics",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "WeaponRare2",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3692,19 +3694,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Tactics",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 1071,
     "fields": {
-      "name": "Vitality",
+      "base_name": "Vitality",
+      "skill_name": "",
       "gear_type": 141,
       "game_id": "ArmorRare1",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3720,19 +3722,19 @@
       "skill_type": "mod",
       "tier_unlock": "",
       "detailed_stats": {},
-      "is_craftable": true,
-      "base_name": "Vitality",
-      "skill_name": ""
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2461,
     "fields": {
-      "name": "Blazruptor (Hell Salvo)",
+      "base_name": "Blazruptor",
+      "skill_name": "Hell Salvo",
       "gear_type": 175,
       "game_id": "FireStaff_Fanning",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3751,19 +3753,19 @@
         "attackPower": "155",
         "as": "0.58"
       },
-      "is_craftable": true,
-      "base_name": "Blazruptor",
-      "skill_name": "Hell Salvo"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2416,
     "fields": {
-      "name": "Blightspitter (Toxic Shroud)",
+      "base_name": "Blightspitter",
+      "skill_name": "Toxic Shroud",
       "gear_type": 169,
       "game_id": "Gun_Grenade",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3782,19 +3784,19 @@
         "attackPower": "155",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Blightspitter",
-      "skill_name": "Toxic Shroud"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2432,
     "fields": {
-      "name": "Bloodfury Blades (Crimson Frenzy)",
+      "base_name": "Bloodfury Blades",
+      "skill_name": "Crimson Frenzy",
       "gear_type": 171,
       "game_id": "TwinDagger_BladeWind",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3815,19 +3817,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Bloodfury Blades",
-      "skill_name": "Crimson Frenzy"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2431,
     "fields": {
-      "name": "Bloodpiercers (Rupture Thrust)",
+      "base_name": "Bloodpiercers",
+      "skill_name": "Rupture Thrust",
       "gear_type": 171,
       "game_id": "Dagger_Dagger",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3848,19 +3850,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Bloodpiercers",
-      "skill_name": "Rupture Thrust"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2401,
     "fields": {
-      "name": "Bonefang Reaper (Bonecrusher Leap)",
+      "base_name": "Bonefang Reaper",
+      "skill_name": "Bonecrusher Leap",
       "gear_type": 167,
       "game_id": "Axe_JumpSlash",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3881,19 +3883,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Bonefang Reaper",
-      "skill_name": "Bonecrusher Leap"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2409,
     "fields": {
-      "name": "Bulwark Core (Shield Slam)",
+      "base_name": "Bulwark Core",
+      "skill_name": "Shield Slam",
       "gear_type": 168,
       "game_id": "Mace_ShieldMace_2",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3915,19 +3917,19 @@
         "ms": "0.3",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Bulwark Core",
-      "skill_name": "Shield Slam"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2415,
     "fields": {
-      "name": "Burstfire Rifle (Rapid Fire)",
+      "base_name": "Burstfire Rifle",
+      "skill_name": "Rapid Fire",
       "gear_type": 169,
       "game_id": "Gun_ThreeGun",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3946,19 +3948,19 @@
         "attackPower": "155",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Burstfire Rifle",
-      "skill_name": "Rapid Fire"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2466,
     "fields": {
-      "name": "Cryoshard Mask (Frostbound Echo)",
+      "base_name": "Cryoshard Mask",
+      "skill_name": "Frostbound Echo",
       "gear_type": 176,
       "game_id": "IceStaff_Chillhowl",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -3977,19 +3979,19 @@
         "attackPower": "155",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Cryoshard Mask",
-      "skill_name": "Frostbound Echo"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2402,
     "fields": {
-      "name": "Cyclone Cleave (Vortex Toss)",
+      "base_name": "Cyclone Cleave",
+      "skill_name": "Vortex Toss",
       "gear_type": 167,
       "game_id": "Axe_GiantSwing",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4010,19 +4012,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Cyclone Cleave",
-      "skill_name": "Vortex Toss"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2475,
     "fields": {
-      "name": "Divine Resonator (Sanctified Domain)",
+      "base_name": "Divine Resonator",
+      "skill_name": "Sanctified Domain",
       "gear_type": 177,
       "game_id": "HolyStaff_SingleHoly",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4041,19 +4043,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Divine Resonator",
-      "skill_name": "Sanctified Domain"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2459,
     "fields": {
-      "name": "Doomfire (Scorching Surge)",
+      "base_name": "Doomfire",
+      "skill_name": "Scorching Surge",
       "gear_type": 175,
       "game_id": "FireStaff_Brimstone",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4072,19 +4074,19 @@
         "attackPower": "155",
         "as": "0.58"
       },
-      "is_craftable": true,
-      "base_name": "Doomfire",
-      "skill_name": "Scorching Surge"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2447,
     "fields": {
-      "name": "Drakespike (Rapid Thrust)",
+      "base_name": "Drakespike",
+      "skill_name": "Rapid Thrust",
       "gear_type": 173,
       "game_id": "Spear_DragonBack",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4105,19 +4107,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Drakespike",
-      "skill_name": "Rapid Thrust"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2399,
     "fields": {
-      "name": "Emerald Edge (Runic Rebound)",
+      "base_name": "Emerald Edge",
+      "skill_name": "Runic Rebound",
       "gear_type": 167,
       "game_id": "Axe_Throw",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4138,19 +4140,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Emerald Edge",
-      "skill_name": "Runic Rebound"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2458,
     "fields": {
-      "name": "Flame Maw (Molten Blast)",
+      "base_name": "Flame Maw",
+      "skill_name": "Molten Blast",
       "gear_type": 175,
       "game_id": "FireStaff_1HandStaff",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4169,19 +4171,19 @@
         "attackPower": "155",
         "as": "0.58"
       },
-      "is_craftable": true,
-      "base_name": "Flame Maw",
-      "skill_name": "Molten Blast"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2465,
     "fields": {
-      "name": "Frost Matrix (Frostbite)",
+      "base_name": "Frost Matrix",
+      "skill_name": "Frostbite",
       "gear_type": 176,
       "game_id": "IceStaff_Icicle",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4200,19 +4202,19 @@
         "attackPower": "155",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Frost Matrix",
-      "skill_name": "Frostbite"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2468,
     "fields": {
-      "name": "Frozen Conduit (Frozen Phase)",
+      "base_name": "Frozen Conduit",
+      "skill_name": "Frozen Phase",
       "gear_type": 176,
       "game_id": "IceStaff_IcePhase",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4231,19 +4233,19 @@
         "attackPower": "155",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Frozen Conduit",
-      "skill_name": "Frozen Phase"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2406,
     "fields": {
-      "name": "Gravity Hammer (Pulverizing Slam)",
+      "base_name": "Gravity Hammer",
+      "skill_name": "Pulverizing Slam",
       "gear_type": 168,
       "game_id": "Mace_Common_Skill_5",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4265,19 +4267,19 @@
         "ms": "0.3",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Gravity Hammer",
-      "skill_name": "Pulverizing Slam"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2473,
     "fields": {
-      "name": "Guardian's Embrace (Divine Vault)",
+      "base_name": "Guardian's Embrace",
+      "skill_name": "Divine Vault",
       "gear_type": 177,
       "game_id": "HolyStaff_LeapFaith",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4296,19 +4298,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Guardian's Embrace",
-      "skill_name": "Divine Vault"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2437,
     "fields": {
-      "name": "Harmony's Staff (Rain of Serenity)",
+      "base_name": "Harmony's Staff",
+      "skill_name": "Rain of Serenity",
       "gear_type": 172,
       "game_id": "Nature_HealRain",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4327,19 +4329,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Harmony's Staff",
-      "skill_name": "Rain of Serenity"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2392,
     "fields": {
-      "name": "Hellcore Cleaver (Overload Slash)",
+      "base_name": "Hellcore Cleaver",
+      "skill_name": "Overload Slash",
       "gear_type": 166,
       "game_id": "Sword_Claymore",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4360,19 +4362,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Hellcore Cleaver",
-      "skill_name": "Overload Slash"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2451,
     "fields": {
-      "name": "Hexlock (Hexbound Malice)",
+      "base_name": "Hexlock",
+      "skill_name": "Hexbound Malice",
       "gear_type": 174,
       "game_id": "Curse_AntiMagic",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4391,19 +4393,19 @@
         "attackPower": "155",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Hexlock",
-      "skill_name": "Hexbound Malice"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2467,
     "fields": {
-      "name": "Iceshard Comet (Frost Nova)",
+      "base_name": "Iceshard Comet",
+      "skill_name": "Frost Nova",
       "gear_type": 176,
       "game_id": "IceStaff_GreatFrost",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4422,19 +4424,19 @@
         "attackPower": "155",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Iceshard Comet",
-      "skill_name": "Frost Nova"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2460,
     "fields": {
-      "name": "Inferno Core (Core Flare)",
+      "base_name": "Inferno Core",
+      "skill_name": "Core Flare",
       "gear_type": 175,
       "game_id": "FireStaff_Common_Skill_5",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4453,19 +4455,19 @@
         "attackPower": "155",
         "as": "0.58"
       },
-      "is_craftable": true,
-      "base_name": "Inferno Core",
-      "skill_name": "Core Flare"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2453,
     "fields": {
-      "name": "Infestor's Staff (Parasitic Swarm)",
+      "base_name": "Infestor's Staff",
+      "skill_name": "Parasitic Swarm",
       "gear_type": 174,
       "game_id": "Curse_Worm",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4484,19 +4486,19 @@
         "attackPower": "155",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Infestor's Staff",
-      "skill_name": "Parasitic Swarm"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2423,
     "fields": {
-      "name": "Kinetic Arc (PowerShot)",
+      "base_name": "Kinetic Arc",
+      "skill_name": "PowerShot",
       "gear_type": 170,
       "game_id": "Bow_Eighteen",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4515,19 +4517,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Kinetic Arc",
-      "skill_name": "PowerShot"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2394,
     "fields": {
-      "name": "Lordbreaker (Sovereign Strike)",
+      "base_name": "Lordbreaker",
+      "skill_name": "Sovereign Strike",
       "gear_type": 166,
       "game_id": "Sword_KingSlash",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4548,19 +4550,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Lordbreaker",
-      "skill_name": "Sovereign Strike"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2474,
     "fields": {
-      "name": "Luminous Ward (Sanctum Arc)",
+      "base_name": "Luminous Ward",
+      "skill_name": "Sanctum Arc",
       "gear_type": 177,
       "game_id": "HolyStaff_Redemption",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4579,19 +4581,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Luminous Ward",
-      "skill_name": "Sanctum Arc"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2454,
     "fields": {
-      "name": "Nihilstaff (Crippling Curse)",
+      "base_name": "Nihilstaff",
+      "skill_name": "Crippling Curse",
       "gear_type": 174,
       "game_id": "Curse_Clipple",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4610,19 +4612,19 @@
         "attackPower": "155",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Nihilstaff",
-      "skill_name": "Crippling Curse"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2418,
     "fields": {
-      "name": "Photonic Rifle (Photon Bolt)",
+      "base_name": "Photonic Rifle",
+      "skill_name": "Photon Bolt",
       "gear_type": 169,
       "game_id": "Gun_RayGun",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4641,19 +4643,19 @@
         "attackPower": "",
         "as": ""
       },
-      "is_craftable": true,
-      "base_name": "Photonic Rifle",
-      "skill_name": "Photon Bolt"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2452,
     "fields": {
-      "name": "Plaguespread (Pestilence)",
+      "base_name": "Plaguespread",
+      "skill_name": "Pestilence",
       "gear_type": 174,
       "game_id": "Curse_Infect",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4672,19 +4674,19 @@
         "attackPower": "155",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Plaguespread",
-      "skill_name": "Pestilence"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2422,
     "fields": {
-      "name": "Predator's Splitbow (Splintershot)",
+      "base_name": "Predator's Splitbow",
+      "skill_name": "Splintershot",
       "gear_type": 170,
       "game_id": "Bow_War",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4703,19 +4705,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Predator's Splitbow",
-      "skill_name": "Splintershot"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2476,
     "fields": {
-      "name": "Radiant Nova (Sacred Flare)",
+      "base_name": "Radiant Nova",
+      "skill_name": "Sacred Flare",
       "gear_type": 177,
       "game_id": "HolyStaff_HolyShine",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4734,19 +4736,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Radiant Nova",
-      "skill_name": "Sacred Flare"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2400,
     "fields": {
-      "name": "Ravager's Cleave (Execution)",
+      "base_name": "Ravager's Cleave",
+      "skill_name": "Execution",
       "gear_type": 167,
       "game_id": "Axe_Slayer",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4767,19 +4769,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Ravager's Cleave",
-      "skill_name": "Execution"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2408,
     "fields": {
-      "name": "Ripper's Grasp (Grappling Strike)",
+      "base_name": "Ripper's Grasp",
+      "skill_name": "Grappling Strike",
       "gear_type": 168,
       "game_id": "Mace_Hook",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4801,19 +4803,19 @@
         "ms": "0.3",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Ripper's Grasp",
-      "skill_name": "Grappling Strike"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2414,
     "fields": {
-      "name": "Sentinel Barrage (Sentinel Barrage)",
+      "base_name": "Sentinel Barrage",
+      "skill_name": "Sentinel Barrage",
       "gear_type": 169,
       "game_id": "Gun_GatlinGun",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4832,19 +4834,19 @@
         "attackPower": "155",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Sentinel Barrage",
-      "skill_name": "Sentinel Barrage"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2444,
     "fields": {
-      "name": "Sentinel's Lance (Banner of Justice)",
+      "base_name": "Sentinel's Lance",
+      "skill_name": "Banner of Justice",
       "gear_type": 173,
       "game_id": "Spear_Trinity",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4865,19 +4867,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Sentinel's Lance",
-      "skill_name": "Banner of Justice"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2417,
     "fields": {
-      "name": "Shadowhunter Rifle (Snipe)",
+      "base_name": "Shadowhunter Rifle",
+      "skill_name": "Snipe",
       "gear_type": 169,
       "game_id": "Gun_Common_Skill_6",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4896,19 +4898,19 @@
         "attackPower": "",
         "as": ""
       },
-      "is_craftable": true,
-      "base_name": "Shadowhunter Rifle",
-      "skill_name": "Snipe"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2469,
     "fields": {
-      "name": "Shard of Fractured Ice (Ice Shard)",
+      "base_name": "Shard of Fractured Ice",
+      "skill_name": "Ice Shard",
       "gear_type": 176,
       "game_id": "IceStaff_IceSliver",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4927,19 +4929,19 @@
         "attackPower": "",
         "as": ""
       },
-      "is_craftable": true,
-      "base_name": "Shard of Fractured Ice",
-      "skill_name": "Ice Shard"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2430,
     "fields": {
-      "name": "Soulfangs (Soul Snare)",
+      "base_name": "Soulfangs",
+      "skill_name": "Soul Snare",
       "gear_type": 171,
       "game_id": "Dagger_DeathDagger",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4960,19 +4962,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Soulfangs",
-      "skill_name": "Soul Snare"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2446,
     "fields": {
-      "name": "Storm Spear (Sweeping Tempest)",
+      "base_name": "Storm Spear",
+      "skill_name": "Sweeping Tempest",
       "gear_type": 173,
       "game_id": "Spear_Sweep",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -4993,19 +4995,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Storm Spear",
-      "skill_name": "Sweeping Tempest"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2445,
     "fields": {
-      "name": "Stormfang Lance (Surging Throw)",
+      "base_name": "Stormfang Lance",
+      "skill_name": "Surging Throw",
       "gear_type": 173,
       "game_id": "Spear_Fling",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5026,19 +5028,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Stormfang Lance",
-      "skill_name": "Surging Throw"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2439,
     "fields": {
-      "name": "Tendril's Grasp (Entangling Growth)",
+      "base_name": "Tendril's Grasp",
+      "skill_name": "Entangling Growth",
       "gear_type": 172,
       "game_id": "Nature_TwineSeed",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5057,19 +5059,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Tendril's Grasp",
-      "skill_name": "Entangling Growth"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2436,
     "fields": {
-      "name": "Thornward Staff (Thorn Barrier)",
+      "base_name": "Thornward Staff",
+      "skill_name": "Thorn Barrier",
       "gear_type": 172,
       "game_id": "Nature_TreeSkin",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5088,19 +5090,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Thornward Staff",
-      "skill_name": "Thorn Barrier"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2424,
     "fields": {
-      "name": "Thunderstrike (Arcbolt)",
+      "base_name": "Thunderstrike",
+      "skill_name": "Arcbolt",
       "gear_type": 170,
       "game_id": "Bow_Thunder",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5119,19 +5121,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Thunderstrike",
-      "skill_name": "Arcbolt"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2395,
     "fields": {
-      "name": "Titan's Spineblade (Titan's Stride)",
+      "base_name": "Titan's Spineblade",
+      "skill_name": "Titan's Stride",
       "gear_type": 166,
       "game_id": "Sword_Knight",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5152,19 +5154,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Titan's Spineblade",
-      "skill_name": "Titan's Stride"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2429,
     "fields": {
-      "name": "Twilight Blades (Blade Dance)",
+      "base_name": "Twilight Blades",
+      "skill_name": "Blade Dance",
       "gear_type": 171,
       "game_id": "Dagger_BloodDagger",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5185,19 +5187,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Twilight Blades",
-      "skill_name": "Blade Dance"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2440,
     "fields": {
-      "name": "VenomStave (Toxine Injection)",
+      "base_name": "VenomStave",
+      "skill_name": "Toxine Injection",
       "gear_type": 172,
       "game_id": "Nature_NatureToxin",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5216,19 +5218,19 @@
         "attackPower": "",
         "as": ""
       },
-      "is_craftable": true,
-      "base_name": "VenomStave",
-      "skill_name": "Toxine Injection"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2438,
     "fields": {
-      "name": "Verdant Embrace (Healing Bloom)",
+      "base_name": "Verdant Embrace",
+      "skill_name": "Healing Bloom",
       "gear_type": 172,
       "game_id": "Nature_Tranquility",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5247,19 +5249,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Verdant Embrace",
-      "skill_name": "Healing Bloom"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2393,
     "fields": {
-      "name": "Voidblade (Force Pierce)",
+      "base_name": "Voidblade",
+      "skill_name": "Force Pierce",
       "gear_type": 166,
       "game_id": "Sword_Clarent",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5280,19 +5282,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Voidblade",
-      "skill_name": "Force Pierce"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2407,
     "fields": {
-      "name": "Voidbreaker (Void Slam)",
+      "base_name": "Voidbreaker",
+      "skill_name": "Void Slam",
       "gear_type": 168,
       "game_id": "Mace_DualMace",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5314,19 +5316,19 @@
         "ms": "0.3",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Voidbreaker",
-      "skill_name": "Void Slam"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2425,
     "fields": {
-      "name": "Windbreaker (Windrend Splitters)",
+      "base_name": "Windbreaker",
+      "skill_name": "Windrend Splitters",
       "gear_type": 170,
       "game_id": "Bow_WindArrow",
       "rarity": "epic",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5345,19 +5347,19 @@
         "attackPower": "155",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Windbreaker",
-      "skill_name": "Windrend Splitters"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2410,
     "fields": {
-      "name": "Abyssal Conduit (Void Devour)",
+      "base_name": "Abyssal Conduit",
+      "skill_name": "Void Devour",
       "gear_type": 168,
       "game_id": "Mace_CamlannMace",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5379,19 +5381,19 @@
         "ms": "0.3",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Abyssal Conduit",
-      "skill_name": "Void Devour"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2433,
     "fields": {
-      "name": "Bloodthirst (Sanguine Pounce)",
+      "base_name": "Bloodthirst",
+      "skill_name": "Sanguine Pounce",
       "gear_type": 171,
       "game_id": "TwinDagger_HungerBlood",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5412,19 +5414,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Bloodthirst",
-      "skill_name": "Sanguine Pounce"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2477,
     "fields": {
-      "name": "Celestial Redeemer (Blessed Halo)",
+      "base_name": "Celestial Redeemer",
+      "skill_name": "Blessed Halo",
       "gear_type": 177,
       "game_id": "HolyStaff_Fallen",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5443,19 +5445,19 @@
         "attackPower": "163",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Celestial Redeemer",
-      "skill_name": "Blessed Halo"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2448,
     "fields": {
-      "name": "Corrosive Piercer (Blightfall)",
+      "base_name": "Corrosive Piercer",
+      "skill_name": "Blightfall",
       "gear_type": 173,
       "game_id": "Spear_SpiritHunter",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5476,19 +5478,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Corrosive Piercer",
-      "skill_name": "Blightfall"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2427,
     "fields": {
-      "name": "Eclypse Bow (Shadow Vortex)",
+      "base_name": "Eclypse Bow",
+      "skill_name": "Shadow Vortex",
       "gear_type": 170,
       "game_id": "Bow_GravityArrow",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5507,19 +5509,19 @@
         "attackPower": "163",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Eclypse Bow",
-      "skill_name": "Shadow Vortex"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2471,
     "fields": {
-      "name": "Frost's Caller (Deep Frost Slash)",
+      "base_name": "Frost's Caller",
+      "skill_name": "Deep Frost Slash",
       "gear_type": 176,
       "game_id": "IceStaff_IceAvatar",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5538,19 +5540,19 @@
         "attackPower": "163",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Frost's Caller",
-      "skill_name": "Deep Frost Slash"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2470,
     "fields": {
-      "name": "Glacier Spark (Ice Blast)",
+      "base_name": "Glacier Spark",
+      "skill_name": "Ice Blast",
       "gear_type": 176,
       "game_id": "IceStaff_Permafrost",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5569,19 +5571,19 @@
         "attackPower": "163",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Glacier Spark",
-      "skill_name": "Ice Blast"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2396,
     "fields": {
-      "name": "Judicator (Obliteration)",
+      "base_name": "Judicator",
+      "skill_name": "Obliteration",
       "gear_type": 166,
       "game_id": "Sword_Carving",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5602,19 +5604,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Judicator",
-      "skill_name": "Obliteration"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2426,
     "fields": {
-      "name": "Mender's Ruin (Severance Shot)",
+      "base_name": "Mender's Ruin",
+      "skill_name": "Severance Shot",
       "gear_type": 170,
       "game_id": "Bow_Light",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5633,19 +5635,19 @@
         "attackPower": "163",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Mender's Ruin",
-      "skill_name": "Severance Shot"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2463,
     "fields": {
-      "name": "Molten Mortar (Molten Volley)",
+      "base_name": "Molten Mortar",
+      "skill_name": "Molten Volley",
       "gear_type": 175,
       "game_id": "FireStaff_LavaCannonade",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5664,19 +5666,19 @@
         "attackPower": "163",
         "as": "0.58"
       },
-      "is_craftable": true,
-      "base_name": "Molten Mortar",
-      "skill_name": "Molten Volley"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2455,
     "fields": {
-      "name": "Necromist (Necrotic Eruption)",
+      "base_name": "Necromist",
+      "skill_name": "Necrotic Eruption",
       "gear_type": 174,
       "game_id": "Curse_Cloud",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5695,19 +5697,19 @@
         "attackPower": "163",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Necromist",
-      "skill_name": "Necrotic Eruption"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2412,
     "fields": {
-      "name": "Paladin's Mace (Paladin's Shield)",
+      "base_name": "Paladin's Mace",
+      "skill_name": "Paladin's Shield",
       "gear_type": 168,
       "game_id": "Mace_Paladin_Shield",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5726,19 +5728,19 @@
         "attackPower": "",
         "as": ""
       },
-      "is_craftable": true,
-      "base_name": "Paladin's Mace",
-      "skill_name": "Paladin's Shield"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2449,
     "fields": {
-      "name": "Phantom Spear (Shadow Dash)",
+      "base_name": "Phantom Spear",
+      "skill_name": "Shadow Dash",
       "gear_type": 173,
       "game_id": "Spear_Bright",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5759,19 +5761,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Phantom Spear",
-      "skill_name": "Shadow Dash"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2420,
     "fields": {
-      "name": "Prism Cloak (Photon Activation)",
+      "base_name": "Prism Cloak",
+      "skill_name": "Photon Activation",
       "gear_type": 169,
       "game_id": "Gun_PrismGun",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5790,19 +5792,19 @@
         "attackPower": "163",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Prism Cloak",
-      "skill_name": "Photon Activation"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2442,
     "fields": {
-      "name": "Sanctuary of Growth (Divine Rootfall)",
+      "base_name": "Sanctuary of Growth",
+      "skill_name": "Divine Rootfall",
       "gear_type": 172,
       "game_id": "Nature_GodTree",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5821,19 +5823,19 @@
         "attackPower": "163",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Sanctuary of Growth",
-      "skill_name": "Divine Rootfall"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2434,
     "fields": {
-      "name": "Scarlet Hunger (Bloodeye Burst)",
+      "base_name": "Scarlet Hunger",
+      "skill_name": "Bloodeye Burst",
       "gear_type": 171,
       "game_id": "Dagger_FastDagger",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5854,19 +5856,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Scarlet Hunger",
-      "skill_name": "Bloodeye Burst"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2478,
     "fields": {
-      "name": "Sol Protector (Sanctuary)",
+      "base_name": "Sol Protector",
+      "skill_name": "Sanctuary",
       "gear_type": 177,
       "game_id": "HolyStaff_HolyGuardian",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5885,19 +5887,19 @@
         "attackPower": "163",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Sol Protector",
-      "skill_name": "Sanctuary"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2462,
     "fields": {
-      "name": "Solarflare (Starforge Beam)",
+      "base_name": "Solarflare",
+      "skill_name": "Starforge Beam",
       "gear_type": 175,
       "game_id": "FireStaff_Dawnsong",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5916,19 +5918,19 @@
         "attackPower": "163",
         "as": "0.58"
       },
-      "is_craftable": true,
-      "base_name": "Solarflare",
-      "skill_name": "Starforge Beam"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2397,
     "fields": {
-      "name": "Sovereign's Radiance (Thousandfold Strike)",
+      "base_name": "Sovereign's Radiance",
+      "skill_name": "Thousandfold Strike",
       "gear_type": 166,
       "game_id": "Sword_ThousandBlade",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5949,19 +5951,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Sovereign's Radiance",
-      "skill_name": "Thousandfold Strike"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2441,
     "fields": {
-      "name": "Spirit's Call (Breeze of Resurgence)",
+      "base_name": "Spirit's Call",
+      "skill_name": "Breeze of Resurgence",
       "gear_type": 172,
       "game_id": "Nature_HolyDeer",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -5980,19 +5982,19 @@
         "attackPower": "163",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Spirit's Call",
-      "skill_name": "Breeze of Resurgence"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2411,
     "fields": {
-      "name": "Thunderlord's Wrath (Thunderclap Impact)",
+      "base_name": "Thunderlord's Wrath",
+      "skill_name": "Thunderclap Impact",
       "gear_type": 168,
       "game_id": "Mace_ThunderMace",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6014,19 +6016,19 @@
         "ms": "0.3",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Thunderlord's Wrath",
-      "skill_name": "Thunderclap Impact"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2419,
     "fields": {
-      "name": "Voideye (Deadshot)",
+      "base_name": "Voideye",
+      "skill_name": "Deadshot",
       "gear_type": 169,
       "game_id": "Gun_RifleGun",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6045,19 +6047,19 @@
         "attackPower": "163",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Voideye",
-      "skill_name": "Deadshot"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2404,
     "fields": {
-      "name": "Wingblade (Twinstorm)",
+      "base_name": "Wingblade",
+      "skill_name": "Twinstorm",
       "gear_type": 167,
       "game_id": "Axe_DoubleWhirl",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6078,19 +6080,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Wingblade",
-      "skill_name": "Twinstorm"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2456,
     "fields": {
-      "name": "Withermaul (Bloom of Malice)",
+      "base_name": "Withermaul",
+      "skill_name": "Bloom of Malice",
       "gear_type": 174,
       "game_id": "Curse_Flower",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6109,19 +6111,19 @@
         "attackPower": "163",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Withermaul",
-      "skill_name": "Bloom of Malice"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2403,
     "fields": {
-      "name": "Wreckingsaw (Bladewheel Throw)",
+      "base_name": "Wreckingsaw",
+      "skill_name": "Bladewheel Throw",
       "gear_type": 167,
       "game_id": "Axe_Flywheel",
       "rarity": "legendary",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6142,19 +6144,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Wreckingsaw",
-      "skill_name": "Bladewheel Throw"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2398,
     "fields": {
-      "name": "Berserker's Fury (Whirlwind Slash)",
+      "base_name": "Berserker's Fury",
+      "skill_name": "Whirlwind Slash",
       "gear_type": 167,
       "game_id": "Axe_Whirlwind",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6175,19 +6177,19 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Berserker's Fury",
-      "skill_name": "Whirlwind Slash"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2457,
     "fields": {
-      "name": "Blazing Catalyst (Hellfire)",
+      "base_name": "Blazing Catalyst",
+      "skill_name": "Hellfire",
       "gear_type": 175,
       "game_id": "FireStaff_Blazing",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6206,19 +6208,19 @@
         "attackPower": "148",
         "as": "0.58"
       },
-      "is_craftable": true,
-      "base_name": "Blazing Catalyst",
-      "skill_name": "Hellfire"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2405,
     "fields": {
-      "name": "Breaker's Resolve (Unyielding Smash)",
+      "base_name": "Breaker's Resolve",
+      "skill_name": "Unyielding Smash",
       "gear_type": 168,
       "game_id": "Mace_1HandMace",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6240,19 +6242,19 @@
         "ms": "0.3",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Breaker's Resolve",
-      "skill_name": "Unyielding Smash"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2435,
     "fields": {
-      "name": "Eclipse Conduit (Crater Surge)",
+      "base_name": "Eclipse Conduit",
+      "skill_name": "Crater Surge",
       "gear_type": 172,
       "game_id": "Nature_MoonFire",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6271,19 +6273,19 @@
         "attackPower": "148",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Eclipse Conduit",
-      "skill_name": "Crater Surge"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2464,
     "fields": {
-      "name": "Glacier Prism (Frost Torrent)",
+      "base_name": "Glacier Prism",
+      "skill_name": "Frost Torrent",
       "gear_type": 176,
       "game_id": "IceStaff_Frost",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6302,19 +6304,19 @@
         "attackPower": "148",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Glacier Prism",
-      "skill_name": "Frost Torrent"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2421,
     "fields": {
-      "name": "Hailfire (Barrage)",
+      "base_name": "Hailfire",
+      "skill_name": "Barrage",
       "gear_type": 170,
       "game_id": "Bow_ArrowRain",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6333,19 +6335,19 @@
         "attackPower": "148",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Hailfire",
-      "skill_name": "Barrage"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2428,
     "fields": {
-      "name": "Hemoblades (Rend and Reap)",
+      "base_name": "Hemoblades",
+      "skill_name": "Rend and Reap",
       "gear_type": 171,
       "game_id": "Dagger_LongDagger",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6366,19 +6368,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Hemoblades",
-      "skill_name": "Rend and Reap"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2472,
     "fields": {
-      "name": "Judgement's Staff (Aegisflare)",
+      "base_name": "Judgement's Staff",
+      "skill_name": "Aegisflare",
       "gear_type": 177,
       "game_id": "HolyStaff_Shield",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6397,19 +6399,19 @@
         "attackPower": "148",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Judgement's Staff",
-      "skill_name": "Aegisflare"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2450,
     "fields": {
-      "name": "Rotten Breath (Rot Manifest)",
+      "base_name": "Rotten Breath",
+      "skill_name": "Rot Manifest",
       "gear_type": 174,
       "game_id": "Curse_DeathDisease",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6428,19 +6430,19 @@
         "attackPower": "148",
         "as": "0.66"
       },
-      "is_craftable": true,
-      "base_name": "Rotten Breath",
-      "skill_name": "Rot Manifest"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2443,
     "fields": {
-      "name": "Sharspike (Bloodeye Burst)",
+      "base_name": "Sharspike",
+      "skill_name": "Bloodeye Burst",
       "gear_type": 173,
       "game_id": "Spear_SpearDance",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6461,19 +6463,19 @@
         "ms": "0.3",
         "as": "1"
       },
-      "is_craftable": true,
-      "base_name": "Sharspike",
-      "skill_name": "Bloodeye Burst"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2413,
     "fields": {
-      "name": "Shattercoil (Scatterblast)",
+      "base_name": "Shattercoil",
+      "skill_name": "Scatterblast",
       "gear_type": 169,
       "game_id": "Gun_ShotGun",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6492,19 +6494,19 @@
         "attackPower": "148",
         "as": "0.83"
       },
-      "is_craftable": true,
-      "base_name": "Shattercoil",
-      "skill_name": "Scatterblast"
+      "is_craftable": true
     }
   },
   {
     "model": "guilds.gearitem",
     "pk": 2391,
     "fields": {
-      "name": "Storm Cleaver (Tempest Slash)",
+      "base_name": "Storm Cleaver",
+      "skill_name": "Tempest Slash",
       "gear_type": 166,
       "game_id": "Sword_ZeroSlash",
       "rarity": "rare",
+      "required_level": 1,
       "damage": 0,
       "defense": 0,
       "health_bonus": 0,
@@ -6525,9 +6527,7 @@
         "ms": "0.3",
         "as": "0.76"
       },
-      "is_craftable": true,
-      "base_name": "Storm Cleaver",
-      "skill_name": "Tempest Slash"
+      "is_craftable": true
     }
   }
 ]
