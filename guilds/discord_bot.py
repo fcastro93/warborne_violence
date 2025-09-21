@@ -49,7 +49,7 @@ class CommandMenuView(discord.ui.View):
             
             faction = discord.ui.TextInput(
                 label="Faction",
-                placeholder="none, emberwild, magnates, ashen, ironcreed, sirius, shroud",
+                placeholder="none, emberwild, magnates, ashen, etc.",
                 default="none",
                 max_length=20,
                 required=True
@@ -64,7 +64,7 @@ class CommandMenuView(discord.ui.View):
             
             game_role = discord.ui.TextInput(
                 label="Game Role",
-                placeholder="ranged_dps, melee_dps, tank, healer, defensive_tank, offensive_tank, offensive_support, defensive_support",
+                placeholder="tank, healer, ranged_dps, melee_dps, etc.",
                 max_length=30,
                 required=False
             )
