@@ -179,15 +179,13 @@ def player_loadout(request, player_id):
     
     # Check if current request can modify this player (for display purposes)
     discord_user_id = request.GET.get('discord_user_id')
-    can_modify = False
+    can_modify = True  # Everyone can modify loadouts now
     is_owner = False
     
     if discord_user_id:
         try:
             discord_user_id = int(discord_user_id)
             is_owner = player.is_owner(discord_user_id)
-            is_staff = request.user.is_staff if hasattr(request, 'user') and request.user.is_authenticated else False
-            can_modify = player.can_modify(discord_user_id, is_staff)
         except (ValueError, TypeError):
             pass
 
@@ -205,7 +203,6 @@ def player_loadout(request, player_id):
     return render(request, 'guilds/player_loadout.html', context)
 
 
-@discord_owner_or_staff_required
 @require_POST
 def assign_drifter(request, player_id):
     """AJAX view to assign a drifter to a player slot"""
@@ -245,7 +242,6 @@ def assign_drifter(request, player_id):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
-@discord_owner_or_staff_required
 @require_POST
 @csrf_exempt
 def update_loadout(request, player_id):
@@ -332,7 +328,6 @@ def drifter_details(request, drifter_id):
     return render(request, 'guilds/drifter_details.html', context)
 
 
-@discord_owner_or_staff_required
 @require_POST
 def update_game_role(request, player_id):
     """AJAX view to update player's game role"""
