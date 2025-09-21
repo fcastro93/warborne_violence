@@ -46,6 +46,9 @@ class WarborneBot(commands.Bot):
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
         print(f'Bot commands loaded: {[cmd.name for cmd in self.commands]}')
+        print(f'Total commands: {len(self.commands)}')
+        for cmd in self.commands:
+            print(f'Command: {cmd.name} - {cmd.description}')
         await self.update_bot_status(True)
     
     async def update_bot_status(self, is_online):
