@@ -454,6 +454,100 @@ class CommandMenuView(discord.ui.View):
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
     
+    @discord.ui.button(label="📢 Publish Events", style=discord.ButtonStyle.primary, emoji="📢")
+    async def publish_events_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to publish events to announcement channel"""
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def get_events_with_participant_counts():
+            from .models import Event, EventParticipant
+            events = Event.objects.filter(is_active=True, is_cancelled=False).order_by('event_datetime')[:10]
+            
+            events_data = []
+            for event in events:
+                # Count participants using raw SQL to avoid async issues
+                participant_count = EventParticipant.objects.filter(
+                    event=event, 
+                    is_active=True
+                ).count()
+                
+                events_data.append({
+                    'title': event.title,
+                    'discord_timestamp': event.discord_timestamp,
+                    'created_by_discord_name': event.created_by_discord_name,
+                    'participant_count': participant_count,
+                    'max_participants': event.max_participants,
+                    'event_type_display': event.get_event_type_display()
+                })
+            
+            return events_data
+        
+        # Get bot config to find announcement channel
+        config = await _get_bot_config()
+        if not config or not config.event_announcements_channel_id:
+            await interaction.response.send_message(
+                "❌ No se ha configurado el canal de anuncios de eventos. Contacta al administrador.",
+                ephemeral=True
+            )
+            return
+        
+        # Get the announcement channel
+        announcement_channel = self.bot_instance.get_channel(config.event_announcements_channel_id)
+        if not announcement_channel:
+            await interaction.response.send_message(
+                "❌ No se pudo encontrar el canal de anuncios de eventos.",
+                ephemeral=True
+            )
+            return
+        
+        events_data = await get_events_with_participant_counts()
+        
+        if not events_data:
+            await interaction.response.send_message(
+                "❌ No hay eventos activos para publicar.",
+                ephemeral=True
+            )
+            return
+        
+        embed = discord.Embed(
+            title="📢 EVENTOS ACTIVOS - WARBORNE",
+            description="¡Únete a estos eventos épicos!",
+            color=0xff6b35  # Orange color for announcements
+        )
+        
+        for event_data in events_data:
+            participants_text = f"{event_data['participant_count']} participantes"
+            if event_data['max_participants']:
+                participants_text += f" / {event_data['max_participants']} máx"
+            
+            embed.add_field(
+                name=f"🎯 {event_data['title']}",
+                value=f"**📅 Fecha:** {event_data['discord_timestamp']}\n"
+                      f"**👤 Creado por:** {event_data['created_by_discord_name']}\n"
+                      f"**👥 Participantes:** {participants_text}\n"
+                      f"**🏷️ Tipo:** {event_data['event_type_display']}",
+                inline=True
+            )
+        
+        if len(events_data) == 10:
+            embed.set_footer(text="Mostrando 10 eventos más recientes")
+        
+        embed.add_field(
+            name="🚀 ¿Cómo participar?",
+            value="Usa `!menu` y selecciona el evento que te interese para unirte.",
+            inline=False
+        )
+        
+        # Send to announcement channel
+        await announcement_channel.send(embed=embed)
+        
+        # Confirm to user
+        await interaction.response.send_message(
+            f"✅ Eventos publicados exitosamente en {announcement_channel.mention}",
+            ephemeral=True
+        )
+    
     @discord.ui.button(label="⚔️ Create Parties", style=discord.ButtonStyle.danger, emoji="⚔️")
     async def create_parties_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Button to create parties for events"""
@@ -503,6 +597,68 @@ class CommandMenuView(discord.ui.View):
                     await interaction.response.send_message(f"❌ {message}", ephemeral=True)
         
         modal = EventSelectionModal(self.bot_instance)
+        await interaction.response.send_modal(modal)
+    
+    @discord.ui.button(label="🗑️ Delete Event", style=discord.ButtonStyle.danger, emoji="🗑️")
+    async def delete_event_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to delete an event"""
+        # Create a modal for event selection
+        class DeleteEventModal(discord.ui.Modal, title="Delete Event"):
+            def __init__(self, bot_instance):
+                super().__init__()
+                self.bot_instance = bot_instance
+            
+            event_title = discord.ui.TextInput(
+                label="Event Title",
+                placeholder="Enter the exact title of the event to delete",
+                max_length=100,
+                required=True
+            )
+            
+            confirmation = discord.ui.TextInput(
+                label="Confirmation",
+                placeholder="Type 'DELETE' to confirm",
+                max_length=10,
+                required=True
+            )
+            
+            async def on_submit(self, interaction: discord.Interaction):
+                if self.confirmation.value.upper() != 'DELETE':
+                    await interaction.response.send_message(
+                        "❌ Debes escribir 'DELETE' para confirmar la eliminación.",
+                        ephemeral=True
+                    )
+                    return
+                
+                from asgiref.sync import sync_to_async
+                
+                @sync_to_async
+                def find_and_delete_event(title):
+                    from .models import Event
+                    event = Event.objects.filter(
+                        title__iexact=title.strip(),
+                        is_active=True,
+                        is_cancelled=False
+                    ).first()
+                    
+                    if not event:
+                        return False, f"No se encontró un evento activo con el título '{title}'"
+                    
+                    # Mark as cancelled instead of deleting to preserve history
+                    event.is_cancelled = True
+                    event.is_active = False
+                    event.save()
+                    
+                    return True, f"Evento '{event.title}' cancelado exitosamente"
+                
+                success, message = await find_and_delete_event(self.event_title.value)
+                
+                if success:
+                    await interaction.response.send_message(f"✅ {message}", ephemeral=True)
+                else:
+                    await interaction.response.send_message(f"❌ {message}", ephemeral=True)
+        
+        modal = DeleteEventModal(self.bot_instance)
         await interaction.response.send_modal(modal)
     
     @discord.ui.button(label="🏓 Ping", style=discord.ButtonStyle.success, emoji="🏓")
