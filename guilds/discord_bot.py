@@ -11,7 +11,8 @@ class WarborneBot(commands.Bot):
         intents = discord.Intents.default()
         intents.message_content = True
         intents.guilds = True
-        intents.members = True
+        intents.members = False  # Deshabilitar si no es necesario
+        intents.presences = False  # Deshabilitar si no es necesario
         
         super().__init__(command_prefix='/', intents=intents)
         self.config = self.get_bot_config()
@@ -49,13 +50,20 @@ class WarborneBot(commands.Bot):
     async def update_bot_status(self, is_online):
         """Update bot status in database"""
         try:
-            config = DiscordBotConfig.objects.first()
-            if config:
-                config.is_online = is_online
-                if is_online:
-                    from django.utils import timezone
-                    config.last_heartbeat = timezone.now()
-                config.save()
+            from asgiref.sync import sync_to_async
+            from django.utils import timezone
+            
+            @sync_to_async
+            def update_status():
+                config = DiscordBotConfig.objects.first()
+                if config:
+                    config.is_online = is_online
+                    if is_online:
+                        config.last_heartbeat = timezone.now()
+                    config.save()
+                return config
+            
+            await update_status()
         except Exception as e:
             print(f"Error updating bot status: {e}")
     
