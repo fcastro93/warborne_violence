@@ -309,35 +309,37 @@
             {% if role_code in builds_by_role %}
                 <div id="tab-{{ role_code }}" class="tab-content">
                     <div class="builds-grid">
-                        {% for build in builds_by_role|dictsort:"0"|lookup:role_code %}
-                        <div class="build-card">
-                            <div class="build-header">
-                                <div class="build-title">
-                                    <a href="{{ build.build_url }}" style="color: #4a9eff; text-decoration: none;">{{ build.title }}</a>
-                                </div>
-                                <div class="build-role">{{ build.get_role_display }}</div>
-                            </div>
-                                
-                                {% if build.description %}
-                                    <div class="build-description">{{ build.description }}</div>
-                                {% endif %}
-                                
-                                <div class="build-template">
-                                    <div class="template-info">
-                                        <div class="template-avatar">
-                                            🏆
+                        {% for build in builds_by_role|dictsort:"0" %}
+                            {% if build.role == role_code %}
+                                <div class="build-card">
+                                    <div class="build-header">
+                                        <div class="build-title">
+                                            <a href="{{ build.build_url }}" style="color: #4a9eff; text-decoration: none;">{{ build.title }}</a>
                                         </div>
-                                        <div class="template-details">
-                                            <h4>{{ build.title }}</h4>
-                                            <p>{{ build.get_role_display }} • {{ build.equipped_items|length }} items equipped</p>
+                                        <div class="build-role">{{ build.get_role_display }}</div>
+                                    </div>
+                                    
+                                    {% if build.description %}
+                                        <div class="build-description">{{ build.description }}</div>
+                                    {% endif %}
+                                    
+                                    <div class="build-template">
+                                        <div class="template-info">
+                                            <div class="template-avatar">
+                                                🏆
+                                            </div>
+                                            <div class="template-details">
+                                                <h4>{{ build.title }}</h4>
+                                                <p>{{ build.get_role_display }} • {{ build.equipped_items|length }} items equipped</p>
+                                            </div>
                                         </div>
                                     </div>
+                                    
+                                    <a href="{{ build.build_url }}" class="view-build-btn">
+                                        Edit Build →
+                                    </a>
                                 </div>
-                                
-                                <a href="{{ build.build_url }}" class="view-build-btn">
-                                    Edit Build →
-                                </a>
-                            </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>

@@ -648,22 +648,49 @@
             <div class="equipment-section">
                 <h3>Mods</h3>
                 <div class="mods-grid">
-                    {% for i in "1234" %}
-                        {% with mod_key="mod"|add:i %}
-                            {% with mod=build|lookup:mod_key %}
-                                <div class="mod-slot {% if mod %}equipped{% else %}empty{% endif %}" onclick="selectSlot('{{ mod_key }}')">
-                                    <div class="slot-label">Mod {{ i }}</div>
-                                    {% if mod %}
-                                        <div class="equipment-name">{{ mod.name }}</div>
-                                        <div class="equipment-rarity rarity-{{ mod.rarity|lower }}">{{ mod.rarity }}</div>
-                                        <button class="remove-item" onclick="removeItem('{{ mod_key }}', event)">×</button>
-                                    {% else %}
-                                        <div class="equipment-name">Empty</div>
-                                    {% endif %}
-                                </div>
-                            {% endwith %}
-                        {% endwith %}
-                    {% endfor %}
+                    <div class="mod-slot {% if build.mod1 %}equipped{% else %}empty{% endif %}" onclick="selectSlot('mod1')">
+                        <div class="slot-label">Mod 1</div>
+                        {% if build.mod1 %}
+                            <div class="equipment-name">{{ build.mod1.name }}</div>
+                            <div class="equipment-rarity rarity-{{ build.mod1.rarity|lower }}">{{ build.mod1.rarity }}</div>
+                            <button class="remove-item" onclick="removeItem('mod1', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mod-slot {% if build.mod2 %}equipped{% else %}empty{% endif %}" onclick="selectSlot('mod2')">
+                        <div class="slot-label">Mod 2</div>
+                        {% if build.mod2 %}
+                            <div class="equipment-name">{{ build.mod2.name }}</div>
+                            <div class="equipment-rarity rarity-{{ build.mod2.rarity|lower }}">{{ build.mod2.rarity }}</div>
+                            <button class="remove-item" onclick="removeItem('mod2', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mod-slot {% if build.mod3 %}equipped{% else %}empty{% endif %}" onclick="selectSlot('mod3')">
+                        <div class="slot-label">Mod 3</div>
+                        {% if build.mod3 %}
+                            <div class="equipment-name">{{ build.mod3.name }}</div>
+                            <div class="equipment-rarity rarity-{{ build.mod3.rarity|lower }}">{{ build.mod3.rarity }}</div>
+                            <button class="remove-item" onclick="removeItem('mod3', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mod-slot {% if build.mod4 %}equipped{% else %}empty{% endif %}" onclick="selectSlot('mod4')">
+                        <div class="slot-label">Mod 4</div>
+                        {% if build.mod4 %}
+                            <div class="equipment-name">{{ build.mod4.name }}</div>
+                            <div class="equipment-rarity rarity-{{ build.mod4.rarity|lower }}">{{ build.mod4.rarity }}</div>
+                            <button class="remove-item" onclick="removeItem('mod4', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
