@@ -75,7 +75,7 @@ class WarborneBot(commands.Bot):
             await ctx.send(f"❌ Error: {str(error)}")
     
     @commands.command(name='buildplayer')
-    async def handle_buildplayer_command(self, ctx, *, player_name):
+    async def buildplayer(self, ctx, *, player_name):
         """Get a player's loadout link"""
         try:
             player = Player.objects.filter(name__icontains=player_name).first()
@@ -88,7 +88,7 @@ class WarborneBot(commands.Bot):
             await ctx.send(f"❌ Error: {str(e)}")
     
     @commands.command(name='guildinfo')
-    async def handle_guildinfo_command(self, ctx):
+    async def guildinfo(self, ctx):
         """Get guild information"""
         try:
             guilds = Guild.objects.filter(is_active=True)
@@ -105,7 +105,7 @@ class WarborneBot(commands.Bot):
             await ctx.send(f"❌ Error: {str(e)}")
     
     @commands.command(name='playerlist')
-    async def handle_playerlist_command(self, ctx, guild_name=None):
+    async def playerlist(self, ctx, guild_name=None):
         """List players, optionally filtered by guild"""
         try:
             if guild_name:
@@ -130,7 +130,7 @@ class WarborneBot(commands.Bot):
             await ctx.send(f"❌ Error: {str(e)}")
     
     @commands.command(name='drifters')
-    async def handle_drifters_command(self, ctx):
+    async def drifters(self, ctx):
         """Get available drifters"""
         try:
             from .models import Drifter
@@ -144,7 +144,7 @@ class WarborneBot(commands.Bot):
             await ctx.send(f"❌ Error: {str(e)}")
     
     @commands.command(name='gear')
-    async def handle_gear_command(self, ctx, gear_type=None):
+    async def gear(self, ctx, gear_type=None):
         """Get gear information"""
         try:
             from .models import GearItem
@@ -162,7 +162,7 @@ class WarborneBot(commands.Bot):
             await ctx.send(f"❌ Error: {str(e)}")
     
     @commands.command(name='help')
-    async def handle_help_command(self, ctx):
+    async def help(self, ctx):
         """Show available commands"""
         help_text = """
 🤖 **Warborne Bot - Comandos Disponibles:**

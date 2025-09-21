@@ -3,6 +3,10 @@ services:
   - name: web
     image:
       buildpack: heroku/python
+    run: pip install -r requirements.txt && python manage.py migrate && python manage.py create_bot_config && python manage.py runserver 0.0.0.0:$PORT
+    envs:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
     http_port: 8000
     envs:
       - key: SECRET_KEY
