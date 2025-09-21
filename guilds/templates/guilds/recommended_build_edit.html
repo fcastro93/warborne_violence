@@ -1216,7 +1216,10 @@
                      onclick="selectSlot('drifter')"
                      data-slot-type="drifter">
                     {% if build.drifter %}
-                        <div class="gear-slot-name">{{ build.drifter.name }}</div>
+                        <div class="gear-slot-name">
+                            <img src="" alt="{{ build.drifter.name }}" class="gear-icon equipped-drifter-icon" style="width: 48px; height: 48px; margin-right: 12px; vertical-align: middle; border-radius: 4px;" onerror="this.style.display='none';">
+                            {{ build.drifter.name }}
+                        </div>
                         <div class="slot-label">🎭 Drifter</div>
                     {% else %}
                         <span class="gear-empty">🎭</span>
@@ -1736,15 +1739,27 @@
         }
         
         function loadDrifterImages() {
-            // Load images for all drifter items
+            console.log('Loading drifter images...');
+            
+            // Load images for all drifter items in the list
             document.querySelectorAll('.drifter-item').forEach(item => {
                 const drifterName = item.getAttribute('data-drifter-name');
                 const iconId = getDrifterIconId(drifterName);
                 const img = item.querySelector('.item-icon');
                 if (img) {
                     img.src = `/static/icons/${iconId}.png`;
+                    console.log(`Loaded drifter image for ${drifterName}: ${iconId}.png`);
                 }
             });
+            
+            // Load image for equipped drifter
+            const equippedDrifterIcon = document.querySelector('.equipped-drifter-icon');
+            if (equippedDrifterIcon) {
+                const drifterName = equippedDrifterIcon.getAttribute('alt');
+                const iconId = getDrifterIconId(drifterName);
+                equippedDrifterIcon.src = `/static/icons/${iconId}.png`;
+                console.log(`Loaded equipped drifter image for ${drifterName}: ${iconId}.png`);
+            }
         }
         
         // Initialize filters when DOM is ready
@@ -1753,6 +1768,18 @@
             
             // Load drifter images
             loadDrifterImages();
+            
+            // Load drifter images again after a short delay to ensure DOM is fully loaded
+            setTimeout(() => {
+                loadDrifterImages();
+            }, 100);
+            
+            // Additional backup call when window is fully loaded
+            window.addEventListener('load', function() {
+                setTimeout(() => {
+                    loadDrifterImages();
+                }, 200);
+            });
             
             // Initialize mod search
             const modSearchInput = document.querySelector('.mod-search-input');
