@@ -367,11 +367,34 @@ class DiscordBotConfig(models.Model):
         """Start the bot manually"""
         try:
             import threading
-            from .discord_bot import run_bot
+            import os
+            import django
+            from django.conf import settings
+            from .discord_bot import WarborneBot
             
             if not self.is_online:
+                def run_bot_in_thread():
+                    """Run bot in thread with proper Django setup"""
+                    try:
+                        # Ensure Django is configured
+                        if not settings.configured:
+                            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warborne_tools.settings_production')
+                            django.setup()
+                        
+                        # Create and run bot
+                        bot = WarborneBot()
+                        bot.run(self.bot_token or os.getenv('DISCORD_BOT_TOKEN'))
+                    except Exception as e:
+                        print(f"Bot thread error: {e}")
+                        # Update status in database
+                        config = DiscordBotConfig.objects.first()
+                        if config:
+                            config.is_online = False
+                            config.error_message = str(e)
+                            config.save()
+                
                 # Start bot in background thread
-                bot_thread = threading.Thread(target=run_bot, daemon=True)
+                bot_thread = threading.Thread(target=run_bot_in_thread, daemon=True)
                 bot_thread.start()
                 
                 self.is_online = True
@@ -399,12 +422,29 @@ class DiscordBotConfig(models.Model):
             self.save()
             return False, f"Error stopping bot: {str(e)}"
     
+    def check_bot_status(self):
+        """Check if bot is actually running"""
+        try:
+            # This is a simple check - in production you might want to ping the bot
+            # or check if the Discord connection is active
+            return self.is_online
+        except Exception as e:
+            self.is_online = False
+            self.error_message = str(e)
+            self.save()
+            return False
+    
     def restart_bot_manually(self):
         """Restart the bot manually"""
         try:
+            # Stop the bot first
             self.stop_bot_manually()
+            
+            # Wait a bit for cleanup
             import time
-            time.sleep(2)  # Wait a bit before restarting
+            time.sleep(3)
+            
+            # Start the bot again
             return self.start_bot_manually()
         except Exception as e:
             self.error_message = str(e)

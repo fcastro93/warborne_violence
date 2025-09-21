@@ -232,7 +232,7 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
     list_filter = ['is_active', 'is_online', 'created_at']
     search_fields = ['name', 'error_message']
     readonly_fields = ['is_online', 'last_heartbeat', 'error_message', 'created_at', 'updated_at']
-    actions = ['start_bot', 'stop_bot', 'restart_bot']
+    actions = ['start_bot', 'stop_bot', 'restart_bot', 'check_bot_status']
     
     fieldsets = (
         ('Basic Information', {
@@ -287,6 +287,15 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
             else:
                 self.message_user(request, f"Failed to restart bot: {message}", level='ERROR')
     restart_bot.short_description = "Restart Bot"
+    
+    def check_bot_status(self, request, queryset):
+        for config in queryset:
+            status = config.check_bot_status()
+            if status:
+                self.message_user(request, f"Bot status checked: Online")
+            else:
+                self.message_user(request, f"Bot status checked: Offline", level='WARNING')
+    check_bot_status.short_description = "Check Bot Status"
     
     def has_add_permission(self, request):
         # Only allow one bot configuration
