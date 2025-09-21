@@ -461,6 +461,8 @@ class RecommendedBuildAdmin(admin.ModelAdmin):
     ordering = ['role', 'title']
     readonly_fields = ['created_at', 'updated_at', 'edit_build_link']
     actions = ['edit_builds_action']
+    raw_id_fields = ['drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable', 'mod1', 'mod2', 'mod3', 'mod4']
+    autocomplete_fields = ['drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable', 'mod1', 'mod2', 'mod3', 'mod4']
     
     fieldsets = (
         ('Build Information', {
@@ -485,25 +487,28 @@ class RecommendedBuildAdmin(admin.ModelAdmin):
     role_display.admin_order_field = 'role'
     
     def equipment_summary(self, obj):
-        items = []
-        if obj.drifter:
-            items.append(f"Drifter: {obj.drifter.name}")
-        if obj.weapon:
-            items.append(f"Weapon: {obj.weapon.name}")
-        if obj.helmet:
-            items.append(f"Helmet: {obj.helmet.name}")
-        if obj.chest:
-            items.append(f"Chest: {obj.chest.name}")
-        if obj.boots:
-            items.append(f"Boots: {obj.boots.name}")
-        if obj.consumable:
-            items.append(f"Consumable: {obj.consumable.name}")
-        
-        mod_count = sum(1 for mod in [obj.mod1, obj.mod2, obj.mod3, obj.mod4] if mod)
-        if mod_count > 0:
-            items.append(f"Mods: {mod_count}")
-        
-        return "; ".join(items[:3]) + ("..." if len(items) > 3 else "")
+        try:
+            items = []
+            if obj.drifter:
+                items.append(f"Drifter: {obj.drifter.name}")
+            if obj.weapon:
+                items.append(f"Weapon: {obj.weapon.name}")
+            if obj.helmet:
+                items.append(f"Helmet: {obj.helmet.name}")
+            if obj.chest:
+                items.append(f"Chest: {obj.chest.name}")
+            if obj.boots:
+                items.append(f"Boots: {obj.boots.name}")
+            if obj.consumable:
+                items.append(f"Consumable: {obj.consumable.name}")
+            
+            mod_count = sum(1 for mod in [obj.mod1, obj.mod2, obj.mod3, obj.mod4] if mod)
+            if mod_count > 0:
+                items.append(f"Mods: {mod_count}")
+            
+            return "; ".join(items[:3]) + ("..." if len(items) > 3 else "")
+        except Exception:
+            return "Error loading equipment"
     equipment_summary.short_description = "Equipment Summary"
     
     def edit_build_link(self, obj):
@@ -523,6 +528,13 @@ class RecommendedBuildAdmin(admin.ModelAdmin):
         else:
             self.message_user(request, "Please select only one build to edit.", level='ERROR')
     edit_builds_action.short_description = "Edit selected build(s) with visual editor"
+    
+    def get_queryset(self, request):
+        """Optimize queryset to avoid N+1 queries"""
+        return super().get_queryset(request).select_related(
+            'drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable',
+            'mod1', 'mod2', 'mod3', 'mod4'
+        )
     
     def save_model(self, request, obj, form, change):
         if not change:  # If creating a new object

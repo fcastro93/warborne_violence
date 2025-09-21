@@ -496,8 +496,11 @@ def recommended_builds(request):
     """View for displaying recommended builds organized by role"""
     from .models import RecommendedBuild, Player
     
-    # Get all active recommended builds
-    builds = RecommendedBuild.objects.filter(is_active=True).select_related('template_player')
+    # Get all active recommended builds with optimized queries
+    builds = RecommendedBuild.objects.filter(is_active=True).select_related(
+        'drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable',
+        'mod1', 'mod2', 'mod3', 'mod4'
+    )
     
     # Group builds by role
     builds_by_role = {}
@@ -513,7 +516,7 @@ def recommended_builds(request):
     context = {
         'builds_by_role': builds_by_role,
         'role_choices': role_choices,
-        'total_builds': builds.count(),
+        'total_builds': len(builds),
     }
     
     return render(request, 'guilds/recommended_builds.html', context)
@@ -526,21 +529,18 @@ def edit_recommended_build(request, build_id=None):
     build = None
     if build_id and build_id != 'new':
         try:
-            build = RecommendedBuild.objects.get(id=build_id)
+            build = RecommendedBuild.objects.select_related(
+                'drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable',
+                'mod1', 'mod2', 'mod3', 'mod4'
+            ).get(id=build_id)
         except RecommendedBuild.DoesNotExist:
             return render(request, 'guilds/error.html', {'error': 'Build not found'})
     
-    # Get all available items for the dropdowns
-    drifters = Drifter.objects.all().order_by('name')
-    gear_items = GearItem.objects.all().order_by('name')
-    gear_mods = GearMod.objects.all().order_by('name')
+    # Get role choices without database queries
     role_choices = Player.GAME_ROLE_CHOICES
     
     context = {
         'build': build,
-        'drifters': drifters,
-        'gear_items': gear_items,
-        'gear_mods': gear_mods,
         'role_choices': role_choices,
     }
     
