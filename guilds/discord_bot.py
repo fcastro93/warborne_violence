@@ -551,42 +551,73 @@ class CommandMenuView(discord.ui.View):
     @discord.ui.button(label="⚔️ Create Parties", style=discord.ButtonStyle.danger, emoji="⚔️")
     async def create_parties_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Button to create parties for events"""
-        # Create a modal for event selection
-        class EventSelectionModal(discord.ui.Modal, title="Select Event for Parties"):
-            def __init__(self, bot_instance):
-                super().__init__()
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def get_active_events_for_dropdown():
+            from .models import Event
+            events = Event.objects.filter(is_active=True, is_cancelled=False).order_by('event_datetime')
+            
+            event_options = []
+            for event in events:
+                # Create a shorter display name for the dropdown
+                display_name = event.title[:90] + "..." if len(event.title) > 90 else event.title
+                event_options.append(
+                    discord.SelectOption(
+                        label=display_name,
+                        value=str(event.id),
+                        description=f"Date: {event.event_datetime.strftime('%Y-%m-%d %H:%M')} | Type: {event.get_event_type_display()}"
+                    )
+                )
+            
+            return event_options
+        
+        event_options = await get_active_events_for_dropdown()
+        
+        if not event_options:
+            await interaction.response.send_message(
+                "❌ No active events available for party creation.",
+                ephemeral=True
+            )
+            return
+        
+        # Create a view with dropdown for event selection
+        class EventSelectionView(discord.ui.View):
+            def __init__(self, bot_instance, event_options):
+                super().__init__(timeout=300)
+                self.bot_instance = bot_instance
+                self.add_item(EventSelectDropdown(event_options, bot_instance))
+        
+        class EventSelectDropdown(discord.ui.Select):
+            def __init__(self, event_options, bot_instance):
+                super().__init__(
+                    placeholder="Choose an event to create parties for...",
+                    min_values=1,
+                    max_values=1,
+                    options=event_options
+                )
                 self.bot_instance = bot_instance
             
-            event_title = discord.ui.TextInput(
-                label="Event Title",
-                placeholder="Enter the exact title of the event",
-                max_length=100,
-                required=True
-            )
-            
-            async def on_submit(self, interaction: discord.Interaction):
+            async def callback(self, interaction: discord.Interaction):
                 from asgiref.sync import sync_to_async
                 
                 @sync_to_async
-                def find_event_by_title(title):
+                def get_event_by_id(event_id):
                     from .models import Event
                     return Event.objects.filter(
-                        title__iexact=title.strip(),
+                        id=event_id,
                         is_active=True,
                         is_cancelled=False
                     ).first()
                 
-                event = await find_event_by_title(self.event_title.value)
+                event = await get_event_by_id(int(self.values[0]))
                 
                 if not event:
                     await interaction.response.send_message(
-                        f"❌ No active event found with title '{self.event_title.value}'",
+                        "❌ Event not found or no longer active.",
                         ephemeral=True
                     )
                     return
-                
-                # Check if user has permission to create parties
-                # For now, allow anyone, but you can add permission checks here
                 
                 # Create parties using the bot instance method
                 success, message = await self.bot_instance.create_balanced_parties(event)
@@ -596,53 +627,79 @@ class CommandMenuView(discord.ui.View):
                 else:
                     await interaction.response.send_message(f"❌ {message}", ephemeral=True)
         
-        modal = EventSelectionModal(self.bot_instance)
-        await interaction.response.send_modal(modal)
+        view = EventSelectionView(self.bot_instance, event_options)
+        embed = discord.Embed(
+            title="⚔️ Create Parties",
+            description="Select an event from the dropdown below to create balanced parties:",
+            color=0xff6b35
+        )
+        
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
     
     @discord.ui.button(label="🗑️ Delete Event", style=discord.ButtonStyle.danger, emoji="🗑️")
     async def delete_event_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Button to delete an event"""
-        # Create a modal for event selection
-        class DeleteEventModal(discord.ui.Modal, title="Delete Event"):
-            def __init__(self, bot_instance):
-                super().__init__()
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def get_active_events_for_deletion():
+            from .models import Event
+            events = Event.objects.filter(is_active=True, is_cancelled=False).order_by('event_datetime')
+            
+            event_options = []
+            for event in events:
+                # Create a shorter display name for the dropdown
+                display_name = event.title[:90] + "..." if len(event.title) > 90 else event.title
+                event_options.append(
+                    discord.SelectOption(
+                        label=display_name,
+                        value=str(event.id),
+                        description=f"Date: {event.event_datetime.strftime('%Y-%m-%d %H:%M')} | Type: {event.get_event_type_display()}"
+                    )
+                )
+            
+            return event_options
+        
+        event_options = await get_active_events_for_deletion()
+        
+        if not event_options:
+            await interaction.response.send_message(
+                "❌ No active events available for deletion.",
+                ephemeral=True
+            )
+            return
+        
+        # Create a view with dropdown for event selection
+        class DeleteEventView(discord.ui.View):
+            def __init__(self, bot_instance, event_options):
+                super().__init__(timeout=300)
+                self.bot_instance = bot_instance
+                self.add_item(DeleteEventDropdown(event_options, bot_instance))
+        
+        class DeleteEventDropdown(discord.ui.Select):
+            def __init__(self, event_options, bot_instance):
+                super().__init__(
+                    placeholder="Choose an event to delete...",
+                    min_values=1,
+                    max_values=1,
+                    options=event_options
+                )
                 self.bot_instance = bot_instance
             
-            event_title = discord.ui.TextInput(
-                label="Event Title",
-                placeholder="Enter the exact title of the event to delete",
-                max_length=100,
-                required=True
-            )
-            
-            confirmation = discord.ui.TextInput(
-                label="Confirmation",
-                placeholder="Type 'DELETE' to confirm",
-                max_length=10,
-                required=True
-            )
-            
-            async def on_submit(self, interaction: discord.Interaction):
-                if self.confirmation.value.upper() != 'DELETE':
-                    await interaction.response.send_message(
-                        "❌ You must type 'DELETE' to confirm deletion.",
-                        ephemeral=True
-                    )
-                    return
-                
+            async def callback(self, interaction: discord.Interaction):
                 from asgiref.sync import sync_to_async
                 
                 @sync_to_async
-                def find_and_delete_event(title):
+                def find_and_delete_event(event_id):
                     from .models import Event
                     event = Event.objects.filter(
-                        title__iexact=title.strip(),
+                        id=event_id,
                         is_active=True,
                         is_cancelled=False
                     ).first()
                     
                     if not event:
-                        return False, f"No active event found with title '{title}'"
+                        return False, "Event not found or no longer active"
                     
                     # Mark as cancelled instead of deleting to preserve history
                     event.is_cancelled = True
@@ -651,15 +708,21 @@ class CommandMenuView(discord.ui.View):
                     
                     return True, f"Event '{event.title}' cancelled successfully"
                 
-                success, message = await find_and_delete_event(self.event_title.value)
+                success, message = await find_and_delete_event(int(self.values[0]))
                 
                 if success:
                     await interaction.response.send_message(f"✅ {message}", ephemeral=True)
                 else:
                     await interaction.response.send_message(f"❌ {message}", ephemeral=True)
         
-        modal = DeleteEventModal(self.bot_instance)
-        await interaction.response.send_modal(modal)
+        view = DeleteEventView(self.bot_instance, event_options)
+        embed = discord.Embed(
+            title="🗑️ Delete Event",
+            description="⚠️ **WARNING: This will cancel the selected event!**\n\nSelect an event from the dropdown below to delete:",
+            color=0xff0000
+        )
+        
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
     
     @discord.ui.button(label="🏓 Ping", style=discord.ButtonStyle.success, emoji="🏓")
     async def ping_button(self, interaction: discord.Interaction, button: discord.ui.Button):
