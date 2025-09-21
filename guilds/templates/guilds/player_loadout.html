@@ -60,6 +60,7 @@
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
         }
         
         .header h1 {
@@ -67,6 +68,134 @@
             font-size: 2.5rem;
             margin-bottom: 10px;
             text-shadow: 0 0 20px rgba(100, 181, 246, 0.5);
+            display: inline-block;
+        }
+        
+        .edit-name-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.6em;
+            margin-left: 8px;
+            padding: 3px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            vertical-align: middle;
+            opacity: 0.7;
+        }
+        
+        .edit-name-btn:hover {
+            color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+            opacity: 1;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 15px;
+        }
+        
+        .close:hover {
+            color: #fff;
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #4a9eff;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.3);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #4a9eff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3a8eef;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
         
         .header .subtitle {
@@ -855,7 +984,12 @@
             {% endif %}
             
             <div class="header">
-                <h1>{{ player.in_game_name }}</h1>
+                <h1>
+                    {{ player.in_game_name }}
+                    <button class="edit-name-btn" onclick="openEditNameModal()" title="Edit player name">
+                        ✏️
+                    </button>
+                </h1>
                 <div class="subtitle">Player Loadout</div>
             </div>
             
@@ -2225,5 +2359,91 @@
             <p class="skill-modal-description" id="skill-modal-description">Skill description will appear here.</p>
         </div>
     </div>
+
+    <!-- Edit Name Modal -->
+    <div id="editNameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditNameModal()">&times;</span>
+            <h2>Edit Player Name</h2>
+            <form id="editNameForm">
+                <div class="form-group">
+                    <label for="newPlayerName">Player Name:</label>
+                    <input type="text" id="newPlayerName" name="name" value="{{ player.in_game_name }}" maxlength="50" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditNameModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Edit Name Modal Functions
+        function openEditNameModal() {
+            document.getElementById('editNameModal').style.display = 'block';
+            document.getElementById('newPlayerName').focus();
+            document.getElementById('newPlayerName').select();
+        }
+
+        function closeEditNameModal() {
+            document.getElementById('editNameModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('editNameModal');
+            if (event.target == modal) {
+                closeEditNameModal();
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('editNameForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newName = document.getElementById('newPlayerName').value.trim();
+            const playerId = window.location.pathname.split('/')[3]; // Extract player ID from URL
+            
+            if (!newName) {
+                alert('Please enter a valid name');
+                return;
+            }
+            
+            if (newName === '{{ player.in_game_name }}') {
+                closeEditNameModal();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/guilds/player/${playerId}/update-name/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        name: newName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update the displayed name
+                    document.querySelector('.header h1').innerHTML = `${newName} <button class="edit-name-btn" onclick="openEditNameModal()" title="Edit player name">✏️</button>`;
+                    // Update page title
+                    document.title = `${newName} - Loadout`;
+                    closeEditNameModal();
+                    alert('Player name updated successfully!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error updating name:', error);
+                alert('Error updating name. Please try again.');
+            }
+        });
+    </script>
 </body>
 </html>

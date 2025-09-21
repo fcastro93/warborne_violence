@@ -385,6 +385,40 @@ def check_player_permissions(request, player_id):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
+@require_POST
+def update_player_name(request, player_id):
+    """AJAX view to update player's name"""
+    try:
+        player = get_object_or_404(Player, id=player_id)
+        data = json.loads(request.body)
+        new_name = data.get('name', '').strip()
+        
+        # Validate new name
+        if not new_name:
+            return JsonResponse({'success': False, 'error': 'Name cannot be empty'})
+        
+        if len(new_name) < 3 or len(new_name) > 50:
+            return JsonResponse({'success': False, 'error': 'Name must be between 3 and 50 characters'})
+        
+        # Check if name already exists (excluding current player)
+        if Player.objects.filter(in_game_name__iexact=new_name).exclude(id=player_id).exists():
+            return JsonResponse({'success': False, 'error': 'A player with this name already exists'})
+        
+        # Update player name
+        old_name = player.in_game_name
+        player.in_game_name = new_name
+        player.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Player name updated from "{old_name}" to "{new_name}"',
+            'new_name': new_name
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
 # Discord Bot Management Views
 @staff_member_required
 def bot_management(request):

@@ -3,8 +3,179 @@ from discord.ext import commands
 from discord import app_commands
 import os
 import asyncio
+from datetime import datetime, timezone
 from django.conf import settings
-from .models import DiscordBotConfig, Player, Guild
+from .models import DiscordBotConfig, Player, Guild, Event, EventParticipant
+
+
+class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
+    """Modal for creating guild events"""
+    def __init__(self, bot_instance):
+        super().__init__()
+        self.bot_instance = bot_instance
+    
+    title_input = discord.ui.TextInput(
+        label="Event Title",
+        placeholder="e.g., Guild War vs Yellows",
+        max_length=100,
+        required=True
+    )
+    
+    description_input = discord.ui.TextInput(
+        label="Event Description",
+        placeholder="Describe what this event is about...",
+        style=discord.TextStyle.paragraph,
+        max_length=1000,
+        required=False
+    )
+    
+    datetime_input = discord.ui.TextInput(
+        label="Event Date & Time",
+        placeholder="Format: YYYY-MM-DD HH:MM (24h format)",
+        max_length=20,
+        required=True
+    )
+    
+    max_participants_input = discord.ui.TextInput(
+        label="Max Participants (optional)",
+        placeholder="Leave empty for unlimited",
+        max_length=3,
+        required=False
+    )
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        """Handle the modal submission"""
+        try:
+            # Parse datetime
+            try:
+                event_datetime = datetime.strptime(self.datetime_input.value, "%Y-%m-%d %H:%M")
+                # Convert to UTC (assuming input is in UTC for now)
+                event_datetime = event_datetime.replace(tzinfo=timezone.utc)
+            except ValueError:
+                await interaction.response.send_message(
+                    "❌ Invalid date format. Please use: YYYY-MM-DD HH:MM (e.g., 2024-12-25 19:30)",
+                    ephemeral=True
+                )
+                return
+            
+            # Validate max participants
+            max_participants = None
+            if self.max_participants_input.value.strip():
+                try:
+                    max_participants = int(self.max_participants_input.value)
+                    if max_participants <= 0:
+                        raise ValueError()
+                except ValueError:
+                    await interaction.response.send_message(
+                        "❌ Max participants must be a positive number.",
+                        ephemeral=True
+                    )
+                    return
+            
+            # Create event in database
+            from asgiref.sync import sync_to_async
+            
+            @sync_to_async
+            def create_event():
+                event = Event.objects.create(
+                    title=self.title_input.value,
+                    description=self.description_input.value or "",
+                    event_type='other',  # Default type, can be enhanced later
+                    created_by_discord_id=interaction.user.id,
+                    created_by_discord_name=str(interaction.user),
+                    event_datetime=event_datetime,
+                    timezone='UTC',
+                    max_participants=max_participants
+                )
+                return event
+            
+            event = await create_event()
+            
+            # Post event to announcements channel
+            await self.post_event_announcement(interaction, event)
+            
+            # Confirm to user
+            await interaction.response.send_message(
+                f"✅ **Event created successfully!**\n"
+                f"**Title:** {event.title}\n"
+                f"**Date:** {event.discord_timestamp}\n"
+                f"**Time:** {event.discord_timestamp_relative}",
+                ephemeral=True
+            )
+            
+        except Exception as e:
+            print(f"Error creating event: {e}")
+            await interaction.response.send_message(
+                "❌ An error occurred while creating the event. Please try again.",
+                ephemeral=True
+            )
+    
+    async def post_event_announcement(self, interaction, event):
+        """Post the event announcement to the designated channel"""
+        try:
+            # Get the announcements channel (you can configure this)
+            announcements_channel_id = 1234567890123456789  # Replace with your channel ID
+            announcements_channel = self.bot_instance.get_channel(announcements_channel_id)
+            
+            if not announcements_channel:
+                print(f"Announcements channel not found: {announcements_channel_id}")
+                return
+            
+            # Create event embed
+            embed = discord.Embed(
+                title=f"🎯 {event.title}",
+                description=event.description or "No description provided.",
+                color=0x4a9eff,
+                timestamp=datetime.now(timezone.utc)
+            )
+            
+            embed.add_field(
+                name="📅 Date & Time",
+                value=f"{event.discord_timestamp}\n{event.discord_timestamp_relative}",
+                inline=False
+            )
+            
+            embed.add_field(
+                name="👤 Created by",
+                value=f"<@{event.created_by_discord_id}>",
+                inline=True
+            )
+            
+            if event.max_participants:
+                embed.add_field(
+                    name="👥 Max Participants",
+                    value=str(event.max_participants),
+                    inline=True
+                )
+            
+            embed.add_field(
+                name="✅ Participants",
+                value="0",
+                inline=True
+            )
+            
+            embed.set_footer(text="React with ✅ to join this event!")
+            
+            # Send the announcement
+            message = await announcements_channel.send(embed=embed)
+            
+            # Add reaction
+            await message.add_reaction("✅")
+            
+            # Update event with message info
+            from asgiref.sync import sync_to_async
+            
+            @sync_to_async
+            def update_event_message():
+                event.discord_message_id = message.id
+                event.discord_channel_id = announcements_channel_id
+                event.save()
+            
+            await update_event_message()
+            
+        except Exception as e:
+            print(f"Error posting event announcement: {e}")
+
 
 class WarborneBot(commands.Bot):
     def __init__(self):
@@ -17,6 +188,7 @@ class WarborneBot(commands.Bot):
         intents.guilds = True
         intents.members = False
         intents.presences = False
+        intents.reactions = True  # Need this for reaction tracking
         
         # Initialize bot with correct prefix
         super().__init__(command_prefix=self.config.get('command_prefix', '!'), intents=intents)
@@ -161,6 +333,22 @@ class WarborneBot(commands.Bot):
             except Exception as e:
                 await ctx.send(f"❌ Error: {str(e)}")
     
+    async def setup_hook(self):
+        """Setup hook for slash commands"""
+        # Register slash commands
+        @self.tree.command(name="createevent", description="Create a new guild event")
+        async def createevent(interaction: discord.Interaction):
+            """Slash command to create a new event"""
+            print(f"🔥 DEBUG: createevent slash command called by {interaction.user.name}")
+            await interaction.response.send_modal(CreateEventModal(self))
+        
+        # Sync commands
+        try:
+            synced = await self.tree.sync()
+            print(f'✅ Synced {len(synced)} slash commands')
+        except Exception as e:
+            print(f'❌ Failed to sync commands: {e}')
+    
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
         print('🤖 ¡Hola! Warborne Bot está listo para la acción!')
@@ -186,6 +374,7 @@ class WarborneBot(commands.Bot):
                 try:
                     await general_channel.send("🤖 ¡Hola! Warborne Bot está listo para la acción!\n"
                                               "**Comandos disponibles:**\n"
+                                              "`/createevent` - Crear evento de guild\n"
                                               "`!createplayer [nombre]` - Crear tu jugador (usa tu nombre de Discord por defecto)\n"
                                               "`!myplayer` - Ver tu jugador\n"
                                               "`!buildplayer <nombre>` - Ver loadout de jugador\n"
@@ -200,6 +389,7 @@ class WarborneBot(commands.Bot):
         """Handle command errors"""
         if isinstance(error, commands.CommandNotFound):
             await ctx.send("❌ Comando no encontrado. Comandos disponibles:\n"
+                          "`/createevent` - Crear evento de guild\n"
                           "`!createplayer [nombre]` - Crear tu jugador\n"
                           "`!myplayer` - Ver tu jugador\n"
                           "`!buildplayer <nombre>` - Ver loadout de jugador\n"
@@ -207,6 +397,188 @@ class WarborneBot(commands.Bot):
                           "`!ping` - Probar bot")
         else:
             await ctx.send(f"❌ Error: {str(error)}")
+    
+    async def on_reaction_add(self, reaction, user):
+        """Handle when a user reacts to a message"""
+        # Ignore bot reactions
+        if user.bot:
+            return
+        
+        # Check if this is an event message
+        if reaction.emoji == "✅" and reaction.message.embeds:
+            await self.handle_event_reaction(reaction, user, added=True)
+    
+    async def on_reaction_remove(self, reaction, user):
+        """Handle when a user removes a reaction"""
+        # Ignore bot reactions
+        if user.bot:
+            return
+        
+        # Check if this is an event message
+        if reaction.emoji == "✅" and reaction.message.embeds:
+            await self.handle_event_reaction(reaction, user, added=False)
+    
+    async def handle_event_reaction(self, reaction, user, added=True):
+        """Handle event reactions (joining/leaving events)"""
+        try:
+            from asgiref.sync import sync_to_async
+            
+            @sync_to_async
+            def find_event_by_message():
+                return Event.objects.filter(
+                    discord_message_id=reaction.message.id,
+                    discord_channel_id=reaction.message.channel.id,
+                    is_active=True
+                ).first()
+            
+            event = await find_event_by_message()
+            
+            if not event:
+                return  # Not an event message
+            
+            if added:
+                # User is joining the event
+                await self.add_event_participant(event, user)
+            else:
+                # User is leaving the event
+                await self.remove_event_participant(event, user)
+            
+            # Update the embed with new participant count
+            await self.update_event_embed(event, reaction.message)
+            
+        except Exception as e:
+            print(f"Error handling event reaction: {e}")
+    
+    async def add_event_participant(self, event, user):
+        """Add a participant to an event"""
+        try:
+            from asgiref.sync import sync_to_async
+            
+            @sync_to_async
+            def add_participant():
+                # Check if already participating
+                existing = EventParticipant.objects.filter(
+                    event=event,
+                    discord_user_id=user.id
+                ).first()
+                
+                if existing:
+                    if existing.is_active:
+                        return False  # Already participating
+                    else:
+                        # Reactivate
+                        existing.is_active = True
+                        existing.save()
+                        return True
+                else:
+                    # Check if event is full
+                    if event.max_participants and event.participant_count >= event.max_participants:
+                        return False  # Event is full
+                    
+                    # Get or create player for this user
+                    player = Player.objects.filter(discord_user_id=user.id).first()
+                    
+                    # Create new participant
+                    EventParticipant.objects.create(
+                        event=event,
+                        discord_user_id=user.id,
+                        discord_name=str(user),
+                        player=player
+                    )
+                    return True
+            
+            success = await add_participant()
+            
+            if not success:
+                # Try to remove the reaction if event is full or already participating
+                try:
+                    await reaction.remove(user)
+                    if event.max_participants and event.participant_count >= event.max_participants:
+                        await user.send(f"❌ **{event.title}** is full! ({event.participant_count}/{event.max_participants} participants)")
+                    else:
+                        await user.send(f"ℹ️ You're already participating in **{event.title}**!")
+                except:
+                    pass  # Can't send DM, ignore
+            
+        except Exception as e:
+            print(f"Error adding event participant: {e}")
+    
+    async def remove_event_participant(self, event, user):
+        """Remove a participant from an event"""
+        try:
+            from asgiref.sync import sync_to_async
+            
+            @sync_to_async
+            def remove_participant():
+                participant = EventParticipant.objects.filter(
+                    event=event,
+                    discord_user_id=user.id,
+                    is_active=True
+                ).first()
+                
+                if participant:
+                    participant.is_active = False
+                    participant.save()
+                    return True
+                return False
+            
+            await remove_participant()
+            
+        except Exception as e:
+            print(f"Error removing event participant: {e}")
+    
+    async def update_event_embed(self, event, message):
+        """Update the event embed with current participant count"""
+        try:
+            from asgiref.sync import sync_to_async
+            
+            @sync_to_async
+            def get_participants():
+                return list(EventParticipant.objects.filter(
+                    event=event,
+                    is_active=True
+                ).values_list('discord_name', flat=True))
+            
+            participants = await get_participants()
+            
+            # Create updated embed
+            embed = message.embeds[0]
+            
+            # Update participant count
+            participant_count = len(participants)
+            embed.set_field_at(
+                len(embed.fields) - 1,  # Last field is participants
+                name="✅ Participants",
+                value=str(participant_count),
+                inline=True
+            )
+            
+            # Add participant list if there are participants
+            if participants:
+                participant_list = "\n".join([f"• {name}" for name in participants[:10]])  # Show first 10
+                if len(participants) > 10:
+                    participant_list += f"\n• ... and {len(participants) - 10} more"
+                
+                # Add or update participant list field
+                if len(embed.fields) > 4:  # If participant list field exists
+                    embed.set_field_at(
+                        len(embed.fields) - 1,
+                        name="👥 Participant List",
+                        value=participant_list,
+                        inline=False
+                    )
+                else:
+                    embed.add_field(
+                        name="👥 Participant List",
+                        value=participant_list,
+                        inline=False
+                    )
+            
+            # Update the message
+            await message.edit(embed=embed)
+            
+        except Exception as e:
+            print(f"Error updating event embed: {e}")
     
     def get_bot_config(self):
         """Get bot configuration from database or environment variables"""

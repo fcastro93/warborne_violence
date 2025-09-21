@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Guild(models.Model):
@@ -459,3 +460,93 @@ class DiscordBotConfig(models.Model):
             self.error_message = str(e)
             self.save()
             return False, f"Error restarting bot: {str(e)}"
+
+
+class Event(models.Model):
+    """Model to represent guild events created via Discord"""
+    # Event basic information
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    event_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('guild_war', 'Guild War'),
+            ('pvp_fight', 'PvP Fight'),
+            ('resource_farming', 'Resource Farming'),
+            ('boss_raid', 'Boss Raid'),
+            ('social_event', 'Social Event'),
+            ('training', 'Training'),
+            ('other', 'Other'),
+        ],
+        default='other'
+    )
+    
+    # Discord integration
+    discord_message_id = models.BigIntegerField(null=True, blank=True, help_text="Discord message ID of the event post")
+    discord_channel_id = models.BigIntegerField(null=True, blank=True, help_text="Discord channel ID where event was posted")
+    created_by_discord_id = models.BigIntegerField(help_text="Discord User ID of event creator")
+    created_by_discord_name = models.CharField(max_length=100, help_text="Discord username of event creator")
+    
+    # Event scheduling
+    event_datetime = models.DateTimeField(help_text="When the event will take place")
+    timezone = models.CharField(max_length=50, default='UTC', help_text="Timezone for the event")
+    
+    # Event management
+    max_participants = models.IntegerField(null=True, blank=True, help_text="Maximum number of participants (null = unlimited)")
+    is_active = models.BooleanField(default=True, help_text="Whether the event is still active")
+    is_cancelled = models.BooleanField(default=False, help_text="Whether the event was cancelled")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['event_datetime']
+        verbose_name = "Event"
+        verbose_name_plural = "Events"
+    
+    def __str__(self):
+        return f"{self.title} - {self.event_datetime.strftime('%Y-%m-%d %H:%M')}"
+    
+    @property
+    def participant_count(self):
+        """Get the number of participants"""
+        return self.participants.filter(is_active=True).count()
+    
+    @property
+    def discord_timestamp(self):
+        """Generate Discord timestamp for the event datetime"""
+        import calendar
+        timestamp = calendar.timegm(self.event_datetime.timetuple())
+        return f"<t:{timestamp}:F>"  # Full date and time format
+    
+    @property
+    def discord_timestamp_relative(self):
+        """Generate Discord relative timestamp for the event datetime"""
+        import calendar
+        timestamp = calendar.timegm(self.event_datetime.timetuple())
+        return f"<t:{timestamp}:R>"  # Relative time format
+
+
+class EventParticipant(models.Model):
+    """Model to track event participants"""
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='participants')
+    discord_user_id = models.BigIntegerField(help_text="Discord User ID of participant")
+    discord_name = models.CharField(max_length=100, help_text="Discord username of participant")
+    
+    # Player information (if they have a player created)
+    player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='event_participations')
+    
+    # Participation status
+    is_active = models.BooleanField(default=True, help_text="Whether the participant is still active")
+    joined_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, null=True, help_text="Notes about the participant")
+    
+    class Meta:
+        unique_together = ['event', 'discord_user_id']
+        ordering = ['joined_at']
+        verbose_name = "Event Participant"
+        verbose_name_plural = "Event Participants"
+    
+    def __str__(self):
+        return f"{self.discord_name} - {self.event.title}"

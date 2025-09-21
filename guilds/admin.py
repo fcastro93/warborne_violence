@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
-from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig
+from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, Event, EventParticipant
 
 
 @admin.register(Guild)
@@ -316,6 +316,84 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Don't allow deletion of bot configuration
         return False
+
+
+class EventParticipantInline(admin.TabularInline):
+    model = EventParticipant
+    extra = 0
+    fields = ['discord_name', 'player', 'is_active', 'joined_at']
+    readonly_fields = ['discord_name', 'joined_at']
+    fk_name = 'event'
+
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ['title', 'event_type', 'event_datetime', 'participant_count_display', 'created_by_discord_name', 'is_active', 'is_cancelled']
+    list_filter = ['event_type', 'is_active', 'is_cancelled', 'created_at', 'event_datetime']
+    search_fields = ['title', 'description', 'created_by_discord_name']
+    ordering = ['event_datetime']
+    readonly_fields = ['created_at', 'updated_at', 'discord_message_id', 'discord_channel_id', 'discord_timestamp_display']
+    inlines = [EventParticipantInline]
+    
+    fieldsets = (
+        ('Event Information', {
+            'fields': ('title', 'description', 'event_type', 'event_datetime', 'timezone')
+        }),
+        ('Discord Integration', {
+            'fields': ('created_by_discord_name', 'discord_message_id', 'discord_channel_id', 'discord_timestamp_display'),
+            'classes': ('collapse',)
+        }),
+        ('Event Management', {
+            'fields': ('max_participants', 'is_active', 'is_cancelled')
+        }),
+        ('Dates', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def participant_count_display(self, obj):
+        """Display participant count with color coding"""
+        count = obj.participant_count
+        if obj.max_participants:
+            if count >= obj.max_participants:
+                color = "#ff4444"  # Red if full
+            elif count >= obj.max_participants * 0.8:
+                color = "#ffaa00"  # Orange if almost full
+            else:
+                color = "#44ff44"  # Green if space available
+            return format_html(
+                '<span style="color: {};">{}/{} participants</span>',
+                color, count, obj.max_participants
+            )
+        else:
+            return format_html('<span style="color: #44ff44;">{} participants</span>', count)
+    participant_count_display.short_description = 'Participants'
+    
+    def discord_timestamp_display(self, obj):
+        """Display Discord timestamp"""
+        if obj.event_datetime:
+            return format_html(
+                '<span style="font-family: monospace; background: #2f3136; padding: 2px 6px; border-radius: 3px;">{}</span>',
+                obj.discord_timestamp
+            )
+        return "-"
+    discord_timestamp_display.short_description = 'Discord Timestamp'
+
+
+@admin.register(EventParticipant)
+class EventParticipantAdmin(admin.ModelAdmin):
+    list_display = ['discord_name', 'event_title', 'player', 'is_active', 'joined_at']
+    list_filter = ['is_active', 'event__event_type', 'joined_at']
+    search_fields = ['discord_name', 'event__title']
+    ordering = ['-joined_at']
+    readonly_fields = ['joined_at']
+    
+    def event_title(self, obj):
+        """Display event title"""
+        return obj.event.title
+    event_title.short_description = 'Event'
+    event_title.admin_order_field = 'event__title'
 
 
 # Customize admin title
