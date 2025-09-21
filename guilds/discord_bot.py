@@ -6,6 +6,17 @@ import asyncio
 from datetime import datetime, timezone
 from django.conf import settings
 from .models import DiscordBotConfig, Player, Guild, Event, EventParticipant
+from asgiref.sync import sync_to_async
+
+
+# Global helper functions for database operations
+@sync_to_async
+def _get_bot_config():
+    """Get bot configuration from database"""
+    try:
+        return DiscordBotConfig.objects.first()
+    except DiscordBotConfig.DoesNotExist:
+        return None
 
 
 class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
@@ -253,14 +264,6 @@ class WarborneBot(commands.Bot):
         @sync_to_async
         def _find_player_by_name(q: str):
             return Player.objects.filter(in_game_name__icontains=q).first()
-        
-        @sync_to_async
-        def _get_bot_config():
-            """Get bot configuration from database"""
-            try:
-                return DiscordBotConfig.objects.first()
-            except DiscordBotConfig.DoesNotExist:
-                return None
 
         @sync_to_async
         def _get_active_guilds():
