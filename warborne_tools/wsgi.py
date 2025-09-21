@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warborne_tools.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warborne_tools.settings_production')
 
 application = get_wsgi_application()

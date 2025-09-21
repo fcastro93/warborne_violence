@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "Running release script..."
+
+# Set production settings
+export DJANGO_SETTINGS_MODULE=warborne_tools.settings_production
+
+# Create logs directory
+mkdir -p logs
+
+echo "Release script completed successfully!"

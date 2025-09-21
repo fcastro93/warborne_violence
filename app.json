@@ -33,6 +33,6 @@
     }
   ],
   "scripts": {
-    "postdeploy": "python manage.py migrate && python manage.py import_complete_data"
+    "postdeploy": "bin/post_compile"
   }
 }

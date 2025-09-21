@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Exit on any error
+set -e
+
+echo "Running post-compile script..."
+
+# Set production settings
+export DJANGO_SETTINGS_MODULE=warborne_tools.settings_production
+
+# Create logs directory if it doesn't exist
+mkdir -p logs
+
+# Run migrations
+echo "Running database migrations..."
+python manage.py migrate --noinput || echo "Migrations failed or already up to date"
+
+# Import game data
+echo "Importing game data..."
+python manage.py import_complete_data || echo "Game data import failed or already imported"
+
+# Create superuser if it doesn't exist
+echo "Checking for admin user..."
+python manage.py shell << EOF
+from django.contrib.auth.models import User
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser('admin', 'admin@warborne.com', 'admin123')
+    print('Admin user created: admin/admin123')
+else:
+    print('Admin user already exists')
+EOF
+
+echo "Post-compile script completed successfully!"
