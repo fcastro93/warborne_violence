@@ -101,6 +101,25 @@ class Player(models.Model):
     ]
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
     
+    # Game role/playstyle
+    GAME_ROLE_CHOICES = [
+        ('ranged_dps', 'Ranged DPS'),
+        ('melee_dps', 'Melee DPS'),
+        ('tank', 'Tank'),
+        ('healer', 'Healer'),
+        ('defensive_tank', 'Defensive Tank'),
+        ('offensive_tank', 'Offensive Tank'),
+        ('offensive_support', 'Offensive Support'),
+        ('defensive_support', 'Defensive Support'),
+    ]
+    game_role = models.CharField(
+        max_length=20, 
+        choices=GAME_ROLE_CHOICES, 
+        null=True, 
+        blank=True,
+        help_text="Primary role/playstyle in the game"
+    )
+    
     # Status
     is_active = models.BooleanField(default=True)
     joined_guild_at = models.DateTimeField(null=True, blank=True)

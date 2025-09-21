@@ -41,8 +41,8 @@ class PlayerInline(admin.TabularInline):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ['in_game_name', 'discord_name', 'guild', 'character_level', 'role', 'faction', 'loadout_link', 'is_active']
-    list_filter = ['guild', 'role', 'faction', 'is_active', 'created_at']
+    list_display = ['in_game_name', 'discord_name', 'guild', 'character_level', 'role', 'game_role', 'faction', 'loadout_link', 'is_active']
+    list_filter = ['guild', 'role', 'game_role', 'faction', 'is_active', 'created_at']
     search_fields = ['in_game_name', 'discord_name', 'notes']
     ordering = ['in_game_name']
     readonly_fields = ['created_at', 'updated_at', 'joined_guild_at', 'loadout_link']
@@ -56,7 +56,7 @@ class PlayerAdmin(admin.ModelAdmin):
             'fields': ('faction', 'drifter_1', 'drifter_2', 'drifter_3')
         }),
         ('Roles and Permissions', {
-            'fields': ('role',)
+            'fields': ('role', 'game_role')
         }),
         ('Status', {
             'fields': ('is_active', 'joined_guild_at')

@@ -848,6 +848,12 @@
                     <span class="info-label">Role:</span>
                     <span class="info-value">{{ player.get_role_display }}</span>
                 </div>
+                {% if player.game_role %}
+                <div class="info-row">
+                    <span class="info-label">Game Role:</span>
+                    <span class="info-value">{{ player.get_game_role_display }}</span>
+                </div>
+                {% endif %}
                 <div class="info-row">
                     <span class="info-label">Total Gear:</span>
                     <span class="info-value">{{ total_gear }}</span>
