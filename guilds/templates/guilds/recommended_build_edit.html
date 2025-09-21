@@ -2251,18 +2251,11 @@
                 drifterSlot.classList.add('equipped');
                 drifterSlot.classList.remove('empty');
                 
-                // Get the iconId for this drifter
-                const drifterIconId = getDrifterIconId(drifterName);
-                
-                // Update slot content
-                const slotContent = drifterSlot.querySelector('.slot-content');
-                if (slotContent) {
-                    slotContent.innerHTML = `
-                        <img src="/static/icons/${drifterIconId}.png" alt="${drifterName}" class="gear-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <span class="gear-fallback" style="display:none;">🎭</span>
-                        <div class="slot-label">${drifterName}</div>
-                    `;
-                }
+                // Update slot content to match the expected structure
+                drifterSlot.innerHTML = `
+                    <div class="gear-slot-name">${drifterName}</div>
+                    <div class="slot-label">🎭 Drifter</div>
+                `;
             }
             
             // Store drifter selection for saving
