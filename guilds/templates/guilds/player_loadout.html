@@ -1373,11 +1373,20 @@
         }
         
         function filterGear(category, searchTerm) {
-            const activeAttributeTab = document.querySelector(`#item-tab-${category} .attribute-tab.active`);
-            if (!activeAttributeTab) return;
+            let gearItems;
             
-            const attributeContentId = activeAttributeTab.getAttribute('onclick').match(/'([^']+)'/)[1];
-            const gearItems = document.querySelectorAll(`#${attributeContentId} .gear-item`);
+            if (category === 'consumable') {
+                // For consumables, search in the specific content area
+                gearItems = document.querySelectorAll(`#${category}-all .gear-item`);
+            } else {
+                // For other categories, use the active attribute tab
+                const activeAttributeTab = document.querySelector(`#item-tab-${category} .attribute-tab.active`);
+                if (!activeAttributeTab) return;
+                
+                const attributeContentId = activeAttributeTab.getAttribute('onclick').match(/'([^']+)'/)[1];
+                gearItems = document.querySelectorAll(`#${attributeContentId} .gear-item`);
+            }
+            
             const searchLower = searchTerm.toLowerCase();
             
             gearItems.forEach(item => {
@@ -1471,6 +1480,12 @@
             // Skip mods as they have their own initialization
             if (category === 'mod') {
                 console.log('Skipping mods category');
+                return;
+            }
+            
+            // Skip consumables as they don't have attribute tabs
+            if (category === 'consumable') {
+                console.log('Skipping consumables category - no attribute tabs needed');
                 return;
             }
             
