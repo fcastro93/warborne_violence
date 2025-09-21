@@ -788,3 +788,105 @@ def get_items_for_slot(request, slot_type):
         
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+
+
+def update_recommended_build_equipment(request, build_id):
+    """AJAX endpoint to update recommended build equipment (similar to player loadout update)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        # Check if user is staff
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return JsonResponse({'success': False, 'error': 'Staff privileges required'})
+        
+        build = RecommendedBuild.objects.get(id=build_id)
+        
+        # Parse JSON data
+        import json
+        data = json.loads(request.body)
+        action = data.get('action')
+        
+        if action == 'equip':
+            gear_item_id = data.get('gear_item_id')
+            slot_type = data.get('slot_type')
+            
+            if not gear_item_id or not slot_type:
+                return JsonResponse({'success': False, 'error': 'Missing required parameters'})
+            
+            # Update the appropriate slot
+            if slot_type == 'weapon':
+                build.weapon_id = gear_item_id
+            elif slot_type == 'helmet':
+                build.helmet_id = gear_item_id
+            elif slot_type == 'chest':
+                build.chest_id = gear_item_id
+            elif slot_type == 'boots':
+                build.boots_id = gear_item_id
+            elif slot_type == 'consumable':
+                build.consumable_id = gear_item_id
+            elif slot_type == 'mod1':
+                build.mod1_id = gear_item_id
+            elif slot_type == 'mod2':
+                build.mod2_id = gear_item_id
+            elif slot_type == 'mod3':
+                build.mod3_id = gear_item_id
+            elif slot_type == 'mod4':
+                build.mod4_id = gear_item_id
+            elif slot_type == 'drifter':
+                build.drifter_id = gear_item_id
+            
+            build.save()
+            
+            return JsonResponse({
+                'success': True, 
+                'message': f'Item equipped to {slot_type}',
+                'equipped_item': {
+                    'id': gear_item_id,
+                    'slot': slot_type
+                }
+            })
+            
+        elif action == 'unequip':
+            slot_type = data.get('slot_type')
+            
+            if not slot_type:
+                return JsonResponse({'success': False, 'error': 'Missing slot type'})
+            
+            # Unequip the appropriate slot
+            if slot_type == 'weapon':
+                build.weapon = None
+            elif slot_type == 'helmet':
+                build.helmet = None
+            elif slot_type == 'chest':
+                build.chest = None
+            elif slot_type == 'boots':
+                build.boots = None
+            elif slot_type == 'consumable':
+                build.consumable = None
+            elif slot_type == 'mod1':
+                build.mod1 = None
+            elif slot_type == 'mod2':
+                build.mod2 = None
+            elif slot_type == 'mod3':
+                build.mod3 = None
+            elif slot_type == 'mod4':
+                build.mod4 = None
+            elif slot_type == 'drifter':
+                build.drifter = None
+            
+            build.save()
+            
+            return JsonResponse({
+                'success': True, 
+                'message': f'Item unequipped from {slot_type}',
+                'unequipped_slot': slot_type
+            })
+        
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid action'})
+            
+    except RecommendedBuild.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Build not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

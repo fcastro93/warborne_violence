@@ -1907,7 +1907,7 @@
             }
             const csrfToken = getCookie('csrftoken');
             console.log('CSRF Token:', csrfToken);
-            fetch(`/guilds/player/{{ player.id }}/loadout/update/`, {
+            fetch(`/guilds/recommended-build/{{ build.id }}/equipment/update/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1950,7 +1950,7 @@
                 return;
             }
             
-            fetch(`/guilds/player/{{ player.id }}/loadout/update/`, {
+            fetch(`/guilds/recommended-build/{{ build.id }}/equipment/update/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
