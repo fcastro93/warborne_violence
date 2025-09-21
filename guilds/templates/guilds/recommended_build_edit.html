@@ -1329,9 +1329,10 @@
                                 {% for item_data in items %}
                                 <div class="gear-item drifter-item" 
                                      data-drifter-id="{{ item_data.gear_item.id }}"
+                                     data-drifter-name="{{ item_data.gear_item.name }}"
                                      onclick="equipDrifterToBuild({{ item_data.gear_item.id }}, '{{ item_data.gear_item.name }}')">
                                     <div class="gear-icon-small">
-                                        <img src="{{ image_base_url }}{{ item_data.gear_item.game_id }}.png" alt="{{ item_data.gear_item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <img src="" alt="{{ item_data.gear_item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                         <span class="item-fallback" style="display:none;">🎭</span>
                                     </div>
                                     <div class="item-details">
@@ -1738,10 +1739,24 @@
             console.log('filterByRarity - visible items after filtering:', visibleCount);
         }
         
+        function loadDrifterImages() {
+            // Load images for all drifter items
+            document.querySelectorAll('.drifter-item').forEach(item => {
+                const drifterName = item.getAttribute('data-drifter-name');
+                const iconId = getDrifterIconId(drifterName);
+                const img = item.querySelector('.item-icon');
+                if (img) {
+                    img.src = `/static/icons/${iconId}.png`;
+                }
+            });
+        }
+        
         // Initialize filters when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM Content Loaded');
             
+            // Load drifter images
+            loadDrifterImages();
             
             // Initialize mod search
             const modSearchInput = document.querySelector('.mod-search-input');
@@ -2231,11 +2246,14 @@
                 drifterSlot.classList.add('equipped');
                 drifterSlot.classList.remove('empty');
                 
+                // Get the iconId for this drifter
+                const drifterIconId = getDrifterIconId(drifterName);
+                
                 // Update slot content
                 const slotContent = drifterSlot.querySelector('.slot-content');
                 if (slotContent) {
                     slotContent.innerHTML = `
-                        <img src="/static/icons/${drifterName.toLowerCase().replace(' ', '_')}.png" alt="${drifterName}" class="gear-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <img src="/static/icons/${drifterIconId}.png" alt="${drifterName}" class="gear-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                         <span class="gear-fallback" style="display:none;">🎭</span>
                         <div class="slot-label">${drifterName}</div>
                     `;
@@ -2244,6 +2262,43 @@
             
             // Store drifter selection for saving
             window.selectedDrifter = { id: drifterId, name: drifterName };
+        }
+        
+        function getDrifterIconId(drifterName) {
+            // Drifter icon mapping (same as player loadout)
+            const drifterIcons = {
+                'Sirokos': 'ParagonCard_Str_1',
+                'Varnax': 'ParagonCard_Str_4',
+                'Draknor': 'ParagonCard_Str_7',
+                'Elektrix': 'ParagonCard_Dex_1',
+                'Zero': 'ParagonCard_Dex_2',
+                'Sanguor': 'ParagonCard_Dex_3',
+                'Shadowseer': 'ParagonCard_Dex_4',
+                'Veska': 'ParagonCard_Dex_5',
+                'Moonveil': 'ParagonCard_Dex_6',
+                'Vire': 'ParagonCard_Dex_7',
+                'Kyra': 'ParagonCard_Str_2',
+                'Aegis': 'ParagonCard_Str_5',
+                'Auri': 'ParagonCard_Str_8',
+                'Nyxa': 'ParagonCard_Int_1',
+                'Vryssia': 'ParagonCard_Int_2',
+                'Stormblade': 'ParagonCard_Int_3',
+                'Solenne': 'ParagonCard_Int_4',
+                'Helix': 'ParagonCard_Int_6',
+                'Revelation': 'ParagonCard_Int_7',
+                'Mole': 'ParagonCard_Gather_1',
+                'Izzy': 'ParagonCard_Str_3',
+                'Durion': 'ParagonCard_Str_6',
+                'Firestorm': 'ParagonCard_Str_9',
+                'Overdrive': 'ParagonCard_Dex_8',
+                'Umbra': 'ParagonCard_Dex_9',
+                'Illusarch': 'ParagonCard_Int_9',
+                'Hive Queen': 'ParagonCard_Int_10',
+                'Raven': 'ParagonCard_Int_11',
+                'Astral Magus': 'ParagonCard_Int_13'
+            };
+            
+            return drifterIcons[drifterName] || 'ParagonCard_Str_1'; // Default fallback
         }
         
         function saveBuild() {
