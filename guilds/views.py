@@ -542,7 +542,7 @@ def edit_recommended_build(request, build_id=None):
     """View for editing recommended builds - Staff only"""
     from django.contrib.admin.views.decorators import staff_member_required
     from .models import RecommendedBuild, Drifter, GearItem, GearMod, Player
-    from django.db.models import Q
+    from django.db.models import Case, When, IntegerField
     
     # Check if user is staff
     if not request.user.is_authenticated or not request.user.is_staff:
@@ -562,46 +562,75 @@ def edit_recommended_build(request, build_id=None):
         except RecommendedBuild.DoesNotExist:
             return render(request, 'guilds/error.html', {'error': 'Build not found'})
     
-    # Get all available gear items organized by type for the items section
+    # Base URL for item images from local static files
+    image_base_url = "/static/icons/"
+    
+    # Get all available gear items in the game, organized by type and rarity (same as player loadout)
+    all_gear_items = GearItem.objects.all().select_related('gear_type').annotate(
+        rarity_order=Case(
+            When(rarity='common', then=1),
+            When(rarity='uncommon', then=2),
+            When(rarity='rare', then=3),
+            When(rarity='epic', then=4),
+            When(rarity='legendary', then=5),
+            default=0,
+            output_field=IntegerField(),
+        )
+    ).order_by('gear_type__category', 'rarity_order', 'base_name')
+    
+    # Organize gear by type and attribute for better display (same as player loadout)
     gear_by_type = {}
+    for gear_item in all_gear_items:
+        gear_type = gear_item.gear_type.category
+        if gear_type not in gear_by_type:
+            gear_by_type[gear_type] = {
+                'Strength': [],
+                'Agility': [],
+                'Intelligence': [],
+                'Other': []
+            }
+        
+        # For build editor, all items are available (no ownership concept)
+        item_data = {
+            'gear_item': gear_item,
+            'is_owned': True,  # All items available for builds
+            'player_gear': None,  # No player gear concept for builds
+            'is_equipped': False,  # Will be determined by build equipment
+            'equipped_on_drifter': None,
+        }
+        
+        # Determine attribute based on gear type name (same logic as player loadout)
+        gear_type_name = gear_item.gear_type.name.lower()
+        
+        # Special handling for mods and consumables - don't categorize by attribute, just add to a single list
+        if gear_type == 'mod':
+            if 'All' not in gear_by_type[gear_type]:
+                gear_by_type[gear_type]['All'] = []
+            gear_by_type[gear_type]['All'].append(item_data)
+        elif gear_type == 'consumable':
+            if 'All' not in gear_by_type[gear_type]:
+                gear_by_type[gear_type]['All'] = []
+            gear_by_type[gear_type]['All'].append(item_data)
+        elif gear_type == 'weapon':
+            # For weapons, categorize by weapon type instead of attribute
+            weapon_type = gear_item.gear_type.name.split(' (')[0]  # Extract weapon type (e.g., "Sword" from "Sword (Strength)")
+            if weapon_type not in gear_by_type[gear_type]:
+                gear_by_type[gear_type][weapon_type] = []
+            gear_by_type[gear_type][weapon_type].append(item_data)
+        else:
+            # For other gear types (boots, chest, helmet), categorize by attribute
+            if 'strength' in gear_type_name or 'str_' in gear_item.game_id.lower():
+                gear_by_type[gear_type]['Strength'].append(item_data)
+            elif 'agility' in gear_type_name or 'dex_' in gear_item.game_id.lower():
+                gear_by_type[gear_type]['Agility'].append(item_data)
+            elif 'intelligence' in gear_type_name or 'int_' in gear_item.game_id.lower():
+                gear_by_type[gear_type]['Intelligence'].append(item_data)
+            else:
+                gear_by_type[gear_type]['Other'].append(item_data)
     
-    # Get weapons
-    weapons = GearItem.objects.filter(
-        gear_type__category='weapon'
-    ).order_by('rarity', 'base_name')
-    gear_by_type['weapon'] = weapons
-    
-    # Get helmets
-    helmets = GearItem.objects.filter(
-        gear_type__category='helmet'
-    ).order_by('rarity', 'base_name')
-    gear_by_type['helmet'] = helmets
-    
-    # Get chest pieces
-    chests = GearItem.objects.filter(
-        gear_type__category='chest'
-    ).order_by('rarity', 'base_name')
-    gear_by_type['chest'] = chests
-    
-    # Get boots
-    boots = GearItem.objects.filter(
-        gear_type__category='boots'
-    ).order_by('rarity', 'base_name')
-    gear_by_type['boots'] = boots
-    
-    # Get consumables
-    consumables = GearItem.objects.filter(
-        gear_type__category='consumable'
-    ).order_by('rarity', 'base_name')
-    gear_by_type['consumable'] = consumables
-    
-    # Get mods
-    mods = GearMod.objects.all().order_by('rarity', 'name')
-    gear_by_type['mod'] = mods
-    
-    # Get drifters
+    # Add drifters to gear_by_type (same as player loadout)
     drifters = Drifter.objects.all().order_by('name')
-    gear_by_type['drifter'] = drifters
+    gear_by_type['drifter'] = {'All': [{'gear_item': drifter, 'is_owned': True, 'player_gear': None, 'is_equipped': False, 'equipped_on_drifter': None} for drifter in drifters]}
     
     # Get role choices without database queries
     role_choices = Player.GAME_ROLE_CHOICES
@@ -610,6 +639,8 @@ def edit_recommended_build(request, build_id=None):
         'build': build,
         'role_choices': role_choices,
         'gear_by_type': gear_by_type,
+        'image_base_url': image_base_url,
+        'user': request.user,  # Pass user for staff checks
     }
     
     return render(request, 'guilds/recommended_build_edit.html', context)

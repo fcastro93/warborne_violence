@@ -1237,9 +1237,14 @@
             {% if gear_by_type %}
                 <!-- Item Type Tabs -->
                 <div class="tabs">
-                    {% for category, items in gear_by_type.items %}
+                    {% for category, attributes in gear_by_type.items %}
                     <button class="tab {% if forloop.first %}active{% endif %}" onclick="showItemTab('{{ category }}')" data-category="{{ category }}">
-                        {{ category|title }} (<span class="category-count">{% for attr_items in attributes.values %}{{ attr_items|length }}{% if not forloop.last %}+{% endif %}{% endfor %}</span>)
+                        {{ category|title }} (<span class="category-count">
+                            {% for attr_items in attributes.values %}
+                                {{ attr_items|length }}
+                                {% if not forloop.last %}+{% endif %}
+                            {% endfor %}
+                        </span>)
                     </button>
                     {% endfor %}
                 </div>
@@ -1316,6 +1321,31 @@
                             </div>
                             {% endif %}
                         {% endfor %}
+                    {% elif category == 'drifter' %}
+                        <!-- Drifter selection -->
+                        <div class="items-grid">
+                            {% for attribute, items in attributes.items %}
+                                {% if items %}
+                                {% for item_data in items %}
+                                <div class="gear-item drifter-item" 
+                                     data-drifter-id="{{ item_data.gear_item.id }}"
+                                     onclick="equipDrifterToBuild({{ item_data.gear_item.id }}, '{{ item_data.gear_item.name }}')">
+                                    <div class="gear-icon-small">
+                                        <img src="{{ image_base_url }}{{ item_data.gear_item.game_id }}.png" alt="{{ item_data.gear_item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <span class="item-fallback" style="display:none;">🎭</span>
+                                    </div>
+                                    <div class="item-details">
+                                        <div class="item-name">{{ item_data.gear_item.name }}</div>
+                                        <div class="item-type">Drifter</div>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <button class="action-btn equip-btn" onclick="equipDrifterToBuild({{ item_data.gear_item.id }}, '{{ item_data.gear_item.name }}')">Select Drifter</button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     {% else %}
                         <!-- Search and Rarity Filters for other gear types -->
                         <div class="gear-filters">
@@ -2192,6 +2222,28 @@
             document.querySelectorAll('.gear-slot').forEach(slot => {
                 slot.classList.remove('selected');
             });
+        }
+        
+        function equipDrifterToBuild(drifterId, drifterName) {
+            // Update drifter slot display
+            const drifterSlot = document.querySelector('[data-slot-type="drifter"]');
+            if (drifterSlot) {
+                drifterSlot.classList.add('equipped');
+                drifterSlot.classList.remove('empty');
+                
+                // Update slot content
+                const slotContent = drifterSlot.querySelector('.slot-content');
+                if (slotContent) {
+                    slotContent.innerHTML = `
+                        <img src="/static/icons/${drifterName.toLowerCase().replace(' ', '_')}.png" alt="${drifterName}" class="gear-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span class="gear-fallback" style="display:none;">🎭</span>
+                        <div class="slot-label">${drifterName}</div>
+                    `;
+                }
+            }
+            
+            // Store drifter selection for saving
+            window.selectedDrifter = { id: drifterId, name: drifterName };
         }
         
         function saveBuild() {
