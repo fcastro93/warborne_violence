@@ -614,3 +614,36 @@ class PartyMember(models.Model):
     
     def __str__(self):
         return f"{self.player.in_game_name} - {self.party}"
+
+
+class RecommendedBuild(models.Model):
+    """Model for recommended build templates"""
+    title = models.CharField(max_length=100, help_text="Build title/name")
+    description = models.TextField(blank=True, help_text="Build description and strategy")
+    role = models.CharField(
+        max_length=20,
+        choices=Player.GAME_ROLE_CHOICES,
+        help_text="Role this build is designed for"
+    )
+    template_player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        help_text="Player whose loadout serves as the template"
+    )
+    is_active = models.BooleanField(default=True, help_text="Whether this build is currently recommended")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, default="Admin", help_text="Who created this build recommendation")
+    
+    class Meta:
+        ordering = ['role', 'title']
+        verbose_name = "Recommended Build"
+        verbose_name_plural = "Recommended Builds"
+    
+    def __str__(self):
+        return f"{self.title} ({self.get_role_display()})"
+    
+    @property
+    def build_url(self):
+        """Get the URL to the template player's loadout page"""
+        return f"/guilds/player/{self.template_player.id}/loadout/"

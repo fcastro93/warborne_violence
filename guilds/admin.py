@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
-from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, Event, EventParticipant, Party, PartyMember
+from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, Event, EventParticipant, Party, PartyMember, RecommendedBuild
 
 
 @admin.register(Guild)
@@ -451,6 +451,44 @@ class PartyMemberAdmin(admin.ModelAdmin):
     def party_display(self, obj):
         return f"Party {obj.party.party_number} - {obj.party.event.title}"
     party_display.short_description = "Party"
+
+
+@admin.register(RecommendedBuild)
+class RecommendedBuildAdmin(admin.ModelAdmin):
+    list_display = ['title', 'role_display', 'template_player_name', 'is_active', 'created_by', 'created_at']
+    list_filter = ['is_active', 'role', 'created_at', 'created_by']
+    search_fields = ['title', 'description', 'template_player__in_game_name', 'created_by']
+    ordering = ['role', 'title']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Build Information', {
+            'fields': ('title', 'description', 'role', 'is_active', 'created_by')
+        }),
+        ('Template Player', {
+            'fields': ('template_player',),
+            'description': 'Select the player whose loadout will serve as the template for this build.'
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def role_display(self, obj):
+        return obj.get_role_display()
+    role_display.short_description = "Role"
+    role_display.admin_order_field = 'role'
+    
+    def template_player_name(self, obj):
+        return obj.template_player.in_game_name
+    template_player_name.short_description = "Template Player"
+    template_player_name.admin_order_field = 'template_player__in_game_name'
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # If creating a new object
+            obj.created_by = request.user.username if request.user.is_authenticated else "Admin"
+        super().save_model(request, obj, form, change)
 
 
 # Customize admin title

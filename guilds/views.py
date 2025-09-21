@@ -490,3 +490,30 @@ def bot_status(request):
         })
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+
+
+def recommended_builds(request):
+    """View for displaying recommended builds organized by role"""
+    from .models import RecommendedBuild, Player
+    
+    # Get all active recommended builds
+    builds = RecommendedBuild.objects.filter(is_active=True).select_related('template_player')
+    
+    # Group builds by role
+    builds_by_role = {}
+    for build in builds:
+        role = build.role
+        if role not in builds_by_role:
+            builds_by_role[role] = []
+        builds_by_role[role].append(build)
+    
+    # Get role choices for tab generation
+    role_choices = Player.GAME_ROLE_CHOICES
+    
+    context = {
+        'builds_by_role': builds_by_role,
+        'role_choices': role_choices,
+        'total_builds': builds.count(),
+    }
+    
+    return render(request, 'guilds/recommended_builds.html', context)

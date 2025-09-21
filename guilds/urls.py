@@ -10,6 +10,9 @@ urlpatterns = [
     path('player/<int:player_id>/check-permissions/', views.check_player_permissions, name='check_player_permissions'),
     path('drifter/<int:drifter_id>/details/', views.drifter_details, name='drifter_details'),
     
+    # Recommended Builds URL
+    path('recommended-builds/', views.recommended_builds, name='recommended_builds'),
+    
     # Discord Bot Management URLs
     path('bot/management/', views.bot_management, name='bot_management'),
     path('bot/start/', views.start_bot, name='start_bot'),
