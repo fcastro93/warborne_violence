@@ -19,6 +19,219 @@ def _get_bot_config():
         return None
 
 
+class CreatePlayerView(discord.ui.View):
+    """View with dropdowns for creating a player"""
+    
+    def __init__(self, bot_instance):
+        super().__init__(timeout=300)
+        self.bot_instance = bot_instance
+        self.player_name = None
+        self.selected_faction = None
+        self.selected_guild = None
+        self.selected_role = None
+        
+        # Add dropdowns to the view
+        self.add_item(self.FactionSelect(self))
+        self.add_item(self.RoleSelect(self))
+        
+        # Load guilds dynamically
+        self._load_guilds()
+    
+    def _load_guilds(self):
+        """Load guilds from database and create guild select dropdown"""
+        try:
+            from .models import Guild
+            guilds = Guild.objects.filter(is_active=True)
+            
+            if guilds.exists():
+                guild_options = []
+                for guild in guilds:
+                    guild_options.append(
+                        discord.SelectOption(
+                            label=guild.name,
+                            value=guild.name,
+                            description=f"Members: {guild.players.count()}"
+                        )
+                    )
+                
+                guild_select = self.GuildSelect(self)
+                guild_select.options = guild_options
+                self.add_item(guild_select)
+        except Exception as e:
+            print(f"Error loading guilds: {e}")
+    
+    # Faction Select
+    class FactionSelect(discord.ui.Select):
+        def __init__(self, parent_view):
+            self.parent_view = parent_view
+            options = [
+                discord.SelectOption(label="No Faction", value="none", description="No faction selected"),
+                discord.SelectOption(label="Emberwild", value="emberwild", description="Emberwild faction"),
+                discord.SelectOption(label="Magnates", value="magnates", description="Magnates faction"),
+                discord.SelectOption(label="Ashen", value="ashen", description="Ashen faction"),
+                discord.SelectOption(label="Ironcreed", value="ironcreed", description="Ironcreed faction"),
+                discord.SelectOption(label="Sirius", value="sirius", description="Sirius faction"),
+                discord.SelectOption(label="Shroud", value="shroud", description="Shroud faction"),
+            ]
+            super().__init__(placeholder="Choose your faction...", options=options, min_values=1, max_values=1)
+        
+        async def callback(self, interaction: discord.Interaction):
+            self.parent_view.selected_faction = self.values[0]
+            await interaction.response.send_message(f"✅ Faction selected: {self.values[0]}", ephemeral=True)
+    
+    # Guild Select
+    class GuildSelect(discord.ui.Select):
+        def __init__(self, parent_view):
+            self.parent_view = parent_view
+            # We'll populate this dynamically
+            super().__init__(placeholder="Choose your guild (optional)...", options=[], min_values=0, max_values=1)
+        
+        async def callback(self, interaction: discord.Interaction):
+            if self.values:
+                self.parent_view.selected_guild = self.values[0]
+                await interaction.response.send_message(f"✅ Guild selected: {self.values[0]}", ephemeral=True)
+            else:
+                self.parent_view.selected_guild = None
+                await interaction.response.send_message("✅ No guild selected", ephemeral=True)
+    
+    # Role Select
+    class RoleSelect(discord.ui.Select):
+        def __init__(self, parent_view):
+            self.parent_view = parent_view
+            options = [
+                discord.SelectOption(label="Ranged DPS", value="ranged_dps", description="Ranged damage dealer"),
+                discord.SelectOption(label="Melee DPS", value="melee_dps", description="Melee damage dealer"),
+                discord.SelectOption(label="Tank", value="tank", description="Tank role"),
+                discord.SelectOption(label="Healer", value="healer", description="Healer role"),
+                discord.SelectOption(label="Defensive Tank", value="defensive_tank", description="Defensive tank"),
+                discord.SelectOption(label="Offensive Tank", value="offensive_tank", description="Offensive tank"),
+                discord.SelectOption(label="Offensive Support", value="offensive_support", description="Offensive support"),
+                discord.SelectOption(label="Defensive Support", value="defensive_support", description="Defensive support"),
+            ]
+            super().__init__(placeholder="Choose your role (optional)...", options=options, min_values=0, max_values=1)
+        
+        async def callback(self, interaction: discord.Interaction):
+            if self.values:
+                self.parent_view.selected_role = self.values[0]
+                await interaction.response.send_message(f"✅ Role selected: {self.values[0]}", ephemeral=True)
+            else:
+                self.parent_view.selected_role = None
+                await interaction.response.send_message("✅ No role selected", ephemeral=True)
+    
+    # Player Name Input Modal
+    class PlayerNameModal(discord.ui.Modal, title="Enter Player Name"):
+        def __init__(self, parent_view):
+            super().__init__()
+            self.parent_view = parent_view
+        
+        player_name = discord.ui.TextInput(
+            label="Player Name",
+            placeholder="Enter your in-game name",
+            max_length=50,
+            required=True
+        )
+        
+        async def on_submit(self, interaction: discord.Interaction):
+            self.parent_view.player_name = self.player_name.value.strip()
+            await interaction.response.send_message(f"✅ Player name set: {self.parent_view.player_name}", ephemeral=True)
+    
+    # Create Player Button
+    @discord.ui.button(label="📝 Enter Player Name", style=discord.ButtonStyle.primary, row=0)
+    async def enter_name_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        modal = self.PlayerNameModal(self)
+        await interaction.response.send_modal(modal)
+    
+    @discord.ui.button(label="✅ Create Player", style=discord.ButtonStyle.success, row=0)
+    async def create_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not self.player_name:
+            await interaction.response.send_message("❌ Please enter a player name first.", ephemeral=True)
+            return
+        
+        if not self.selected_faction:
+            await interaction.response.send_message("❌ Please select a faction first.", ephemeral=True)
+            return
+        
+        # Create the player
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def _create_player(in_game_name, discord_user_id, discord_name, faction, game_role=None, guild_name=None):
+            from .models import Player, Guild
+            
+            # Check if player already exists
+            if Player.objects.filter(in_game_name__iexact=in_game_name).exists():
+                return None, "Ya existe un jugador con ese nombre"
+            
+            # Check if user already has a player
+            if Player.objects.filter(discord_user_id=discord_user_id).exists():
+                return None, "Ya tienes un jugador registrado. Usa !myplayer para ver tu jugador actual."
+            
+            # Find guild if specified
+            guild = None
+            if guild_name:
+                try:
+                    guild = Guild.objects.filter(name__iexact=guild_name.strip()).first()
+                    if not guild:
+                        return None, f"No se encontró la guild '{guild_name}'. Verifica el nombre."
+                except Exception as e:
+                    return None, f"Error buscando guild: {str(e)}"
+            
+            try:
+                player = Player.objects.create(
+                    in_game_name=in_game_name,
+                    discord_user_id=discord_user_id,
+                    discord_name=discord_name,
+                    character_level=1,
+                    faction=faction,
+                    game_role=game_role,
+                    guild=guild
+                )
+                return player, None
+            except Exception as e:
+                return None, f"Error creando jugador: {str(e)}"
+        
+        player, error = await _create_player(
+            self.player_name,
+            interaction.user.id,
+            str(interaction.user),
+            faction=self.selected_faction,
+            game_role=self.selected_role,
+            guild_name=self.selected_guild
+        )
+        
+        if error:
+            await interaction.response.send_message(f"❌ {error}", ephemeral=True)
+        else:
+            guild_info = f"\n**Guild:** {player.guild.name}" if player.guild else ""
+            role_info = f"\n**Rol:** {player.get_game_role_display()}" if player.game_role else ""
+            
+            embed = discord.Embed(
+                title="✅ ¡Jugador creado exitosamente!",
+                color=0x4a9eff
+            )
+            embed.add_field(
+                name="📊 Información del Jugador",
+                value=f"**Nombre:** {player.in_game_name}\n"
+                      f"**Nivel:** {player.character_level}\n"
+                      f"**Facción:** {player.get_faction_display()}"
+                      f"{guild_info}"
+                      f"{role_info}",
+                inline=False
+            )
+            embed.add_field(
+                name="🔗 Link del Loadout",
+                value=f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout",
+                inline=False
+            )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+    
+    async def on_timeout(self):
+        # Disable all components when view times out
+        for item in self.children:
+            item.disabled = True
+
+
 class CommandMenuView(discord.ui.View):
     """Interactive menu view with command buttons"""
     
@@ -34,145 +247,19 @@ class CommandMenuView(discord.ui.View):
     @discord.ui.button(label="👤 Create Player", style=discord.ButtonStyle.secondary, emoji="👤")
     async def create_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Button to create a new player"""
-        # Create a comprehensive modal for player creation
-        class CreatePlayerModal(discord.ui.Modal, title="Create Player"):
-            def __init__(self, bot_instance):
-                super().__init__()
-                self.bot_instance = bot_instance
-            
-            player_name = discord.ui.TextInput(
-                label="Player Name",
-                placeholder="Enter your in-game name",
-                max_length=50,
-                required=True
-            )
-            
-            faction = discord.ui.TextInput(
-                label="Faction",
-                placeholder="none, emberwild, magnates, ashen, etc.",
-                default="none",
-                max_length=20,
-                required=True
-            )
-            
-            guild_name = discord.ui.TextInput(
-                label="Guild Name (Optional)",
-                placeholder="Enter guild name or leave empty",
-                max_length=100,
-                required=False
-            )
-            
-            game_role = discord.ui.TextInput(
-                label="Game Role",
-                placeholder="tank, healer, ranged_dps, melee_dps, etc.",
-                max_length=30,
-                required=False
-            )
-            
-            async def on_submit(self, interaction: discord.Interaction):
-                # Validate inputs
-                player_name = self.player_name.value.strip()
-                if not player_name:
-                    await interaction.response.send_message("❌ Player name cannot be empty.", ephemeral=True)
-                    return
-                
-                # Validate faction
-                faction = self.faction.value.strip().lower()
-                valid_factions = ['none', 'emberwild', 'magnates', 'ashen', 'ironcreed', 'sirius', 'shroud']
-                if faction not in valid_factions:
-                    await interaction.response.send_message(
-                        f"❌ Invalid faction. Valid options: {', '.join(valid_factions)}",
-                        ephemeral=True
-                    )
-                    return
-                
-                # Validate game role (optional)
-                game_role = self.game_role.value.strip().lower() if self.game_role.value.strip() else None
-                if game_role:
-                    valid_roles = ['ranged_dps', 'melee_dps', 'tank', 'healer', 'defensive_tank', 'offensive_tank', 'offensive_support', 'defensive_support']
-                    if game_role not in valid_roles:
-                        await interaction.response.send_message(
-                            f"❌ Invalid game role. Valid options: {', '.join(valid_roles)}",
-                            ephemeral=True
-                        )
-                        return
-                
-                # Call the createplayer command logic
-                from asgiref.sync import sync_to_async
-                
-                @sync_to_async
-                def _create_player(in_game_name, discord_user_id, discord_name, level=1, faction='none', game_role=None, guild_name=None):
-                    from .models import Player, Guild
-                    
-                    # Check if player already exists
-                    if Player.objects.filter(in_game_name__iexact=in_game_name).exists():
-                        return None, "Ya existe un jugador con ese nombre"
-                    
-                    # Check if user already has a player
-                    if Player.objects.filter(discord_user_id=discord_user_id).exists():
-                        return None, "Ya tienes un jugador registrado. Usa !myplayer para ver tu jugador actual."
-                    
-                    # Find guild if specified
-                    guild = None
-                    if guild_name:
-                        try:
-                            guild = Guild.objects.filter(name__iexact=guild_name.strip()).first()
-                            if not guild:
-                                return None, f"No se encontró la guild '{guild_name}'. Verifica el nombre."
-                        except Exception as e:
-                            return None, f"Error buscando guild: {str(e)}"
-                    
-                    try:
-                        player = Player.objects.create(
-                            in_game_name=in_game_name,
-                            discord_user_id=discord_user_id,
-                            discord_name=discord_name,
-                            character_level=level,
-                            faction=faction,
-                            game_role=game_role,
-                            guild=guild
-                        )
-                        return player, None
-                    except Exception as e:
-                        return None, f"Error creando jugador: {str(e)}"
-                
-                player, error = await _create_player(
-                    player_name, 
-                    interaction.user.id, 
-                    str(interaction.user),
-                    faction=faction,
-                    game_role=game_role,
-                    guild_name=self.guild_name.value.strip() if self.guild_name.value.strip() else None
-                )
-                
-                if error:
-                    await interaction.response.send_message(f"❌ {error}", ephemeral=True)
-                else:
-                    guild_info = f"\n**Guild:** {player.guild.name}" if player.guild else ""
-                    role_info = f"\n**Rol:** {player.get_game_role_display()}" if player.game_role else ""
-                    
-                    embed = discord.Embed(
-                        title="✅ ¡Jugador creado exitosamente!",
-                        color=0x4a9eff
-                    )
-                    embed.add_field(
-                        name="📊 Información del Jugador",
-                        value=f"**Nombre:** {player.in_game_name}\n"
-                              f"**Nivel:** {player.character_level}\n"
-                              f"**Facción:** {player.get_faction_display()}"
-                              f"{guild_info}"
-                              f"{role_info}",
-                        inline=False
-                    )
-                    embed.add_field(
-                        name="🔗 Link del Loadout",
-                        value=f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout",
-                        inline=False
-                    )
-                    
-                    await interaction.response.send_message(embed=embed, ephemeral=True)
-        
-        await interaction.response.send_modal(CreatePlayerModal(self.bot_instance))
+        # Create a view with dropdowns instead of modal
+        view = CreatePlayerView(self.bot_instance)
+        embed = discord.Embed(
+            title="👤 Create Player",
+            description="Use the dropdowns below to create your player:",
+            color=0x4a9eff
+        )
+        embed.add_field(
+            name="📋 Steps",
+            value="1. Enter your player name\n2. Select your faction\n3. Choose your guild (optional)\n4. Pick your role (optional)",
+            inline=False
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
     
     @discord.ui.button(label="👨‍💼 My Player", style=discord.ButtonStyle.secondary, emoji="👨‍💼")
     async def my_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
