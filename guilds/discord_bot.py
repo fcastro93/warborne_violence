@@ -19,6 +19,229 @@ def _get_bot_config():
         return None
 
 
+class CommandMenuView(discord.ui.View):
+    """Interactive menu view with command buttons"""
+    
+    def __init__(self, bot_instance):
+        super().__init__(timeout=300)  # 5 minutes timeout
+        self.bot_instance = bot_instance
+    
+    @discord.ui.button(label="🎯 Create Event", style=discord.ButtonStyle.primary, emoji="🎯")
+    async def create_event_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to create a new event"""
+        await interaction.response.send_modal(CreateEventModal(self.bot_instance))
+    
+    @discord.ui.button(label="👤 Create Player", style=discord.ButtonStyle.secondary, emoji="👤")
+    async def create_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to create a new player"""
+        # Create a simple modal for player creation
+        class CreatePlayerModal(discord.ui.Modal, title="Create Player"):
+            def __init__(self, bot_instance):
+                super().__init__()
+                self.bot_instance = bot_instance
+            
+            player_name = discord.ui.TextInput(
+                label="Player Name",
+                placeholder="Enter your in-game name",
+                max_length=50,
+                required=True
+            )
+            
+            async def on_submit(self, interaction: discord.Interaction):
+                # Use the existing createplayer logic
+                player_name = self.player_name.value.strip()
+                if not player_name:
+                    await interaction.response.send_message("❌ Player name cannot be empty.", ephemeral=True)
+                    return
+                
+                # Call the createplayer command logic
+                from asgiref.sync import sync_to_async
+                
+                @sync_to_async
+                def _create_player(in_game_name, discord_user_id, discord_name, level=1, faction='none'):
+                    from .models import Player
+                    
+                    # Check if player already exists
+                    if Player.objects.filter(in_game_name__iexact=in_game_name).exists():
+                        return None, "Ya existe un jugador con ese nombre"
+                    
+                    # Check if user already has a player
+                    if Player.objects.filter(discord_user_id=discord_user_id).exists():
+                        return None, "Ya tienes un jugador registrado. Usa !myplayer para ver tu jugador actual."
+                    
+                    try:
+                        player = Player.objects.create(
+                            in_game_name=in_game_name,
+                            discord_user_id=discord_user_id,
+                            discord_name=discord_name,
+                            character_level=level,
+                            faction=faction
+                        )
+                        return player, None
+                    except Exception as e:
+                        return None, f"Error creando jugador: {str(e)}"
+                
+                player, error = await _create_player(
+                    player_name, 
+                    interaction.user.id, 
+                    str(interaction.user)
+                )
+                
+                if error:
+                    await interaction.response.send_message(f"❌ {error}", ephemeral=True)
+                else:
+                    await interaction.response.send_message(
+                        f"✅ ¡Jugador creado exitosamente!\n"
+                        f"**Nombre:** {player.in_game_name}\n"
+                        f"**Nivel:** {player.character_level}\n"
+                        f"**Facción:** {player.get_faction_display()}\n"
+                        f"**Link del Loadout:** https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout",
+                        ephemeral=True
+                    )
+        
+        await interaction.response.send_modal(CreatePlayerModal(self.bot_instance))
+    
+    @discord.ui.button(label="👨‍💼 My Player", style=discord.ButtonStyle.secondary, emoji="👨‍💼")
+    async def my_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to show current player info"""
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def _get_player_by_discord_user(discord_user_id):
+            from .models import Player
+            try:
+                return Player.objects.get(discord_user_id=discord_user_id)
+            except Player.DoesNotExist:
+                return None
+        
+        player = await _get_player_by_discord_user(interaction.user.id)
+        
+        if player:
+            guild_info = ""
+            if player.guild:
+                guild_info = f"\n**Guild:** {player.guild.name}"
+            
+            loadout_url = f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout"
+            
+            embed = discord.Embed(
+                title=f"👨‍💼 {player.in_game_name}",
+                color=0x4a9eff
+            )
+            embed.add_field(
+                name="📊 Player Info",
+                value=f"**Nivel:** {player.character_level}\n"
+                      f"**Facción:** {player.get_faction_display()}\n"
+                      f"{guild_info}\n"
+                      f"**Link del Loadout:** {loadout_url}",
+                inline=False
+            )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        else:
+            await interaction.response.send_message(
+                "❌ No tienes un jugador registrado. Usa el botón 'Create Player' para crear uno.",
+                ephemeral=True
+            )
+    
+    @discord.ui.button(label="🔍 Build Player", style=discord.ButtonStyle.secondary, emoji="🔍")
+    async def build_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to search for a player"""
+        # Create a modal for player search
+        class SearchPlayerModal(discord.ui.Modal, title="Search Player"):
+            def __init__(self, bot_instance):
+                super().__init__()
+                self.bot_instance = bot_instance
+            
+            player_name = discord.ui.TextInput(
+                label="Player Name",
+                placeholder="Enter player name to search",
+                max_length=50,
+                required=True
+            )
+            
+            async def on_submit(self, interaction: discord.Interaction):
+                from asgiref.sync import sync_to_async
+                
+                @sync_to_async
+                def _find_player_by_name(q: str):
+                    from .models import Player
+                    return Player.objects.filter(in_game_name__icontains=q).first()
+                
+                player = await _find_player_by_name(self.player_name.value)
+                
+                if player:
+                    guild_info = ""
+                    if player.guild:
+                        guild_info = f"\n**Guild:** {player.guild.name}"
+                    
+                    loadout_url = f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout"
+                    
+                    embed = discord.Embed(
+                        title=f"🔍 {player.in_game_name}",
+                        color=0x4a9eff
+                    )
+                    embed.add_field(
+                        name="📊 Player Info",
+                        value=f"**Nivel:** {player.character_level}\n"
+                              f"**Facción:** {player.get_faction_display()}\n"
+                              f"{guild_info}\n"
+                              f"**Link del Loadout:** {loadout_url}",
+                        inline=False
+                    )
+                    
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                else:
+                    await interaction.response.send_message(
+                        f"❌ No se encontró un jugador con el nombre '{self.player_name.value}'",
+                        ephemeral=True
+                    )
+        
+        await interaction.response.send_modal(SearchPlayerModal(self.bot_instance))
+    
+    @discord.ui.button(label="🏰 Guild Info", style=discord.ButtonStyle.secondary, emoji="🏰")
+    async def guild_info_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to show guild information"""
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def _get_active_guilds():
+            from .models import Guild
+            return list(Guild.objects.filter(is_active=True))
+        
+        guilds = await _get_active_guilds()
+        
+        if guilds:
+            embed = discord.Embed(
+                title="🏰 Guilds Activas",
+                color=0x4a9eff
+            )
+            
+            for guild in guilds:
+                member_count = guild.players.count()
+                embed.add_field(
+                    name=guild.name,
+                    value=f"**Miembros:** {member_count}\n"
+                          f"**Descripción:** {guild.description or 'Sin descripción'}",
+                    inline=True
+                )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        else:
+            await interaction.response.send_message(
+                "❌ No hay guilds activas disponibles.",
+                ephemeral=True
+            )
+    
+    @discord.ui.button(label="🏓 Ping", style=discord.ButtonStyle.success, emoji="🏓")
+    async def ping_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to test bot ping"""
+        latency = round(self.bot_instance.latency * 1000)
+        await interaction.response.send_message(
+            f"🏓 Pong! Latencia: {latency}ms",
+            ephemeral=True
+        )
+
+
 class CreateEventModal(discord.ui.Modal, title="Create Guild Event (Date: YYYY-MM-DD HH:MM)"):
     """Modal for creating guild events"""
     def __init__(self, bot_instance):
@@ -413,6 +636,33 @@ class WarborneBot(commands.Bot):
             
             view = EventButton(self)
             await ctx.send(embed=embed, view=view)
+        
+        @self.command(name="menu")
+        async def menu(ctx):
+            """Show interactive menu with all available commands"""
+            embed = discord.Embed(
+                title="🎮 Warborne Bot - Command Menu",
+                description="Select a command from the menu below:",
+                color=0x4a9eff,
+                timestamp=datetime.now(timezone.utc)
+            )
+            
+            embed.add_field(
+                name="📋 Available Commands",
+                value="• 🎯 Create Event\n• 👤 Create Player\n• 👨‍💼 My Player\n• 🔍 Build Player\n• 🏰 Guild Info\n• 🏓 Ping Test",
+                inline=False
+            )
+            
+            embed.add_field(
+                name="ℹ️ How to Use",
+                value="Click the buttons below to access each command directly!",
+                inline=False
+            )
+            
+            embed.set_footer(text="Warborne Above Ashes - Guild Tools")
+            
+            view = CommandMenuView(self)
+            await ctx.send(embed=embed, view=view)
     
     async def setup_hook(self):
         """Setup hook - no slash commands needed"""
@@ -440,10 +690,10 @@ class WarborneBot(commands.Bot):
             
             # Fallback to finding a general channel or first available text channel
             if not general_channel:
-                for channel in guild.text_channels:
-                    if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
-                        general_channel = channel
-                        break
+            for channel in guild.text_channels:
+                if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
+                    general_channel = channel
+                    break
             
             if not general_channel:
                 general_channel = guild.text_channels[0] if guild.text_channels else None
@@ -452,6 +702,7 @@ class WarborneBot(commands.Bot):
                 try:
                     await general_channel.send("🤖 ¡Hola! Warborne Bot está listo para la acción!\n"
                                               "**Comandos disponibles:**\n"
+                                              "`!menu` - 🎮 Menú interactivo con todos los comandos\n"
                                               "`!createevent` - Crear evento de guild\n"
                                               "`!createplayer [nombre]` - Crear tu jugador (usa tu nombre de Discord por defecto)\n"
                                               "`!myplayer` - Ver tu jugador\n"
@@ -486,6 +737,7 @@ class WarborneBot(commands.Bot):
         """Handle command errors"""
         if isinstance(error, commands.CommandNotFound):
             await ctx.send("❌ Comando no encontrado. Comandos disponibles:\n"
+                          "`!menu` - 🎮 Menú interactivo con todos los comandos\n"
                           "`!createevent` - Crear evento de guild\n"
                           "`!createplayer [nombre]` - Crear tu jugador\n"
                           "`!myplayer` - Ver tu jugador\n"
