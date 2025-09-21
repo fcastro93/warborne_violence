@@ -34,7 +34,7 @@ class CommandMenuView(discord.ui.View):
     @discord.ui.button(label="👤 Create Player", style=discord.ButtonStyle.secondary, emoji="👤")
     async def create_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Button to create a new player"""
-        # Create a simple modal for player creation
+        # Create a comprehensive modal for player creation
         class CreatePlayerModal(discord.ui.Modal, title="Create Player"):
             def __init__(self, bot_instance):
                 super().__init__()
@@ -47,19 +47,62 @@ class CommandMenuView(discord.ui.View):
                 required=True
             )
             
+            faction = discord.ui.TextInput(
+                label="Faction",
+                placeholder="none, emberwild, magnates, ashen, ironcreed, sirius, shroud",
+                default="none",
+                max_length=20,
+                required=True
+            )
+            
+            guild_name = discord.ui.TextInput(
+                label="Guild Name (Optional)",
+                placeholder="Enter guild name or leave empty",
+                max_length=100,
+                required=False
+            )
+            
+            game_role = discord.ui.TextInput(
+                label="Game Role",
+                placeholder="ranged_dps, melee_dps, tank, healer, defensive_tank, offensive_tank, offensive_support, defensive_support",
+                max_length=30,
+                required=False
+            )
+            
             async def on_submit(self, interaction: discord.Interaction):
-                # Use the existing createplayer logic
+                # Validate inputs
                 player_name = self.player_name.value.strip()
                 if not player_name:
                     await interaction.response.send_message("❌ Player name cannot be empty.", ephemeral=True)
                     return
                 
+                # Validate faction
+                faction = self.faction.value.strip().lower()
+                valid_factions = ['none', 'emberwild', 'magnates', 'ashen', 'ironcreed', 'sirius', 'shroud']
+                if faction not in valid_factions:
+                    await interaction.response.send_message(
+                        f"❌ Invalid faction. Valid options: {', '.join(valid_factions)}",
+                        ephemeral=True
+                    )
+                    return
+                
+                # Validate game role (optional)
+                game_role = self.game_role.value.strip().lower() if self.game_role.value.strip() else None
+                if game_role:
+                    valid_roles = ['ranged_dps', 'melee_dps', 'tank', 'healer', 'defensive_tank', 'offensive_tank', 'offensive_support', 'defensive_support']
+                    if game_role not in valid_roles:
+                        await interaction.response.send_message(
+                            f"❌ Invalid game role. Valid options: {', '.join(valid_roles)}",
+                            ephemeral=True
+                        )
+                        return
+                
                 # Call the createplayer command logic
                 from asgiref.sync import sync_to_async
                 
                 @sync_to_async
-                def _create_player(in_game_name, discord_user_id, discord_name, level=1, faction='none'):
-                    from .models import Player
+                def _create_player(in_game_name, discord_user_id, discord_name, level=1, faction='none', game_role=None, guild_name=None):
+                    from .models import Player, Guild
                     
                     # Check if player already exists
                     if Player.objects.filter(in_game_name__iexact=in_game_name).exists():
@@ -69,13 +112,25 @@ class CommandMenuView(discord.ui.View):
                     if Player.objects.filter(discord_user_id=discord_user_id).exists():
                         return None, "Ya tienes un jugador registrado. Usa !myplayer para ver tu jugador actual."
                     
+                    # Find guild if specified
+                    guild = None
+                    if guild_name:
+                        try:
+                            guild = Guild.objects.filter(name__iexact=guild_name.strip()).first()
+                            if not guild:
+                                return None, f"No se encontró la guild '{guild_name}'. Verifica el nombre."
+                        except Exception as e:
+                            return None, f"Error buscando guild: {str(e)}"
+                    
                     try:
                         player = Player.objects.create(
                             in_game_name=in_game_name,
                             discord_user_id=discord_user_id,
                             discord_name=discord_name,
                             character_level=level,
-                            faction=faction
+                            faction=faction,
+                            game_role=game_role,
+                            guild=guild
                         )
                         return player, None
                     except Exception as e:
@@ -84,20 +139,38 @@ class CommandMenuView(discord.ui.View):
                 player, error = await _create_player(
                     player_name, 
                     interaction.user.id, 
-                    str(interaction.user)
+                    str(interaction.user),
+                    faction=faction,
+                    game_role=game_role,
+                    guild_name=self.guild_name.value.strip() if self.guild_name.value.strip() else None
                 )
                 
                 if error:
                     await interaction.response.send_message(f"❌ {error}", ephemeral=True)
                 else:
-                    await interaction.response.send_message(
-                        f"✅ ¡Jugador creado exitosamente!\n"
-                        f"**Nombre:** {player.in_game_name}\n"
-                        f"**Nivel:** {player.character_level}\n"
-                        f"**Facción:** {player.get_faction_display()}\n"
-                        f"**Link del Loadout:** https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout",
-                        ephemeral=True
+                    guild_info = f"\n**Guild:** {player.guild.name}" if player.guild else ""
+                    role_info = f"\n**Rol:** {player.get_game_role_display()}" if player.game_role else ""
+                    
+                    embed = discord.Embed(
+                        title="✅ ¡Jugador creado exitosamente!",
+                        color=0x4a9eff
                     )
+                    embed.add_field(
+                        name="📊 Información del Jugador",
+                        value=f"**Nombre:** {player.in_game_name}\n"
+                              f"**Nivel:** {player.character_level}\n"
+                              f"**Facción:** {player.get_faction_display()}"
+                              f"{guild_info}"
+                              f"{role_info}",
+                        inline=False
+                    )
+                    embed.add_field(
+                        name="🔗 Link del Loadout",
+                        value=f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout",
+                        inline=False
+                    )
+                    
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
         
         await interaction.response.send_modal(CreatePlayerModal(self.bot_instance))
     
