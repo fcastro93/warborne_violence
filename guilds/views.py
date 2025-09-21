@@ -5,7 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Player, PlayerGear, GearItem, Drifter
+from .models import Player, PlayerGear, GearItem, Drifter, DiscordBotConfig
+import threading
 import json
 
 
@@ -302,3 +303,76 @@ def update_game_role(request, player_id):
         
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+# Discord Bot Management Views
+@staff_member_required
+def bot_management(request):
+    """View for Discord bot management dashboard"""
+    bot_config = DiscordBotConfig.objects.first()
+    return render(request, 'guilds/bot_management.html', {'bot_config': bot_config})
+
+
+@staff_member_required
+@require_POST
+def start_bot(request):
+    """Start the Discord bot"""
+    try:
+        bot_config = DiscordBotConfig.objects.first()
+        if not bot_config:
+            return JsonResponse({'success': False, 'message': 'No bot configuration found'})
+        
+        success, message = bot_config.start_bot_manually()
+        return JsonResponse({'success': success, 'message': message})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@staff_member_required
+@require_POST
+def stop_bot(request):
+    """Stop the Discord bot"""
+    try:
+        bot_config = DiscordBotConfig.objects.first()
+        if not bot_config:
+            return JsonResponse({'success': False, 'message': 'No bot configuration found'})
+        
+        success, message = bot_config.stop_bot_manually()
+        return JsonResponse({'success': success, 'message': message})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@staff_member_required
+@require_POST
+def restart_bot(request):
+    """Restart the Discord bot"""
+    try:
+        bot_config = DiscordBotConfig.objects.first()
+        if not bot_config:
+            return JsonResponse({'success': False, 'message': 'No bot configuration found'})
+        
+        success, message = bot_config.restart_bot_manually()
+        return JsonResponse({'success': success, 'message': message})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@staff_member_required
+def bot_status(request):
+    """Get Discord bot status"""
+    try:
+        bot_config = DiscordBotConfig.objects.first()
+        if not bot_config:
+            return JsonResponse({'success': False, 'message': 'No bot configuration found'})
+        
+        return JsonResponse({
+            'success': True,
+            'is_online': bot_config.is_online,
+            'is_active': bot_config.is_active,
+            'last_heartbeat': bot_config.last_heartbeat.isoformat() if bot_config.last_heartbeat else None,
+            'error_message': bot_config.error_message,
+            'status': bot_config.get_status_display()
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})

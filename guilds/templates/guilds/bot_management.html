@@ -1,0 +1,221 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Discord Bot Management{% endblock %}
+
+{% block extrahead %}
+<style>
+    .bot-status {
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        border: 2px solid #ddd;
+    }
+    .bot-status.online {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    .bot-status.offline {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    .bot-status.inactive {
+        background-color: #fff3cd;
+        border-color: #ffeaa7;
+    }
+    .bot-controls {
+        margin: 20px 0;
+    }
+    .bot-controls button {
+        margin: 5px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .btn-start {
+        background-color: #28a745;
+        color: white;
+    }
+    .btn-stop {
+        background-color: #dc3545;
+        color: white;
+    }
+    .btn-restart {
+        background-color: #ffc107;
+        color: black;
+    }
+    .btn-refresh {
+        background-color: #17a2b8;
+        color: white;
+    }
+    .bot-info {
+        margin: 20px 0;
+    }
+    .bot-info h3 {
+        margin-bottom: 10px;
+    }
+    .bot-info p {
+        margin: 5px 0;
+    }
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    .status-online {
+        background-color: #28a745;
+    }
+    .status-offline {
+        background-color: #dc3545;
+    }
+    .status-inactive {
+        background-color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bot-management">
+    <h1>🤖 Discord Bot Management</h1>
+    
+    {% if bot_config %}
+        <div class="bot-status {{ bot_config.is_online|yesno:'online,offline' }} {% if not bot_config.is_active %}inactive{% endif %}">
+            <h2>
+                <span class="status-indicator status-{{ bot_config.is_online|yesno:'online,offline' }} {% if not bot_config.is_active %}status-inactive{% endif %}"></span>
+                {{ bot_config.name }}
+            </h2>
+            <p><strong>Status:</strong> {{ bot_config.get_status_display }}</p>
+            <p><strong>Active:</strong> {{ bot_config.is_active|yesno:"Yes,No" }}</p>
+            <p><strong>Online:</strong> {{ bot_config.is_online|yesno:"Yes,No" }}</p>
+            {% if bot_config.last_heartbeat %}
+                <p><strong>Last Heartbeat:</strong> {{ bot_config.last_heartbeat }}</p>
+            {% endif %}
+            {% if bot_config.error_message %}
+                <p><strong>Error:</strong> {{ bot_config.error_message }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="bot-info">
+            <h3>Bot Configuration</h3>
+            <p><strong>Name:</strong> {{ bot_config.name }}</p>
+            <p><strong>Command Prefix:</strong> {{ bot_config.command_prefix }}</p>
+            <p><strong>Base URL:</strong> {{ bot_config.base_url }}</p>
+            <p><strong>Client ID:</strong> {{ bot_config.client_id|default:"Not set" }}</p>
+            <p><strong>Token:</strong> {{ bot_config.bot_token|default:"Not set"|slice:":10" }}...</p>
+        </div>
+        
+        <div class="bot-controls">
+            <h3>Bot Controls</h3>
+            <button class="btn-start" onclick="startBot()" {% if bot_config.is_online %}disabled{% endif %}>
+                🟢 Start Bot
+            </button>
+            <button class="btn-stop" onclick="stopBot()" {% if not bot_config.is_online %}disabled{% endif %}>
+                🔴 Stop Bot
+            </button>
+            <button class="btn-restart" onclick="restartBot()">
+                🔄 Restart Bot
+            </button>
+            <button class="btn-refresh" onclick="refreshStatus()">
+                🔄 Refresh Status
+            </button>
+        </div>
+        
+        <div class="bot-commands">
+            <h3>Available Commands</h3>
+            <ul>
+                <li><code>/buildplayer &lt;name&gt;</code> - Get player loadout link</li>
+                <li><code>/guildinfo</code> - Get guild information</li>
+                <li><code>/playerlist [guild_name]</code> - List players</li>
+                <li><code>/drifters</code> - List available drifters</li>
+                <li><code>/gear [type]</code> - List gear items</li>
+                <li><code>/help</code> - Show help</li>
+            </ul>
+        </div>
+        
+    {% else %}
+        <div class="bot-status inactive">
+            <h2>❌ No Bot Configuration Found</h2>
+            <p>Please create a bot configuration in the Django Admin panel.</p>
+            <a href="{% url 'admin:guilds_discordbotconfig_add' %}" class="btn btn-primary">
+                Create Bot Configuration
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function startBot() {
+    fetch('{% url "start_bot" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Bot started successfully!');
+            location.reload();
+        } else {
+            alert('Error starting bot: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+
+function stopBot() {
+    fetch('{% url "stop_bot" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Bot stopped successfully!');
+            location.reload();
+        } else {
+            alert('Error stopping bot: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+
+function restartBot() {
+    fetch('{% url "restart_bot" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Bot restarted successfully!');
+            location.reload();
+        } else {
+            alert('Error restarting bot: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+
+function refreshStatus() {
+    location.reload();
+}
+</script>
+{% endblock %}

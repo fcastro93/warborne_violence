@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
-from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod
+from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig
 
 
 @admin.register(Guild)
@@ -224,6 +224,78 @@ class GearModAdmin(admin.ModelAdmin):
 
 # Customize User admin to show player information
 # Players are no longer linked to Users, so no custom UserAdmin needed
+
+# Discord Bot Configuration Admin
+@admin.register(DiscordBotConfig)
+class DiscordBotConfigAdmin(admin.ModelAdmin):
+    list_display = ['name', 'is_active', 'get_status_display', 'is_online', 'last_heartbeat', 'created_at']
+    list_filter = ['is_active', 'is_online', 'created_at']
+    search_fields = ['name', 'error_message']
+    readonly_fields = ['is_online', 'last_heartbeat', 'error_message', 'created_at', 'updated_at']
+    actions = ['start_bot', 'stop_bot', 'restart_bot']
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'is_active', 'command_prefix', 'base_url')
+        }),
+        ('Bot Credentials', {
+            'fields': ('bot_token', 'client_id', 'client_secret'),
+            'description': 'These should be set from environment variables'
+        }),
+        ('Bot Status', {
+            'fields': ('is_online', 'last_heartbeat', 'error_message'),
+            'classes': ('collapse',)
+        }),
+        ('Bot Permissions', {
+            'fields': ('can_manage_messages', 'can_embed_links', 'can_attach_files', 
+                      'can_read_message_history', 'can_use_external_emojis'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+    get_status_display.short_description = 'Status'
+    
+    def start_bot(self, request, queryset):
+        for config in queryset:
+            success, message = config.start_bot_manually()
+            if success:
+                self.message_user(request, f"Bot started: {message}")
+            else:
+                self.message_user(request, f"Failed to start bot: {message}", level='ERROR')
+    start_bot.short_description = "Start Bot"
+    
+    def stop_bot(self, request, queryset):
+        for config in queryset:
+            success, message = config.stop_bot_manually()
+            if success:
+                self.message_user(request, f"Bot stopped: {message}")
+            else:
+                self.message_user(request, f"Failed to stop bot: {message}", level='ERROR')
+    stop_bot.short_description = "Stop Bot"
+    
+    def restart_bot(self, request, queryset):
+        for config in queryset:
+            success, message = config.restart_bot_manually()
+            if success:
+                self.message_user(request, f"Bot restarted: {message}")
+            else:
+                self.message_user(request, f"Failed to restart bot: {message}", level='ERROR')
+    restart_bot.short_description = "Restart Bot"
+    
+    def has_add_permission(self, request):
+        # Only allow one bot configuration
+        return not DiscordBotConfig.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        # Don't allow deletion of bot configuration
+        return False
+
 
 # Customize admin title
 admin.site.site_header = "Warborne Above Ashes - Guild Tools"

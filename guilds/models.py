@@ -315,3 +315,98 @@ class GearMod(models.Model):
     
     def __str__(self):
         return f"{self.name} ({self.get_rarity_display()})"
+
+
+class DiscordBotConfig(models.Model):
+    """Model to store Discord bot configuration"""
+    name = models.CharField(max_length=100, default="Warborne Bot")
+    is_active = models.BooleanField(default=False, help_text="Whether the bot is currently active")
+    
+    # Bot credentials (stored in environment variables)
+    bot_token = models.CharField(max_length=200, blank=True, help_text="Discord bot token (from environment)")
+    client_id = models.CharField(max_length=100, blank=True, help_text="Discord client ID (from environment)")
+    client_secret = models.CharField(max_length=200, blank=True, help_text="Discord client secret (from environment)")
+    
+    # Bot settings
+    command_prefix = models.CharField(max_length=10, default="/", help_text="Command prefix for the bot")
+    base_url = models.URLField(default="http://127.0.0.1:8000", help_text="Base URL for the application")
+    
+    # Bot status
+    is_online = models.BooleanField(default=False, help_text="Whether the bot is currently online")
+    last_heartbeat = models.DateTimeField(null=True, blank=True, help_text="Last heartbeat from the bot")
+    error_message = models.TextField(blank=True, help_text="Last error message from the bot")
+    
+    # Bot permissions
+    can_manage_messages = models.BooleanField(default=True)
+    can_embed_links = models.BooleanField(default=True)
+    can_attach_files = models.BooleanField(default=True)
+    can_read_message_history = models.BooleanField(default=True)
+    can_use_external_emojis = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Discord Bot Configuration"
+        verbose_name_plural = "Discord Bot Configurations"
+    
+    def __str__(self):
+        return f"{self.name} ({'Active' if self.is_active else 'Inactive'})"
+    
+    def get_status_display(self):
+        """Get a human-readable status"""
+        if self.is_online:
+            return "🟢 Online"
+        elif self.is_active:
+            return "🟡 Active (Offline)"
+        else:
+            return "🔴 Inactive"
+    
+    def start_bot_manually(self):
+        """Start the bot manually"""
+        try:
+            import threading
+            from .discord_bot import run_bot
+            
+            if not self.is_online:
+                # Start bot in background thread
+                bot_thread = threading.Thread(target=run_bot, daemon=True)
+                bot_thread.start()
+                
+                self.is_online = True
+                self.error_message = ""
+                self.save()
+                
+                return True, "Bot started successfully"
+            else:
+                return False, "Bot is already running"
+                
+        except Exception as e:
+            self.error_message = str(e)
+            self.save()
+            return False, f"Error starting bot: {str(e)}"
+    
+    def stop_bot_manually(self):
+        """Stop the bot manually"""
+        try:
+            self.is_online = False
+            self.error_message = ""
+            self.save()
+            return True, "Bot stopped successfully"
+        except Exception as e:
+            self.error_message = str(e)
+            self.save()
+            return False, f"Error stopping bot: {str(e)}"
+    
+    def restart_bot_manually(self):
+        """Restart the bot manually"""
+        try:
+            self.stop_bot_manually()
+            import time
+            time.sleep(2)  # Wait a bit before restarting
+            return self.start_bot_manually()
+        except Exception as e:
+            self.error_message = str(e)
+            self.save()
+            return False, f"Error restarting bot: {str(e)}"
