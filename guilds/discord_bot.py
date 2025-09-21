@@ -36,6 +36,14 @@ class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
         required=True
     )
     
+    timezone_input = discord.ui.TextInput(
+        label="Timezone",
+        placeholder="e.g., UTC, EST, PST, CET, etc.",
+        default="UTC",
+        max_length=50,
+        required=True
+    )
+    
     max_participants_input = discord.ui.TextInput(
         label="Max Participants (optional)",
         placeholder="Leave empty for unlimited",
@@ -46,14 +54,47 @@ class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
     async def on_submit(self, interaction: discord.Interaction):
         """Handle the modal submission"""
         try:
-            # Parse datetime
+            # Parse datetime with timezone
             try:
+                from zoneinfo import ZoneInfo
+                import pytz
+                
+                # Parse the datetime string
                 event_datetime = datetime.strptime(self.datetime_input.value, "%Y-%m-%d %H:%M")
-                # Convert to UTC (assuming input is in UTC for now)
-                event_datetime = event_datetime.replace(tzinfo=timezone.utc)
-            except ValueError:
+                
+                # Get timezone
+                timezone_str = self.timezone_input.value.strip().upper()
+                
+                # Common timezone mappings
+                timezone_mapping = {
+                    'UTC': 'UTC',
+                    'EST': 'US/Eastern',
+                    'PST': 'US/Pacific',
+                    'CST': 'US/Central',
+                    'MST': 'US/Mountain',
+                    'CET': 'Europe/Berlin',
+                    'GMT': 'Europe/London',
+                    'JST': 'Asia/Tokyo',
+                    'AEST': 'Australia/Sydney'
+                }
+                
+                # Use mapping if available, otherwise try the input directly
+                if timezone_str in timezone_mapping:
+                    tz = ZoneInfo(timezone_mapping[timezone_str])
+                else:
+                    try:
+                        tz = ZoneInfo(timezone_str)
+                    except:
+                        # Fallback to UTC if timezone is invalid
+                        tz = ZoneInfo('UTC')
+                        timezone_str = 'UTC'
+                
+                # Apply timezone to datetime
+                event_datetime = event_datetime.replace(tzinfo=tz)
+                
+            except (ValueError, ImportError) as e:
                 await interaction.response.send_message(
-                    "❌ Invalid date format. Please use: YYYY-MM-DD HH:MM (e.g., 2024-12-25 19:30)",
+                    "❌ Invalid date format or timezone. Please use YYYY-MM-DD HH:MM format and a valid timezone (UTC, EST, PST, etc.).",
                     ephemeral=True
                 )
                 return
@@ -84,7 +125,7 @@ class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
                     created_by_discord_id=interaction.user.id,
                     created_by_discord_name=str(interaction.user),
                     event_datetime=event_datetime,
-                    timezone='UTC',
+                    timezone=timezone_str,
                     max_participants=max_participants
                 )
                 return event
@@ -113,8 +154,16 @@ class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
     async def post_event_announcement(self, interaction, event):
         """Post the event announcement to the designated channel"""
         try:
-            # Get the announcements channel (you can configure this)
-            announcements_channel_id = 1234567890123456789  # Replace with your channel ID
+            # Get bot configuration to find channel IDs
+            config = await _get_bot_config()
+            if not config or not config.event_announcements_channel_id:
+                await interaction.followup.send(
+                    "❌ Error: Event announcements channel not configured. Please configure it in the admin panel.",
+                    ephemeral=True
+                )
+                return
+            
+            announcements_channel_id = config.event_announcements_channel_id
             announcements_channel = self.bot_instance.get_channel(announcements_channel_id)
             
             if not announcements_channel:
@@ -131,7 +180,7 @@ class CreateEventModal(discord.ui.Modal, title="Create Guild Event"):
             
             embed.add_field(
                 name="📅 Date & Time",
-                value=f"{event.discord_timestamp}\n{event.discord_timestamp_relative}",
+                value=f"{event.discord_timestamp}\n{event.discord_timestamp_relative}\n**Timezone:** {event.timezone}",
                 inline=False
             )
             
@@ -204,6 +253,14 @@ class WarborneBot(commands.Bot):
         @sync_to_async
         def _find_player_by_name(q: str):
             return Player.objects.filter(in_game_name__icontains=q).first()
+        
+        @sync_to_async
+        def _get_bot_config():
+            """Get bot configuration from database"""
+            try:
+                return DiscordBotConfig.objects.first()
+            except DiscordBotConfig.DoesNotExist:
+                return None
 
         @sync_to_async
         def _get_active_guilds():
@@ -361,7 +418,7 @@ class WarborneBot(commands.Bot):
             )
             embed.add_field(
                 name="Features",
-                value="• Automatic timestamps\n• Participant tracking\n• Event announcements\n• Discord integration",
+                value="• Automatic timestamps\n• Participant tracking\n• Event announcements\n• Discord integration\n• Timezone support",
                 inline=True
             )
             
@@ -382,13 +439,19 @@ class WarborneBot(commands.Bot):
             print(f'   - !{cmd.name}: {cmd.description}')
         
         # Send hello message to all guilds
+        config = await _get_bot_config()
         for guild in self.guilds:
-            # Find a general channel or first available text channel
+            # Use configured general channel if available
             general_channel = None
-            for channel in guild.text_channels:
-                if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
-                    general_channel = channel
-                    break
+            if config and config.general_channel_id:
+                general_channel = guild.get_channel(config.general_channel_id)
+            
+            # Fallback to finding a general channel or first available text channel
+            if not general_channel:
+                for channel in guild.text_channels:
+                    if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
+                        general_channel = channel
+                        break
             
             if not general_channel:
                 general_channel = guild.text_channels[0] if guild.text_channels else None

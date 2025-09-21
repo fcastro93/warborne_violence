@@ -343,6 +343,11 @@ class DiscordBotConfig(models.Model):
     
     # Bot status
     is_online = models.BooleanField(default=False, help_text="Whether the bot is currently online")
+    
+    # Channel configuration
+    general_channel_id = models.BigIntegerField(null=True, blank=True, help_text="ID of the general channel for bot announcements")
+    event_announcements_channel_id = models.BigIntegerField(null=True, blank=True, help_text="ID of the channel where event announcements are posted")
+    violence_bot_channel_id = models.BigIntegerField(null=True, blank=True, help_text="ID of the violence-bot channel where events are created")
     last_heartbeat = models.DateTimeField(null=True, blank=True, help_text="Last heartbeat from the bot")
     error_message = models.TextField(blank=True, help_text="Last error message from the bot")
     

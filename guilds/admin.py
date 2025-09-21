@@ -258,6 +258,10 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
             'fields': ('is_online', 'last_heartbeat', 'error_message'),
             'classes': ('collapse',)
         }),
+        ('Channel Configuration', {
+            'fields': ('general_channel_id', 'event_announcements_channel_id', 'violence_bot_channel_id'),
+            'description': 'Configure Discord channel IDs for bot functionality'
+        }),
         ('Bot Permissions', {
             'fields': ('can_manage_messages', 'can_embed_links', 'can_attach_files', 
                       'can_read_message_history', 'can_use_external_emojis'),
