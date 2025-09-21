@@ -14,7 +14,7 @@ class WarborneBot(commands.Bot):
         intents.members = False  # Deshabilitar si no es necesario
         intents.presences = False  # Deshabilitar si no es necesario
         
-        super().__init__(command_prefix='!violence ', intents=intents)
+        super().__init__(command_prefix='!', intents=intents)
         self.config = self.get_bot_config()
     
     def get_bot_config(self):
@@ -73,11 +73,17 @@ class WarborneBot(commands.Bot):
     
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send("❌ Comando no encontrado. Usa `/help` para ver los comandos disponibles.")
+            await ctx.send("❌ Comando no encontrado. Usa `!violence help` para ver los comandos disponibles.")
         else:
             await ctx.send(f"❌ Error: {str(error)}")
     
-    @commands.command(name='buildplayer')
+    @commands.group()
+    async def violence(self, ctx):
+        """Warborne Bot commands"""
+        if ctx.invoked_subcommand is None:
+            await ctx.send("❌ Por favor especifica un subcomando. Usa `!violence help` para más información.")
+    
+    @violence.command(name='buildplayer')
     async def buildplayer(self, ctx, *, player_name):
         """Get a player's loadout link"""
         print(f"DEBUG: buildplayer command called with {player_name}")
@@ -91,7 +97,7 @@ class WarborneBot(commands.Bot):
         except Exception as e:
             await ctx.send(f"❌ Error: {str(e)}")
     
-    @commands.command(name='guildinfo')
+    @violence.command(name='guildinfo')
     async def guildinfo(self, ctx):
         """Get guild information"""
         print(f"DEBUG: guildinfo command called")
@@ -109,7 +115,7 @@ class WarborneBot(commands.Bot):
         except Exception as e:
             await ctx.send(f"❌ Error: {str(e)}")
     
-    @commands.command(name='playerlist')
+    @violence.command(name='playerlist')
     async def playerlist(self, ctx, guild_name=None):
         """List players, optionally filtered by guild"""
         try:
@@ -134,7 +140,7 @@ class WarborneBot(commands.Bot):
         except Exception as e:
             await ctx.send(f"❌ Error: {str(e)}")
     
-    @commands.command(name='drifters')
+    @violence.command(name='drifters')
     async def drifters(self, ctx):
         """Get available drifters"""
         try:
@@ -148,7 +154,7 @@ class WarborneBot(commands.Bot):
         except Exception as e:
             await ctx.send(f"❌ Error: {str(e)}")
     
-    @commands.command(name='gear')
+    @violence.command(name='gear')
     async def gear(self, ctx, gear_type=None):
         """Get gear information"""
         try:
@@ -166,7 +172,7 @@ class WarborneBot(commands.Bot):
         except Exception as e:
             await ctx.send(f"❌ Error: {str(e)}")
     
-    @commands.command(name='help')
+    @violence.command(name='help')
     async def help(self, ctx):
         """Show available commands"""
         help_text = """
