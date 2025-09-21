@@ -39,6 +39,19 @@ class Command(BaseCommand):
             'gear_mods.json'
         ]
         
+        # Also import consumables if they don't exist
+        from guilds.models import GearItem, GearType
+        if not GearItem.objects.filter(gear_type__category='consumable').exists():
+            self.stdout.write('Importing consumables...')
+            try:
+                from .import_consumables import Command as ImportConsumablesCommand
+                import_consumables_cmd = ImportConsumablesCommand()
+                import_consumables_cmd.handle()
+            except Exception as e:
+                self.stdout.write(
+                    self.style.WARNING(f'⚠ Error importing consumables: {e}')
+                )
+        
         for fixture in fixtures:
             fixture_path = os.path.join(fixtures_dir, fixture)
             if os.path.exists(fixture_path):

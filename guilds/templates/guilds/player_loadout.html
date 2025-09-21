@@ -1000,8 +1000,8 @@
                 <!-- Item Type Tabs -->
                 <div class="tabs">
                     {% for category, items in gear_by_type.items %}
-                    <button class="tab {% if forloop.first %}active{% endif %}" onclick="showItemTab('{{ category }}')">
-                        {{ category|title }} ({{ items|length }})
+                    <button class="tab {% if forloop.first %}active{% endif %}" onclick="showItemTab('{{ category }}')" data-category="{{ category }}">
+                        {{ category|title }} (<span class="category-count">{% for attr_items in attributes.values %}{{ attr_items|length }}{% if not forloop.last %}+{% endif %}{% endfor %}</span>)
                     </button>
                     {% endfor %}
                 </div>
@@ -1089,6 +1089,7 @@
                                 <span class="search-icon">🔍</span>
                             </div>
                             
+                            {% if category != 'consumable' %}
                             <div class="rarity-filters">
                                 <button class="rarity-filter active" onclick="filterByRarity('{{ category }}', 'all')">All</button>
                                 {% if category == 'weapon' %}
@@ -1098,9 +1099,11 @@
                                 <button class="rarity-filter" onclick="filterByRarity('{{ category }}', 'epic')">Epic</button>
                                 <button class="rarity-filter" onclick="filterByRarity('{{ category }}', 'legendary')">Legendary</button>
                             </div>
+                            {% endif %}
                         </div>
                         
-                        <!-- Attribute Tabs for other gear types -->
+                        <!-- Attribute Tabs for other gear types (skip for consumables) -->
+                        {% if category != 'consumable' %}
                         <div class="attribute-tabs">
                             {% for attribute, items in attributes.items %}
                                 {% if items %}
@@ -1116,8 +1119,71 @@
                                 {% endif %}
                             {% endfor %}
                         </div>
+                        {% endif %}
                         
                         <!-- Attribute Content -->
+                        {% if category == 'consumable' %}
+                        <!-- For consumables, show all items directly without subtabs -->
+                        <div class="attribute-content active" id="{{ category }}-all">
+                            <div class="items-grid">
+                                {% for attribute, items in attributes.items %}
+                                    {% for item_data in items %}
+                                     <div class="gear-item rarity-{{ item_data.gear_item.rarity }} {% if item_data.is_equipped %}equipped{% endif %} {% if not item_data.is_owned %}not-owned{% endif %}" 
+                                          data-gear-item-id="{{ item_data.gear_item.id }}"
+                                          data-gear-type="{{ item_data.gear_item.gear_type.category }}">
+                                        <div class="gear-icon-small">
+                                            {% if item_data.gear_item.icon_url %}
+                                                <img src="{{ item_data.gear_item.icon_url }}" alt="{{ item_data.gear_item.name }}" class="item-icon">
+                                            {% else %}
+                                                <img src="{{ image_base_url }}{{ item_data.gear_item.game_id }}.png" alt="{{ item_data.gear_item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                <span class="item-fallback" style="display:none;">⚔️</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="item-details">
+                                            <div class="item-name">{{ item_data.gear_item.base_name }}</div>
+                                            {% if item_data.gear_item.skill_name %}
+                                            <div class="item-skill skill-clickable" onclick="showSkillModal('{{ item_data.gear_item.skill_name|escapejs }}', '{{ item_data.gear_item.description|default:'No description available'|escapejs }}', '{{ item_data.gear_item.game_id|escapejs }}')">{{ item_data.gear_item.skill_name }}</div>
+                                            {% endif %}
+                                            <div class="item-type">{{ item_data.gear_item.gear_type.name }} • {{ item_data.gear_item.rarity|title }}</div>
+                                            {% if item_data.gear_item.damage > 0 or item_data.gear_item.health_bonus > 0 or item_data.gear_item.mana_recovery > 0 or item_data.gear_item.armor > 0 or item_data.gear_item.magic_resistance > 0 %}
+                                            <div class="item-stats">
+                                                {% if item_data.gear_item.damage > 0 %}
+                                                <div>Damage & Heal bonus: {{ item_data.gear_item.damage }}%</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.health_bonus > 0 %}
+                                                <div>HP: {{ item_data.gear_item.health_bonus }}</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.mana_recovery > 0 %}
+                                                <div>Mana recovery bonus: {{ item_data.gear_item.mana_recovery }}%</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.armor > 0 %}
+                                                <div>Armor: {{ item_data.gear_item.armor }}</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.magic_resistance > 0 %}
+                                                <div>Magic resistance: {{ item_data.gear_item.magic_resistance }}</div>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="action-buttons">
+                                            {% if item_data.is_equipped %}
+                                                <div class="equipped-badge">Equipped</div>
+                                                {% if user.is_staff %}
+                                                <button class="action-btn unequip-btn" onclick="unequipGear({{ item_data.player_gear.id }})">Unequip</button>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if user.is_staff %}
+                                                <button class="action-btn equip-btn" onclick="event.stopPropagation(); event.preventDefault(); console.log('Equip button clicked'); showEquipMenu({{ item_data.gear_item.id }}, '{{ item_data.gear_item.gear_type.category }}')">Equip</button>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- For other gear types, show with subtabs -->
                         {% for attribute, items in attributes.items %}
                             {% if items %}
                             <div class="attribute-content {% if forloop.first %}active{% endif %}" id="{{ category }}-{{ attribute|lower }}">
@@ -1178,6 +1244,7 @@
                             </div>
                             {% endif %}
                         {% endfor %}
+                        {% endif %}
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -1969,6 +2036,23 @@
             if (e.target === modal) {
                 closeSkillModal();
             }
+        });
+        
+        // Fix category counts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Calculate correct counts for each category
+            const tabs = document.querySelectorAll('.tab[data-category]');
+            tabs.forEach(tab => {
+                const category = tab.getAttribute('data-category');
+                const categoryContent = document.getElementById(`item-tab-${category}`);
+                if (categoryContent) {
+                    const items = categoryContent.querySelectorAll('.gear-item');
+                    const countSpan = tab.querySelector('.category-count');
+                    if (countSpan) {
+                        countSpan.textContent = items.length;
+                    }
+                }
+            });
         });
     </script>
 

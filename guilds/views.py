@@ -112,8 +112,12 @@ def player_loadout(request, player_id):
         # Determine attribute based on gear type name
         gear_type_name = gear_item.gear_type.name.lower()
         
-        # Special handling for mods - don't categorize by attribute, just add to a single list
+        # Special handling for mods and consumables - don't categorize by attribute, just add to a single list
         if gear_type == 'mod':
+            if 'All' not in gear_by_type[gear_type]:
+                gear_by_type[gear_type]['All'] = []
+            gear_by_type[gear_type]['All'].append(item_data)
+        elif gear_type == 'consumable':
             if 'All' not in gear_by_type[gear_type]:
                 gear_by_type[gear_type]['All'] = []
             gear_by_type[gear_type]['All'].append(item_data)
