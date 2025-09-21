@@ -7,6 +7,19 @@ import os
 # Production environment
 DEBUG = False
 
+# Allowed hosts
+ALLOWED_HOSTS = [
+    'strategic-brena-charfire-afecfd9e.koyeb.app',
+    '*.koyeb.app',
+    'localhost',
+    '127.0.0.1'
+]
+
+# Add any additional hosts from environment variables
+if os.environ.get('ALLOWED_HOSTS'):
+    additional_hosts = os.environ.get('ALLOWED_HOSTS', '').split(',')
+    ALLOWED_HOSTS.extend([host.strip() for host in additional_hosts if host.strip()])
+
 # Security settings
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
