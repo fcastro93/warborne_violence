@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
-from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, Event, EventParticipant
+from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, Event, EventParticipant, Party, PartyMember
 
 
 @admin.register(Guild)
@@ -398,6 +398,59 @@ class EventParticipantAdmin(admin.ModelAdmin):
         return obj.event.title
     event_title.short_description = 'Event'
     event_title.admin_order_field = 'event__title'
+
+
+class PartyMemberInline(admin.TabularInline):
+    model = PartyMember
+    extra = 0
+    fields = ['player', 'assigned_role', 'is_active', 'assigned_at']
+    readonly_fields = ['assigned_at']
+    fk_name = 'party'
+
+
+@admin.register(Party)
+class PartyAdmin(admin.ModelAdmin):
+    list_display = ['event_title', 'party_number', 'member_count_display', 'max_members', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at', 'event__event_type']
+    search_fields = ['event__title', 'party_number']
+    ordering = ['event', 'party_number']
+    readonly_fields = ['created_at', 'updated_at']
+    inlines = [PartyMemberInline]
+    
+    fieldsets = (
+        ('Party Information', {
+            'fields': ('event', 'party_number', 'max_members', 'is_active')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def event_title(self, obj):
+        return obj.event.title
+    event_title.short_description = "Event"
+    
+    def member_count_display(self, obj):
+        return f"{obj.member_count}/{obj.max_members}"
+    member_count_display.short_description = "Members"
+
+
+@admin.register(PartyMember)
+class PartyMemberAdmin(admin.ModelAdmin):
+    list_display = ['player_name', 'party_display', 'assigned_role', 'is_active', 'assigned_at']
+    list_filter = ['is_active', 'assigned_role', 'assigned_at']
+    search_fields = ['player__in_game_name', 'party__event__title']
+    ordering = ['-assigned_at']
+    readonly_fields = ['assigned_at']
+    
+    def player_name(self, obj):
+        return obj.player.in_game_name
+    player_name.short_description = "Player"
+    
+    def party_display(self, obj):
+        return f"Party {obj.party.party_number} - {obj.party.event.title}"
+    party_display.short_description = "Party"
 
 
 # Customize admin title

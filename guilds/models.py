@@ -555,3 +555,58 @@ class EventParticipant(models.Model):
     
     def __str__(self):
         return f"{self.discord_name} - {self.event.title}"
+
+
+class Party(models.Model):
+    """Model for event parties/groups"""
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='parties')
+    party_number = models.IntegerField(help_text="Party number within the event (1, 2, 3, etc.)")
+    max_members = models.IntegerField(default=15, help_text="Maximum members per party")
+    is_active = models.BooleanField(default=True, help_text="Whether the party is still active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['event', 'party_number']
+        ordering = ['party_number']
+        verbose_name = "Party"
+        verbose_name_plural = "Parties"
+    
+    @property
+    def member_count(self):
+        return self.members.filter(is_active=True).count()
+    
+    @property
+    def role_distribution(self):
+        """Get role distribution for this party"""
+        from collections import Counter
+        roles = self.members.filter(is_active=True).values_list('player__game_role', flat=True)
+        return Counter(roles)
+    
+    def __str__(self):
+        return f"Party {self.party_number} - {self.event.title}"
+
+
+class PartyMember(models.Model):
+    """Model for party members"""
+    party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='members')
+    event_participant = models.ForeignKey(EventParticipant, on_delete=models.CASCADE, related_name='party_assignments')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='party_assignments')
+    assigned_role = models.CharField(
+        max_length=20,
+        choices=Player.GAME_ROLE_CHOICES,
+        null=True,
+        blank=True,
+        help_text="Role assigned in this party (may differ from player's default role)"
+    )
+    is_active = models.BooleanField(default=True, help_text="Whether the member is still active in the party")
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['party', 'event_participant']
+        ordering = ['assigned_at']
+        verbose_name = "Party Member"
+        verbose_name_plural = "Party Members"
+    
+    def __str__(self):
+        return f"{self.player.in_game_name} - {self.party}"

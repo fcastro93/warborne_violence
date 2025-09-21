@@ -392,6 +392,100 @@ class CommandMenuView(discord.ui.View):
                 ephemeral=True
             )
     
+    @discord.ui.button(label="📅 View Events", style=discord.ButtonStyle.secondary, emoji="📅")
+    async def view_events_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to view all events"""
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def get_active_events():
+            from .models import Event
+            return list(Event.objects.filter(is_active=True, is_cancelled=False).order_by('event_datetime'))
+        
+        events = await get_active_events()
+        
+        if not events:
+            await interaction.response.send_message(
+                "📅 No hay eventos activos disponibles.",
+                ephemeral=True
+            )
+            return
+        
+        embed = discord.Embed(
+            title="📅 Eventos Activos",
+            color=0x4a9eff
+        )
+        
+        for event in events[:10]:  # Show first 10 events
+            participants_text = f"{event.participant_count} participantes"
+            if event.max_participants:
+                participants_text += f" / {event.max_participants} máx"
+            
+            embed.add_field(
+                name=f"🎯 {event.title}",
+                value=f"**Fecha:** {event.discord_timestamp}\n"
+                      f"**Creado por:** {event.created_by_discord_name}\n"
+                      f"**Participantes:** {participants_text}\n"
+                      f"**Tipo:** {event.get_event_type_display()}",
+                inline=True
+            )
+        
+        if len(events) > 10:
+            embed.set_footer(text=f"Mostrando 10 de {len(events)} eventos")
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+    
+    @discord.ui.button(label="⚔️ Create Parties", style=discord.ButtonStyle.danger, emoji="⚔️")
+    async def create_parties_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to create parties for events"""
+        # Create a modal for event selection
+        class EventSelectionModal(discord.ui.Modal, title="Select Event for Parties"):
+            def __init__(self, bot_instance):
+                super().__init__()
+                self.bot_instance = bot_instance
+            
+            event_title = discord.ui.TextInput(
+                label="Event Title",
+                placeholder="Enter the exact title of the event",
+                max_length=100,
+                required=True
+            )
+            
+            async def on_submit(self, interaction: discord.Interaction):
+                from asgiref.sync import sync_to_async
+                
+                @sync_to_async
+                def find_event_by_title(title):
+                    from .models import Event
+                    return Event.objects.filter(
+                        title__iexact=title.strip(),
+                        is_active=True,
+                        is_cancelled=False
+                    ).first()
+                
+                event = await find_event_by_title(self.event_title.value)
+                
+                if not event:
+                    await interaction.response.send_message(
+                        f"❌ No se encontró un evento activo con el título '{self.event_title.value}'",
+                        ephemeral=True
+                    )
+                    return
+                
+                # Check if user has permission to create parties
+                # For now, allow anyone, but you can add permission checks here
+                
+                # Create parties using the bot instance method
+                success, message = await self.bot_instance.create_balanced_parties(event)
+                
+                if success:
+                    await interaction.response.send_message(f"✅ {message}", ephemeral=True)
+                else:
+                    await interaction.response.send_message(f"❌ {message}", ephemeral=True)
+        
+        modal = EventSelectionModal(self.bot_instance)
+        await interaction.response.send_modal(modal)
+    
     @discord.ui.button(label="🏓 Ping", style=discord.ButtonStyle.success, emoji="🏓")
     async def ping_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Button to test bot ping"""
@@ -850,10 +944,10 @@ class WarborneBot(commands.Bot):
             
             # Fallback to finding a general channel or first available text channel
             if not general_channel:
-                for channel in guild.text_channels:
-                    if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
-                        general_channel = channel
-                        break
+            for channel in guild.text_channels:
+                if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
+                    general_channel = channel
+                    break
             
             if not general_channel:
                 general_channel = guild.text_channels[0] if guild.text_channels else None
@@ -1042,7 +1136,9 @@ class WarborneBot(commands.Bot):
             from asgiref.sync import sync_to_async
             
             @sync_to_async
-            def get_participants_with_roles():
+            def get_participants_with_roles_and_parties():
+                from .models import Party, PartyMember
+                
                 participants = EventParticipant.objects.filter(
                     event=event,
                     is_active=True
@@ -1050,7 +1146,9 @@ class WarborneBot(commands.Bot):
                 
                 participant_data = []
                 role_counts = {}
+                parties_data = []
                 
+                # Get participants data
                 for participant in participants:
                     name = participant.discord_name
                     role = None
@@ -1064,9 +1162,36 @@ class WarborneBot(commands.Bot):
                         'role': role
                     })
                 
-                return participant_data, role_counts
+                # Get parties data
+                parties = Party.objects.filter(event=event, is_active=True).order_by('party_number')
+                for party in parties:
+                    party_members = PartyMember.objects.filter(
+                        party=party,
+                        is_active=True
+                    ).select_related('player', 'event_participant')
+                    
+                    members_list = []
+                    party_role_counts = {}
+                    
+                    for member in party_members:
+                        member_name = member.event_participant.discord_name
+                        member_role = member.player.get_game_role_display() if member.player.game_role else 'Unknown'
+                        members_list.append(f"• {member_name} ({member_role})")
+                        party_role_counts[member_role] = party_role_counts.get(member_role, 0) + 1
+                    
+                    # Create role summary
+                    role_summary = ", ".join([f"{role}: {count}" for role, count in party_role_counts.items()])
+                    
+                    parties_data.append({
+                        'party_number': party.party_number,
+                        'members': members_list,
+                        'member_count': len(members_list),
+                        'role_summary': role_summary
+                    })
+                
+                return participant_data, role_counts, parties_data
             
-            participants_data, role_counts = await get_participants_with_roles()
+            participants_data, role_counts, parties_data = await get_participants_with_roles_and_parties()
             participants = [p['name'] for p in participants_data]
             
             # Create updated embed
@@ -1115,6 +1240,22 @@ class WarborneBot(commands.Bot):
                         name="🎯 Role Distribution",
                         value=role_stats_text,
                         inline=True
+                    )
+            
+            # Add parties information if they exist
+            if parties_data:
+                for party_data in parties_data:
+                    party_title = f"⚔️ Party {party_data['party_number']} ({party_data['member_count']}/15)"
+                    
+                    # Show first 5 members to avoid embed field limits
+                    members_display = "\n".join(party_data['members'][:5])
+                    if len(party_data['members']) > 5:
+                        members_display += f"\n• ... and {len(party_data['members']) - 5} more"
+                    
+                    embed.add_field(
+                        name=party_title,
+                        value=f"**Roles:** {party_data['role_summary']}\n**Members:**\n{members_display}",
+                        inline=False
                     )
             
             # Update the message
@@ -1223,3 +1364,107 @@ def run_bot():
                 pass
         
         await super().close()
+    
+    async def create_balanced_parties(self, event):
+        """Create balanced parties for an event"""
+        from asgiref.sync import sync_to_async
+        from .models import Party, PartyMember, EventParticipant
+        
+        @sync_to_async
+        def create_parties():
+            # Get all active participants with their players
+            participants = list(EventParticipant.objects.filter(
+                event=event,
+                is_active=True,
+                player__isnull=False
+            ).select_related('player'))
+            
+            if len(participants) < 2:
+                return False, "Se necesitan al menos 2 participantes para crear parties"
+            
+            # Clear existing parties for this event
+            Party.objects.filter(event=event).delete()
+            
+            # Define role requirements per party (minimum)
+            ROLE_REQUIREMENTS = {
+                'tank': 4,           # 4 tanks per party
+                'healer': 2,         # 2 healers per party
+                'ranged_dps': 3,     # 3 ranged DPS
+                'melee_dps': 3,      # 3 melee DPS
+                'defensive_tank': 1, # 1 defensive tank
+                'offensive_tank': 1, # 1 offensive tank
+                'offensive_support': 1, # 1 offensive support
+            }
+            
+            MAX_PARTY_SIZE = 15
+            
+            # Group participants by role
+            participants_by_role = {}
+            for participant in participants:
+                role = participant.player.game_role or 'unknown'
+                if role not in participants_by_role:
+                    participants_by_role[role] = []
+                participants_by_role[role].append(participant)
+            
+            # Calculate how many parties we need
+            total_participants = len(participants)
+            num_parties = max(1, (total_participants + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
+            
+            parties = []
+            
+            # Create party objects
+            for i in range(num_parties):
+                party = Party.objects.create(
+                    event=event,
+                    party_number=i + 1,
+                    max_members=MAX_PARTY_SIZE
+                )
+                parties.append(party)
+            
+            # Distribute participants across parties
+            party_assignments = [[] for _ in range(num_parties)]
+            party_role_counts = [{} for _ in range(num_parties)]
+            
+            # Initialize role counts
+            for party_idx in range(num_parties):
+                for role in ROLE_REQUIREMENTS.keys():
+                    party_role_counts[party_idx][role] = 0
+            
+            # Distribute participants by role, trying to balance
+            for role, role_participants in participants_by_role.items():
+                if role == 'unknown':
+                    # Distribute unknown roles evenly
+                    for i, participant in enumerate(role_participants):
+                        party_idx = i % num_parties
+                        party_assignments[party_idx].append(participant)
+                else:
+                    # Distribute known roles to balance requirements
+                    for i, participant in enumerate(role_participants):
+                        # Find party with least of this role
+                        best_party = 0
+                        min_count = party_role_counts[0].get(role, 0)
+                        
+                        for party_idx in range(1, num_parties):
+                            current_count = party_role_counts[party_idx].get(role, 0)
+                            if current_count < min_count:
+                                min_count = current_count
+                                best_party = party_idx
+                        
+                        party_assignments[best_party].append(participant)
+                        party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
+            
+            # Create PartyMember objects
+            party_members_created = 0
+            for party_idx, party in enumerate(parties):
+                for participant in party_assignments[party_idx]:
+                    PartyMember.objects.create(
+                        party=party,
+                        event_participant=participant,
+                        player=participant.player,
+                        assigned_role=participant.player.game_role
+                    )
+                    party_members_created += 1
+            
+            return True, f"Parties creadas exitosamente: {num_parties} parties con {party_members_created} participantes distribuidos"
+        
+        return await create_parties()
