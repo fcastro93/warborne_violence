@@ -35,10 +35,10 @@ class CreatePlayerView(discord.ui.View):
         self.add_item(self.RoleSelect(self))
         
         # Load guilds dynamically
-        self._load_guilds()
+        self._load_guilds_sync()
     
-    def _load_guilds(self):
-        """Load guilds from database and create guild select dropdown"""
+    def _load_guilds_sync(self):
+        """Load guilds from database and create guild select dropdown (synchronous version)"""
         try:
             from .models import Guild
             
@@ -104,6 +104,7 @@ class CreatePlayerView(discord.ui.View):
             ]
             self.add_item(guild_select)
             print("DEBUG: Fallback guild dropdown created")
+    
     
     # Faction Select
     class FactionSelect(discord.ui.Select):
