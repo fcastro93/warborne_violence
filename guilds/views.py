@@ -517,3 +517,151 @@ def recommended_builds(request):
     }
     
     return render(request, 'guilds/recommended_builds.html', context)
+
+
+def edit_recommended_build(request, build_id=None):
+    """View for editing recommended builds"""
+    from .models import RecommendedBuild, Drifter, GearItem, GearMod, Player
+    
+    build = None
+    if build_id and build_id != 'new':
+        try:
+            build = RecommendedBuild.objects.get(id=build_id)
+        except RecommendedBuild.DoesNotExist:
+            return render(request, 'guilds/error.html', {'error': 'Build not found'})
+    
+    # Get all available items for the dropdowns
+    drifters = Drifter.objects.all().order_by('name')
+    gear_items = GearItem.objects.all().order_by('name')
+    gear_mods = GearMod.objects.all().order_by('name')
+    role_choices = Player.GAME_ROLE_CHOICES
+    
+    context = {
+        'build': build,
+        'drifters': drifters,
+        'gear_items': gear_items,
+        'gear_mods': gear_mods,
+        'role_choices': role_choices,
+    }
+    
+    return render(request, 'guilds/recommended_build_edit.html', context)
+
+
+@require_POST
+def save_recommended_build(request, build_id=None):
+    """View for saving recommended builds"""
+    from .models import RecommendedBuild, Drifter, GearItem, GearMod
+    import json
+    
+    try:
+        data = json.loads(request.body)
+        
+        if build_id and build_id != 'new':
+            build = RecommendedBuild.objects.get(id=build_id)
+        else:
+            build = RecommendedBuild()
+        
+        # Update build data
+        build.title = data.get('title', '')
+        build.description = data.get('description', '')
+        build.role = data.get('role', '')
+        build.is_active = data.get('is_active', False)
+        
+        # Update equipment
+        if data.get('drifter'):
+            build.drifter = Drifter.objects.get(id=data['drifter'])
+        else:
+            build.drifter = None
+            
+        if data.get('weapon'):
+            build.weapon = GearItem.objects.get(id=data['weapon'])
+        else:
+            build.weapon = None
+            
+        if data.get('helmet'):
+            build.helmet = GearItem.objects.get(id=data['helmet'])
+        else:
+            build.helmet = None
+            
+        if data.get('chest'):
+            build.chest = GearItem.objects.get(id=data['chest'])
+        else:
+            build.chest = None
+            
+        if data.get('boots'):
+            build.boots = GearItem.objects.get(id=data['boots'])
+        else:
+            build.boots = None
+            
+        if data.get('consumable'):
+            build.consumable = GearItem.objects.get(id=data['consumable'])
+        else:
+            build.consumable = None
+            
+        if data.get('mod1'):
+            build.mod1 = GearMod.objects.get(id=data['mod1'])
+        else:
+            build.mod1 = None
+            
+        if data.get('mod2'):
+            build.mod2 = GearMod.objects.get(id=data['mod2'])
+        else:
+            build.mod2 = None
+            
+        if data.get('mod3'):
+            build.mod3 = GearMod.objects.get(id=data['mod3'])
+        else:
+            build.mod3 = None
+            
+        if data.get('mod4'):
+            build.mod4 = GearMod.objects.get(id=data['mod4'])
+        else:
+            build.mod4 = None
+        
+        if not build.id:  # New build
+            build.created_by = request.user.username if request.user.is_authenticated else "Admin"
+        
+        build.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Build saved successfully',
+            'redirect_url': f'/guilds/recommended-build/{build.id}/edit/'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        })
+
+
+def get_items_for_slot(request, slot_type):
+    """API endpoint to get items for a specific slot"""
+    from .models import Drifter, GearItem, GearMod
+    
+    try:
+        items = []
+        
+        if slot_type == 'drifter':
+            drifters = Drifter.objects.all().order_by('name')
+            items = [{'id': d.id, 'name': d.name, 'level': d.level or 1, 'type': 'drifter'} for d in drifters]
+        elif slot_type in ['weapon', 'helmet', 'chest', 'boots', 'consumable']:
+            gear_items = GearItem.objects.filter(gear_type__name__iexact=slot_type).order_by('name')
+            items = [{
+                'id': g.id, 
+                'name': g.name, 
+                'rarity': g.rarity, 
+                'type': slot_type,
+                'damage': g.damage,
+                'armor': g.armor,
+                'speed': g.speed
+            } for g in gear_items]
+        elif slot_type == 'mod':
+            gear_mods = GearMod.objects.all().order_by('name')
+            items = [{'id': g.id, 'name': g.name, 'rarity': g.rarity, 'type': 'mod'} for g in gear_mods]
+        
+        return JsonResponse({'success': True, 'items': items})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})

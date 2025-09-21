@@ -625,11 +625,88 @@ class RecommendedBuild(models.Model):
         choices=Player.GAME_ROLE_CHOICES,
         help_text="Role this build is designed for"
     )
-    template_player = models.ForeignKey(
-        Player,
-        on_delete=models.CASCADE,
-        help_text="Player whose loadout serves as the template"
+    
+    # Equipment fields - store gear directly instead of referencing a player
+    drifter = models.ForeignKey(
+        Drifter,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Primary drifter for this build"
     )
+    weapon = models.ForeignKey(
+        GearItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recommended_builds_weapon',
+        help_text="Weapon for this build"
+    )
+    helmet = models.ForeignKey(
+        GearItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recommended_builds_helmet',
+        help_text="Helmet for this build"
+    )
+    chest = models.ForeignKey(
+        GearItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recommended_builds_chest',
+        help_text="Chest piece for this build"
+    )
+    boots = models.ForeignKey(
+        GearItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recommended_builds_boots',
+        help_text="Boots for this build"
+    )
+    consumable = models.ForeignKey(
+        GearItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recommended_builds_consumable',
+        help_text="Consumable for this build"
+    )
+    mod1 = models.ForeignKey(
+        GearMod,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recommended_builds_mod1',
+        help_text="Mod 1 for this build"
+    )
+    mod2 = models.ForeignKey(
+        GearMod,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recommended_builds_mod2',
+        help_text="Mod 2 for this build"
+    )
+    mod3 = models.ForeignKey(
+        GearMod,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recommended_builds_mod3',
+        help_text="Mod 3 for this build"
+    )
+    mod4 = models.ForeignKey(
+        GearMod,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recommended_builds_mod4',
+        help_text="Mod 4 for this build"
+    )
+    
     is_active = models.BooleanField(default=True, help_text="Whether this build is currently recommended")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -645,5 +722,35 @@ class RecommendedBuild(models.Model):
     
     @property
     def build_url(self):
-        """Get the URL to the template player's loadout page"""
-        return f"/guilds/player/{self.template_player.id}/loadout/"
+        """Get the URL to edit this build"""
+        return f"/guilds/recommended-build/{self.id}/edit/"
+    
+    @property
+    def equipped_items(self):
+        """Get list of equipped items"""
+        items = []
+        if self.weapon:
+            items.append(('weapon', self.weapon))
+        if self.helmet:
+            items.append(('helmet', self.helmet))
+        if self.chest:
+            items.append(('chest', self.chest))
+        if self.boots:
+            items.append(('boots', self.boots))
+        if self.consumable:
+            items.append(('consumable', self.consumable))
+        return items
+    
+    @property
+    def equipped_mods(self):
+        """Get list of equipped mods"""
+        mods = []
+        if self.mod1:
+            mods.append(('mod1', self.mod1))
+        if self.mod2:
+            mods.append(('mod2', self.mod2))
+        if self.mod3:
+            mods.append(('mod3', self.mod3))
+        if self.mod4:
+            mods.append(('mod4', self.mod4))
+        return mods

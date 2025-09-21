@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ build.title|default:"New Build" }} - Edit Build</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .left-panel {
+            width: 25%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .middle-panel {
+            width: 35%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .right-panel {
+            width: 40%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .header h1 {
+            color: #64b5f6;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(100, 181, 246, 0.5);
+            display: inline-block;
+        }
+        
+        .edit-name-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.6em;
+            margin-left: 8px;
+            padding: 3px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            vertical-align: middle;
+            opacity: 0.7;
+        }
+        
+        .edit-name-btn:hover {
+            color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+            opacity: 1;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+        }
+        
+        .close:hover {
+            color: #fff;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #64b5f6;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.3);
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4a9eff 0%, #357abd 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .build-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .build-info h2 {
+            color: #64b5f6;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #b0b0b0;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .equipment-section {
+            margin-bottom: 30px;
+        }
+        
+        .equipment-section h3 {
+            color: #64b5f6;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+        
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .equipment-slot {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .equipment-slot:hover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+        }
+        
+        .equipment-slot.equipped {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+        }
+        
+        .equipment-slot.empty {
+            border-style: dashed;
+            color: #888;
+        }
+        
+        .slot-label {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        
+        .equipment-name {
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .equipment-rarity {
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+        
+        .rarity-common { background: #888; color: #fff; }
+        .rarity-rare { background: #4a9eff; color: #fff; }
+        .rarity-epic { background: #9c4ae6; color: #fff; }
+        .rarity-legendary { background: #ff6b35; color: #fff; }
+        
+        .equipment-stats {
+            font-size: 0.8rem;
+            color: #b0b0b0;
+        }
+        
+        .remove-item {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .equipment-slot:hover .remove-item {
+            display: block;
+        }
+        
+        .mods-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .mod-slot {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .mod-slot:hover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+        }
+        
+        .mod-slot.equipped {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+        }
+        
+        .mod-slot.empty {
+            border-style: dashed;
+            color: #888;
+        }
+        
+        .items-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .items-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .items-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .items-list::-webkit-scrollbar-thumb {
+            background: rgba(74, 158, 255, 0.5);
+            border-radius: 3px;
+        }
+        
+        .item-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .item-card:hover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .item-name {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .item-type {
+            color: #b0b0b0;
+            font-size: 0.8rem;
+            text-transform: capitalize;
+        }
+        
+        .item-stats {
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            line-height: 1.3;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #b0b0b0;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-tab.active {
+            background: #4a9eff;
+            color: white;
+            border-color: #4a9eff;
+        }
+        
+        .filter-tab:hover {
+            background: rgba(74, 158, 255, 0.3);
+            border-color: #4a9eff;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.3);
+        }
+        
+        .search-box::placeholder {
+            color: #888;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(74, 158, 255, 0.2);
+            border-color: #4a9eff;
+            text-decoration: none;
+            color: #fff;
+        }
+        
+        .save-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #4a9eff 0%, #357abd 100%);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 5px 20px rgba(74, 158, 255, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .save-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(74, 158, 255, 0.6);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .left-panel, .middle-panel, .right-panel {
+                width: 100%;
+            }
+            
+            .equipment-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .mods-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/guilds/recommended-builds/" class="back-btn">← Back to Builds</a>
+    
+    <div class="container">
+        <div class="left-panel">
+            <div class="header">
+                <h1 id="build-title">{{ build.title|default:"New Build" }} <span class="edit-name-btn" onclick="openEditNameModal()">✏️</span></h1>
+            </div>
+            
+            <div class="build-info">
+                <h2>Build Information</h2>
+                <div class="info-row">
+                    <span class="info-label">Role:</span>
+                    <span class="info-value">{{ build.get_role_display|default:"Not Set" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">{{ build.is_active|yesno:"Active,Inactive"|default:"Inactive" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Created:</span>
+                    <span class="info-value">{{ build.created_at|date:"M d, Y"|default:"Just now" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Created by:</span>
+                    <span class="info-value">{{ build.created_by|default:"Admin" }}</span>
+                </div>
+            </div>
+            
+            <div class="equipment-section">
+                <h3>Equipped Items</h3>
+                <div class="equipment-grid">
+                    <!-- Weapon Slot -->
+                    <div class="equipment-slot {% if build.weapon %}equipped{% else %}empty{% endif %}" onclick="selectSlot('weapon')">
+                        <div class="slot-label">Weapon</div>
+                        {% if build.weapon %}
+                            <div class="equipment-name">{{ build.weapon.name }}</div>
+                            <div class="equipment-rarity rarity-{{ build.weapon.rarity|lower }}">{{ build.weapon.rarity }}</div>
+                            <div class="equipment-stats">{{ build.weapon.damage|default:"N/A" }} Damage</div>
+                            <button class="remove-item" onclick="removeItem('weapon', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Helmet Slot -->
+                    <div class="equipment-slot {% if build.helmet %}equipped{% else %}empty{% endif %}" onclick="selectSlot('helmet')">
+                        <div class="slot-label">Helmet</div>
+                        {% if build.helmet %}
+                            <div class="equipment-name">{{ build.helmet.name }}</div>
+                            <div class="equipment-rarity rarity-{{ build.helmet.rarity|lower }}">{{ build.helmet.rarity }}</div>
+                            <div class="equipment-stats">{{ build.helmet.armor|default:"N/A" }} Armor</div>
+                            <button class="remove-item" onclick="removeItem('helmet', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Chest Slot -->
+                    <div class="equipment-slot {% if build.chest %}equipped{% else %}empty{% endif %}" onclick="selectSlot('chest')">
+                        <div class="slot-label">Chest</div>
+                        {% if build.chest %}
+                            <div class="equipment-name">{{ build.chest.name }}</div>
+                            <div class="equipment-rarity rarity-{{ build.chest.rarity|lower }}">{{ build.chest.rarity }}</div>
+                            <div class="equipment-stats">{{ build.chest.armor|default:"N/A" }} Armor</div>
+                            <button class="remove-item" onclick="removeItem('chest', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Boots Slot -->
+                    <div class="equipment-slot {% if build.boots %}equipped{% else %}empty{% endif %}" onclick="selectSlot('boots')">
+                        <div class="slot-label">Boots</div>
+                        {% if build.boots %}
+                            <div class="equipment-name">{{ build.boots.name }}</div>
+                            <div class="equipment-rarity rarity-{{ build.boots.rarity|lower }}">{{ build.boots.rarity }}</div>
+                            <div class="equipment-stats">{{ build.boots.speed|default:"N/A" }} Speed</div>
+                            <button class="remove-item" onclick="removeItem('boots', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Consumable Slot -->
+                    <div class="equipment-slot {% if build.consumable %}equipped{% else %}empty{% endif %}" onclick="selectSlot('consumable')">
+                        <div class="slot-label">Consumable</div>
+                        {% if build.consumable %}
+                            <div class="equipment-name">{{ build.consumable.name }}</div>
+                            <div class="equipment-rarity rarity-{{ build.consumable.rarity|lower }}">{{ build.consumable.rarity }}</div>
+                            <button class="remove-item" onclick="removeItem('consumable', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Drifter Slot -->
+                    <div class="equipment-slot {% if build.drifter %}equipped{% else %}empty{% endif %}" onclick="selectSlot('drifter')">
+                        <div class="slot-label">Drifter</div>
+                        {% if build.drifter %}
+                            <div class="equipment-name">{{ build.drifter.name }}</div>
+                            <div class="equipment-stats">Level {{ build.drifter.level|default:"1" }}</div>
+                            <button class="remove-item" onclick="removeItem('drifter', event)">×</button>
+                        {% else %}
+                            <div class="equipment-name">Empty</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="equipment-section">
+                <h3>Mods</h3>
+                <div class="mods-grid">
+                    {% for i in "1234" %}
+                        {% with mod_key="mod"|add:i %}
+                            {% with mod=build|lookup:mod_key %}
+                                <div class="mod-slot {% if mod %}equipped{% else %}empty{% endif %}" onclick="selectSlot('{{ mod_key }}')">
+                                    <div class="slot-label">Mod {{ i }}</div>
+                                    {% if mod %}
+                                        <div class="equipment-name">{{ mod.name }}</div>
+                                        <div class="equipment-rarity rarity-{{ mod.rarity|lower }}">{{ mod.rarity }}</div>
+                                        <button class="remove-item" onclick="removeItem('{{ mod_key }}', event)">×</button>
+                                    {% else %}
+                                        <div class="equipment-name">Empty</div>
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="middle-panel">
+            <h3 style="color: #64b5f6; margin-bottom: 20px; text-align: center;">Available Items</h3>
+            
+            <div class="filter-tabs">
+                <div class="filter-tab active" onclick="filterItems('all')">All</div>
+                <div class="filter-tab" onclick="filterItems('weapon')">Weapon</div>
+                <div class="filter-tab" onclick="filterItems('helmet')">Helmet</div>
+                <div class="filter-tab" onclick="filterItems('chest')">Chest</div>
+                <div class="filter-tab" onclick="filterItems('boots')">Boots</div>
+                <div class="filter-tab" onclick="filterItems('consumable')">Consumable</div>
+                <div class="filter-tab" onclick="filterItems('mod')">Mod</div>
+                <div class="filter-tab" onclick="filterItems('drifter')">Drifter</div>
+            </div>
+            
+            <input type="text" class="search-box" placeholder="Search items..." onkeyup="searchItems(this.value)">
+            
+            <div class="items-list" id="items-list">
+                <!-- Items will be loaded here via JavaScript -->
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <h3 style="color: #64b5f6; margin-bottom: 20px; text-align: center;">Build Description</h3>
+            
+            <div class="form-group">
+                <label for="build-description">Description:</label>
+                <textarea id="build-description" placeholder="Describe this build's strategy, strengths, and use cases...">{{ build.description|default:"" }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="build-role">Role:</label>
+                <select id="build-role">
+                    <option value="">Select Role</option>
+                    {% for role_code, role_name in role_choices %}
+                        <option value="{{ role_code }}" {% if build.role == role_code %}selected{% endif %}>{{ role_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="build-active">Status:</label>
+                <select id="build-active">
+                    <option value="true" {% if build.is_active %}selected{% endif %}>Active</option>
+                    <option value="false" {% if not build.is_active %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Name Modal -->
+    <div id="editNameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditNameModal()">&times;</span>
+            <h2>Edit Build Name</h2>
+            <form id="editNameForm">
+                <div class="form-group">
+                    <label for="new-build-name">Build Name:</label>
+                    <input type="text" id="new-build-name" value="{{ build.title|default:"" }}" required>
+                </div>
+                <button type="submit" class="btn">Save Changes</button>
+                <button type="button" class="btn btn-secondary" onclick="closeEditNameModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+    
+    <button class="save-btn" onclick="saveBuild()">💾 Save Build</button>
+    
+    <script>
+        let selectedSlot = null;
+        let buildData = {
+            title: "{{ build.title|default:"" }}",
+            description: "{{ build.description|default:"" }}",
+            role: "{{ build.role|default:"" }}",
+            is_active: {{ build.is_active|yesno:"true,false"|default:"false" }},
+            drifter: {{ build.drifter.id|default:"null" }},
+            weapon: {{ build.weapon.id|default:"null" }},
+            helmet: {{ build.helmet.id|default:"null" }},
+            chest: {{ build.chest.id|default:"null" }},
+            boots: {{ build.boots.id|default:"null" }},
+            consumable: {{ build.consumable.id|default:"null" }},
+            mod1: {{ build.mod1.id|default:"null" }},
+            mod2: {{ build.mod2.id|default:"null" }},
+            mod3: {{ build.mod3.id|default:"null" }},
+            mod4: {{ build.mod4.id|default:"null" }}
+        };
+        
+        function selectSlot(slotType) {
+            selectedSlot = slotType;
+            
+            // Update visual selection
+            document.querySelectorAll('.equipment-slot, .mod-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Filter items for this slot type
+            filterItems(slotType);
+        }
+        
+        function removeItem(slotType, event) {
+            event.stopPropagation();
+            
+            if (confirm(`Remove ${slotType} from build?`)) {
+                buildData[slotType] = null;
+                updateSlotDisplay(slotType);
+            }
+        }
+        
+        function updateSlotDisplay(slotType) {
+            const slot = document.querySelector(`[onclick*="${slotType}"]`);
+            if (buildData[slotType]) {
+                slot.classList.add('equipped');
+                slot.classList.remove('empty');
+                // Update slot content - this would need to be implemented with actual item data
+            } else {
+                slot.classList.remove('equipped');
+                slot.classList.add('empty');
+                slot.querySelector('.equipment-name').textContent = 'Empty';
+            }
+        }
+        
+        function filterItems(type) {
+            // Update filter tabs
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filter items - this would need to be implemented with actual item loading
+            console.log('Filtering items by type:', type);
+        }
+        
+        function searchItems(query) {
+            // Implement item search - this would need to be implemented with actual item loading
+            console.log('Searching for:', query);
+        }
+        
+        function openEditNameModal() {
+            document.getElementById('editNameModal').style.display = 'block';
+        }
+        
+        function closeEditNameModal() {
+            document.getElementById('editNameModal').style.display = 'none';
+        }
+        
+        function saveBuild() {
+            // Collect form data
+            buildData.title = document.getElementById('new-build-name').value || buildData.title;
+            buildData.description = document.getElementById('build-description').value;
+            buildData.role = document.getElementById('build-role').value;
+            buildData.is_active = document.getElementById('build-active').value === 'true';
+            
+            // Save build via AJAX
+            fetch('/guilds/recommended-build/{{ build.id|default:"new" }}/save/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(buildData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Build saved successfully!');
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    }
+                } else {
+                    alert('Error saving build: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving build');
+            });
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Handle edit name form submission
+        document.getElementById('editNameForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newName = document.getElementById('new-build-name').value;
+            buildData.title = newName;
+            document.getElementById('build-title').textContent = newName;
+            closeEditNameModal();
+        });
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('editNameModal');
+            if (event.target === modal) {
+                closeEditNameModal();
+            }
+        }
+    </script>
+</body>
+</html>

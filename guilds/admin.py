@@ -455,19 +455,23 @@ class PartyMemberAdmin(admin.ModelAdmin):
 
 @admin.register(RecommendedBuild)
 class RecommendedBuildAdmin(admin.ModelAdmin):
-    list_display = ['title', 'role_display', 'template_player_name', 'is_active', 'created_by', 'created_at']
+    list_display = ['title', 'role_display', 'equipment_summary', 'is_active', 'created_by', 'created_at', 'edit_build_link']
     list_filter = ['is_active', 'role', 'created_at', 'created_by']
-    search_fields = ['title', 'description', 'template_player__in_game_name', 'created_by']
+    search_fields = ['title', 'description', 'created_by']
     ordering = ['role', 'title']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'edit_build_link']
+    actions = ['edit_builds_action']
     
     fieldsets = (
         ('Build Information', {
-            'fields': ('title', 'description', 'role', 'is_active', 'created_by')
+            'fields': ('title', 'description', 'role', 'is_active', 'created_by', 'edit_build_link')
         }),
-        ('Template Player', {
-            'fields': ('template_player',),
-            'description': 'Select the player whose loadout will serve as the template for this build.'
+        ('Equipment', {
+            'fields': (
+                'drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable',
+                'mod1', 'mod2', 'mod3', 'mod4'
+            ),
+            'description': 'Configure the equipment for this build. Use the "Edit Build" link above for a visual editor.'
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -480,10 +484,45 @@ class RecommendedBuildAdmin(admin.ModelAdmin):
     role_display.short_description = "Role"
     role_display.admin_order_field = 'role'
     
-    def template_player_name(self, obj):
-        return obj.template_player.in_game_name
-    template_player_name.short_description = "Template Player"
-    template_player_name.admin_order_field = 'template_player__in_game_name'
+    def equipment_summary(self, obj):
+        items = []
+        if obj.drifter:
+            items.append(f"Drifter: {obj.drifter.name}")
+        if obj.weapon:
+            items.append(f"Weapon: {obj.weapon.name}")
+        if obj.helmet:
+            items.append(f"Helmet: {obj.helmet.name}")
+        if obj.chest:
+            items.append(f"Chest: {obj.chest.name}")
+        if obj.boots:
+            items.append(f"Boots: {obj.boots.name}")
+        if obj.consumable:
+            items.append(f"Consumable: {obj.consumable.name}")
+        
+        mod_count = sum(1 for mod in [obj.mod1, obj.mod2, obj.mod3, obj.mod4] if mod)
+        if mod_count > 0:
+            items.append(f"Mods: {mod_count}")
+        
+        return "; ".join(items[:3]) + ("..." if len(items) > 3 else "")
+    equipment_summary.short_description = "Equipment Summary"
+    
+    def edit_build_link(self, obj):
+        if obj.pk:
+            return format_html(
+                '<a href="/guilds/recommended-build/{}/edit/" target="_blank" style="background: #4a9eff; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none;">✏️ Edit Build</a>',
+                obj.pk
+            )
+        return "Save first to edit"
+    edit_build_link.short_description = "Visual Editor"
+    
+    def edit_builds_action(self, request, queryset):
+        """Admin action to edit selected builds"""
+        if queryset.count() == 1:
+            build = queryset.first()
+            return redirect(f'/guilds/recommended-build/{build.id}/edit/')
+        else:
+            self.message_user(request, "Please select only one build to edit.", level='ERROR')
+    edit_builds_action.short_description = "Edit selected build(s) with visual editor"
     
     def save_model(self, request, obj, form, change):
         if not change:  # If creating a new object

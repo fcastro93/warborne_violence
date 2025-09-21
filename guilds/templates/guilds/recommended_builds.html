@@ -310,11 +310,13 @@
                 <div id="tab-{{ role_code }}" class="tab-content">
                     <div class="builds-grid">
                         {% for build in builds_by_role|dictsort:"0"|lookup:role_code %}
-                            <div class="build-card">
-                                <div class="build-header">
-                                    <div class="build-title">{{ build.title }}</div>
-                                    <div class="build-role">{{ build.get_role_display }}</div>
+                        <div class="build-card">
+                            <div class="build-header">
+                                <div class="build-title">
+                                    <a href="{{ build.build_url }}" style="color: #4a9eff; text-decoration: none;">{{ build.title }}</a>
                                 </div>
+                                <div class="build-role">{{ build.get_role_display }}</div>
+                            </div>
                                 
                                 {% if build.description %}
                                     <div class="build-description">{{ build.description }}</div>
@@ -323,17 +325,17 @@
                                 <div class="build-template">
                                     <div class="template-info">
                                         <div class="template-avatar">
-                                            {{ build.template_player.in_game_name|first|upper }}
+                                            🏆
                                         </div>
                                         <div class="template-details">
-                                            <h4>{{ build.template_player.in_game_name }}</h4>
-                                            <p>{{ build.template_player.get_faction_display }} • Level {{ build.template_player.level }}</p>
+                                            <h4>{{ build.title }}</h4>
+                                            <p>{{ build.get_role_display }} • {{ build.equipped_items|length }} items equipped</p>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <a href="{{ build.build_url }}" class="view-build-btn" target="_blank">
-                                    View Build →
+                                <a href="{{ build.build_url }}" class="view-build-btn">
+                                    Edit Build →
                                 </a>
                             </div>
                         {% endfor %}
@@ -348,7 +350,9 @@
                     {% for build in builds %}
                         <div class="build-card">
                             <div class="build-header">
-                                <div class="build-title">{{ build.title }}</div>
+                                <div class="build-title">
+                                    <a href="{{ build.build_url }}" style="color: #4a9eff; text-decoration: none;">{{ build.title }}</a>
+                                </div>
                                 <div class="build-role">{{ build.get_role_display }}</div>
                             </div>
                             
@@ -359,17 +363,17 @@
                             <div class="build-template">
                                 <div class="template-info">
                                     <div class="template-avatar">
-                                        {{ build.template_player.in_game_name|first|upper }}
+                                        🏆
                                     </div>
                                     <div class="template-details">
-                                        <h4>{{ build.template_player.in_game_name }}</h4>
-                                        <p>{{ build.template_player.get_faction_display }} • Level {{ build.template_player.level }}</p>
+                                        <h4>{{ build.title }}</h4>
+                                        <p>{{ build.get_role_display }} • {{ build.equipped_items|length }} items equipped</p>
                                     </div>
                                 </div>
                             </div>
                             
-                            <a href="{{ build.build_url }}" class="view-build-btn" target="_blank">
-                                View Build →
+                            <a href="{{ build.build_url }}" class="view-build-btn">
+                                Edit Build →
                             </a>
                         </div>
                     {% endfor %}
