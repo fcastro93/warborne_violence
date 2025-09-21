@@ -608,13 +608,32 @@ class WarborneBot(commands.Bot):
             from asgiref.sync import sync_to_async
             
             @sync_to_async
-            def get_participants():
-                return list(EventParticipant.objects.filter(
+            def get_participants_with_roles():
+                participants = EventParticipant.objects.filter(
                     event=event,
                     is_active=True
-                ).values_list('discord_name', flat=True))
+                ).select_related('player')
+                
+                participant_data = []
+                role_counts = {}
+                
+                for participant in participants:
+                    name = participant.discord_name
+                    role = None
+                    
+                    if participant.player and participant.player.game_role:
+                        role = participant.player.get_game_role_display()
+                        role_counts[role] = role_counts.get(role, 0) + 1
+                    
+                    participant_data.append({
+                        'name': name,
+                        'role': role
+                    })
+                
+                return participant_data, role_counts
             
-            participants = await get_participants()
+            participants_data, role_counts = await get_participants_with_roles()
+            participants = [p['name'] for p in participants_data]
             
             # Create updated embed
             embed = message.embeds[0]
@@ -647,6 +666,21 @@ class WarborneBot(commands.Bot):
                         name="👥 Participant List",
                         value=participant_list,
                         inline=False
+                    )
+            
+            # Add role statistics if there are roles
+            if role_counts:
+                role_stats = []
+                for role, count in role_counts.items():
+                    if count > 0:  # Only show roles with participants
+                        role_stats.append(f"**{role}**: {count}")
+                
+                if role_stats:
+                    role_stats_text = "\n".join(role_stats)
+                    embed.add_field(
+                        name="🎯 Role Distribution",
+                        value=role_stats_text,
+                        inline=True
                     )
             
             # Update the message
