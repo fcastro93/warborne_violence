@@ -398,13 +398,32 @@ class CommandMenuView(discord.ui.View):
         from asgiref.sync import sync_to_async
         
         @sync_to_async
-        def get_active_events():
-            from .models import Event
-            return list(Event.objects.filter(is_active=True, is_cancelled=False).order_by('event_datetime'))
+        def get_events_with_participant_counts():
+            from .models import Event, EventParticipant
+            events = Event.objects.filter(is_active=True, is_cancelled=False).order_by('event_datetime')[:10]
+            
+            events_data = []
+            for event in events:
+                # Count participants using raw SQL to avoid async issues
+                participant_count = EventParticipant.objects.filter(
+                    event=event, 
+                    is_active=True
+                ).count()
+                
+                events_data.append({
+                    'title': event.title,
+                    'discord_timestamp': event.discord_timestamp,
+                    'created_by_discord_name': event.created_by_discord_name,
+                    'participant_count': participant_count,
+                    'max_participants': event.max_participants,
+                    'event_type_display': event.get_event_type_display()
+                })
+            
+            return events_data
         
-        events = await get_active_events()
+        events_data = await get_events_with_participant_counts()
         
-        if not events:
+        if not events_data:
             await interaction.response.send_message(
                 "📅 No hay eventos activos disponibles.",
                 ephemeral=True
@@ -416,24 +435,22 @@ class CommandMenuView(discord.ui.View):
             color=0x4a9eff
         )
         
-        for event in events[:10]:  # Show first 10 events
-            # Get participant count safely using sync method
-            participant_count = event.get_participant_count_sync()
-            participants_text = f"{participant_count} participantes"
-            if event.max_participants:
-                participants_text += f" / {event.max_participants} máx"
+        for event_data in events_data:
+            participants_text = f"{event_data['participant_count']} participantes"
+            if event_data['max_participants']:
+                participants_text += f" / {event_data['max_participants']} máx"
             
             embed.add_field(
-                name=f"🎯 {event.title}",
-                value=f"**Fecha:** {event.discord_timestamp}\n"
-                      f"**Creado por:** {event.created_by_discord_name}\n"
+                name=f"🎯 {event_data['title']}",
+                value=f"**Fecha:** {event_data['discord_timestamp']}\n"
+                      f"**Creado por:** {event_data['created_by_discord_name']}\n"
                       f"**Participantes:** {participants_text}\n"
-                      f"**Tipo:** {event.get_event_type_display()}",
+                      f"**Tipo:** {event_data['event_type_display']}",
                 inline=True
             )
         
-        if len(events) > 10:
-            embed.set_footer(text=f"Mostrando 10 de {len(events)} eventos")
+        if len(events_data) == 10:
+            embed.set_footer(text="Mostrando 10 eventos más recientes")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
     
