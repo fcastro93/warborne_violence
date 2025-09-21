@@ -427,6 +427,9 @@ class WarborneBot(commands.Bot):
         for cmd in self.commands:
             print(f'   - !{cmd.name}: {cmd.description}')
         
+        # Start the status monitoring task
+        self.status_monitor_task = asyncio.create_task(self.monitor_bot_status())
+        
         # Send hello message to all guilds
         config = await _get_bot_config()
         for guild in self.guilds:
@@ -437,10 +440,10 @@ class WarborneBot(commands.Bot):
             
             # Fallback to finding a general channel or first available text channel
             if not general_channel:
-                for channel in guild.text_channels:
-                    if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
-                        general_channel = channel
-                        break
+            for channel in guild.text_channels:
+                if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
+                    general_channel = channel
+                    break
             
             if not general_channel:
                 general_channel = guild.text_channels[0] if guild.text_channels else None
@@ -459,6 +462,25 @@ class WarborneBot(commands.Bot):
                     print(f"No se pudo enviar mensaje a {guild.name}: {e}")
             
         await self.update_bot_status(True)
+    
+    async def monitor_bot_status(self):
+        """Monitor bot status and stop if is_online becomes False"""
+        while True:
+            try:
+                await asyncio.sleep(10)  # Check every 10 seconds
+                
+                config = await _get_bot_config()
+                if config and not config.is_online:
+                    print("🛑 Bot stop requested from admin panel. Shutting down...")
+                    await self.close()
+                    break
+                    
+            except asyncio.CancelledError:
+                print("📡 Status monitor task cancelled")
+                break
+            except Exception as e:
+                print(f"Error in status monitor: {e}")
+                await asyncio.sleep(30)  # Wait longer on error
     
     async def on_command_error(self, ctx, error):
         """Handle command errors"""
@@ -778,3 +800,14 @@ def run_bot():
                 config.save()
         except:
             pass
+    
+    async def close(self):
+        """Override close to clean up monitoring task"""
+        if hasattr(self, 'status_monitor_task'):
+            self.status_monitor_task.cancel()
+            try:
+                await self.status_monitor_task
+            except asyncio.CancelledError:
+                pass
+        
+        await super().close()
