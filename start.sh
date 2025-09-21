@@ -8,6 +8,39 @@ echo "Starting Warborne Guild Tools..."
 # Set production settings
 export DJANGO_SETTINGS_MODULE=warborne_tools.settings_production
 
+# Wait for database to be available
+echo "Waiting for database connection..."
+python -c "
+import os
+import time
+import django
+from django.conf import settings
+from django.db import connections
+from django.core.exceptions import ImproperlyConfigured
+
+# Configure Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warborne_tools.settings_production')
+django.setup()
+
+# Wait for database connection
+max_attempts = 30
+attempt = 0
+while attempt < max_attempts:
+    try:
+        db_conn = connections['default']
+        db_conn.cursor()
+        print('Database connection successful!')
+        break
+    except Exception as e:
+        attempt += 1
+        print(f'Database connection attempt {attempt}/{max_attempts} failed: {e}')
+        if attempt < max_attempts:
+            time.sleep(2)
+        else:
+            print('Max database connection attempts reached. Exiting.')
+            exit(1)
+"
+
 # Run migrations
 echo "Running database migrations..."
 python manage.py migrate --noinput
@@ -26,10 +59,6 @@ if not User.objects.filter(username='admin').exists():
 else:
     print('Admin user already exists')
 EOF
-
-# Collect static files
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
 
 # Start the application
 echo "Starting Gunicorn server..."

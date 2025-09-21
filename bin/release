@@ -8,4 +8,8 @@ export DJANGO_SETTINGS_MODULE=warborne_tools.settings_production
 # Create logs directory
 mkdir -p logs
 
+# Set environment variables for release
+export DEBUG=False
+export ALLOWED_HOSTS="*"
+
 echo "Release script completed successfully!"
