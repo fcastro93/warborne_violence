@@ -386,7 +386,12 @@
             </div>
         </div>
 
-        {% if not builds_by_role %}
+        {% if error_message %}
+            <div class="empty-state">
+                <h3>⚠️ Error Loading Builds</h3>
+                <p>{{ error_message }}</p>
+            </div>
+        {% elif not builds_by_role %}
             <div class="empty-state">
                 <h3>No builds available</h3>
                 <p>Check back later for recommended builds!</p>

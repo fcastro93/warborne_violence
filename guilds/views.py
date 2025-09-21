@@ -496,30 +496,46 @@ def recommended_builds(request):
     """View for displaying recommended builds organized by role"""
     from .models import RecommendedBuild, Player
     
-    # Get all active recommended builds with optimized queries
-    builds = RecommendedBuild.objects.filter(is_active=True).select_related(
-        'drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable',
-        'mod1', 'mod2', 'mod3', 'mod4'
-    )
-    
-    # Group builds by role
-    builds_by_role = {}
-    for build in builds:
-        role = build.role
-        if role not in builds_by_role:
-            builds_by_role[role] = []
-        builds_by_role[role].append(build)
-    
-    # Get role choices for tab generation
-    role_choices = Player.GAME_ROLE_CHOICES
-    
-    context = {
-        'builds_by_role': builds_by_role,
-        'role_choices': role_choices,
-        'total_builds': len(builds),
-    }
-    
-    return render(request, 'guilds/recommended_builds.html', context)
+    try:
+        # Get all active recommended builds with optimized queries
+        # Note: template_player field was removed - using new equipment fields
+        builds = RecommendedBuild.objects.filter(is_active=True).select_related(
+            'drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable',
+            'mod1', 'mod2', 'mod3', 'mod4'
+        )
+        
+        # Group builds by role
+        builds_by_role = {}
+        for build in builds:
+            role = build.role
+            if role not in builds_by_role:
+                builds_by_role[role] = []
+            builds_by_role[role].append(build)
+        
+        # Get role choices for tab generation
+        role_choices = Player.GAME_ROLE_CHOICES
+        
+        context = {
+            'builds_by_role': builds_by_role,
+            'role_choices': role_choices,
+            'total_builds': len(builds),
+        }
+        
+        return render(request, 'guilds/recommended_builds.html', context)
+        
+    except Exception as e:
+        # Fallback for any database issues
+        print(f"Error in recommended_builds view: {e}")
+        
+        # Return empty context with error handling
+        context = {
+            'builds_by_role': {},
+            'role_choices': Player.GAME_ROLE_CHOICES,
+            'total_builds': 0,
+            'error_message': 'Error loading recommended builds. Please try again later.'
+        }
+        
+        return render(request, 'guilds/recommended_builds.html', context)
 
 
 def edit_recommended_build(request, build_id=None):
