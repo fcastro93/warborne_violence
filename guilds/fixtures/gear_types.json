@@ -1,0 +1,155 @@
+[
+{
+  "model": "guilds.geartype",
+  "pk": 125,
+  "fields": {
+    "name": "Head",
+    "category": "helmet",
+    "description": "Head armor pieces"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 126,
+  "fields": {
+    "name": "Chest",
+    "category": "chest",
+    "description": "Chest armor pieces"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 127,
+  "fields": {
+    "name": "Boots",
+    "category": "boots",
+    "description": "Boots armor pieces"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 140,
+  "fields": {
+    "name": "Consumable",
+    "category": "consumable",
+    "description": "Consumable items"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 141,
+  "fields": {
+    "name": "Mod",
+    "category": "mod",
+    "description": "Equipment modifications"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 166,
+  "fields": {
+    "name": "Sword (Strength)",
+    "category": "weapon",
+    "description": "Sword weapons for Strength builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 167,
+  "fields": {
+    "name": "Axe (Strength)",
+    "category": "weapon",
+    "description": "Axe weapons for Strength builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 168,
+  "fields": {
+    "name": "Mace (Strength)",
+    "category": "weapon",
+    "description": "Mace weapons for Strength builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 169,
+  "fields": {
+    "name": "Gun (Strength)",
+    "category": "weapon",
+    "description": "Gun weapons for Strength builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 170,
+  "fields": {
+    "name": "Bow (Agility)",
+    "category": "weapon",
+    "description": "Bow weapons for Agility builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 171,
+  "fields": {
+    "name": "Dagger (Agility)",
+    "category": "weapon",
+    "description": "Dagger weapons for Agility builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 172,
+  "fields": {
+    "name": "Nature (Agility)",
+    "category": "weapon",
+    "description": "Nature weapons for Agility builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 173,
+  "fields": {
+    "name": "Spear (Agility)",
+    "category": "weapon",
+    "description": "Spear weapons for Agility builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 174,
+  "fields": {
+    "name": "Curse (Intelligence)",
+    "category": "weapon",
+    "description": "Curse weapons for Intelligence builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 175,
+  "fields": {
+    "name": "Fire (Intelligence)",
+    "category": "weapon",
+    "description": "Fire weapons for Intelligence builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 176,
+  "fields": {
+    "name": "Frost (Intelligence)",
+    "category": "weapon",
+    "description": "Frost weapons for Intelligence builds"
+  }
+},
+{
+  "model": "guilds.geartype",
+  "pk": 177,
+  "fields": {
+    "name": "Holy (Intelligence)",
+    "category": "weapon",
+    "description": "Holy weapons for Intelligence builds"
+  }
+}
+]

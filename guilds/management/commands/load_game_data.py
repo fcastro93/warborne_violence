@@ -14,7 +14,7 @@ class Command(BaseCommand):
         self.stdout.write('Loading game data from fixtures...')
         
         # Get the fixtures directory
-        fixtures_dir = os.path.join(settings.BASE_DIR, 'fixtures')
+        fixtures_dir = os.path.join(settings.BASE_DIR, 'guilds', 'fixtures')
         
         if not os.path.exists(fixtures_dir):
             self.stdout.write(
@@ -34,7 +34,7 @@ class Command(BaseCommand):
             fixture_path = os.path.join(fixtures_dir, fixture)
             if os.path.exists(fixture_path):
                 try:
-                    call_command('loaddata', fixture, verbosity=0)
+                    call_command('loaddata', fixture_path, verbosity=0)
                     self.stdout.write(
                         self.style.SUCCESS(f'✓ Loaded {fixture}')
                     )
