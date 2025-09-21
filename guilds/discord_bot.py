@@ -1123,40 +1123,25 @@ class WarborneBot(commands.Bot):
         
         @self.command(name="createplayer")
         async def createplayer(ctx, *, player_name=None):
-            """Create a new player linked to your Discord account"""
-            # Use Discord username as default if no name provided
-            if not player_name:
-                player_name = ctx.author.name
-                
-            print(f"🔥 DEBUG: createplayer command called by {ctx.author.name} with {player_name}")
-            try:
-                # Validate player name
-                if len(player_name) < 3 or len(player_name) > 50:
-                    await ctx.send("❌ El nombre del jugador debe tener entre 3 y 50 caracteres")
-                    return
-                
-                # Create player
-                player, error = await _create_player(
-                    in_game_name=player_name,
-                    discord_user_id=ctx.author.id,
-                    discord_name=str(ctx.author),
-                    level=1,
-                    faction='none'
+            """Create a new player linked to your Discord account using interactive dropdowns"""
+            print(f"🔥 DEBUG: createplayer command called by {ctx.author.name}")
+            
+            # Create a view with dropdowns for player creation
+            view = CreatePlayerView(self)
+            embed = discord.Embed(
+                title="👤 Create Player",
+                description="Use the dropdowns below to create your player:",
+                color=0x4a9eff
+            )
+            
+            if player_name:
+                embed.add_field(
+                    name="Suggested Name",
+                    value=player_name,
+                    inline=False
                 )
-                
-                if error:
-                    await ctx.send(f"❌ {error}")
-                else:
-                    base_url = self.config.get('base_url', 'http://127.0.0.1:8000')
-                    loadout_url = f"{base_url}/guilds/player/{player.id}/loadout/"
-                    await ctx.send(f"✅ **Player created successfully!**\n"
-                                 f"**Name:** {player.in_game_name}\n"
-                                 f"**Level:** {player.character_level}\n"
-                                 f"**Faction:** {player.get_faction_display()}\n"
-                                 f"**Loadout Link:** {loadout_url}\n"
-                                 f"💡 Now you can modify your equipment from the web page!")
-            except Exception as e:
-                await ctx.send(f"❌ Error: {str(e)}")
+            
+            await ctx.send(embed=embed, view=view)
         
         @self.command(name="myplayer")
         async def myplayer(ctx):
@@ -1269,10 +1254,10 @@ class WarborneBot(commands.Bot):
             
             # Fallback to finding a general channel or first available text channel
             if not general_channel:
-                for channel in guild.text_channels:
-                    if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
-                        general_channel = channel
-                        break
+            for channel in guild.text_channels:
+                if channel.name in ['general', 'chat', 'bienvenida', 'welcome']:
+                    general_channel = channel
+                    break
             
             if not general_channel:
                 general_channel = guild.text_channels[0] if guild.text_channels else None
