@@ -448,6 +448,21 @@
             background: rgba(255, 255, 255, 0.1);
         }
         
+        /* Change Drifter Button */
+        .change-drifter-btn:hover {
+            background: linear-gradient(135deg, #357abd, #2968a3) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
+        }
+        
+        /* Drifter Modal Styles */
+        .drifter-option:hover {
+            border-color: #90caf9 !important;
+            background: linear-gradient(135deg, #3d4852, #5a6572) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
         /* Gear Slots */
         .gear-slots {
             display: grid;
@@ -1225,6 +1240,23 @@
                         <span class="gear-empty">🎭</span>
                         <div class="slot-label">Drifter</div>
                     {% endif %}
+                </div>
+                
+                <!-- Change Drifter Button -->
+                <div style="margin-top: 10px; text-align: center;">
+                    <button class="change-drifter-btn" onclick="showDrifterSelection()" 
+                            style="background: linear-gradient(135deg, #4a90e2, #357abd); 
+                                   color: white; 
+                                   border: none; 
+                                   padding: 8px 16px; 
+                                   border-radius: 6px; 
+                                   cursor: pointer; 
+                                   font-weight: bold; 
+                                   font-size: 0.9rem;
+                                   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                                   transition: all 0.3s ease;">
+                        Change Drifter
+                    </button>
                 </div>
             </div>
         </div>
@@ -2162,11 +2194,50 @@
             modal.classList.remove('show');
         }
         
+        // Drifter Modal Functions
+        function showDrifterSelection() {
+            const modal = document.getElementById('drifter-modal');
+            if (modal) {
+                modal.classList.add('show');
+                // Load drifter images in the modal
+                loadDrifterModalImages();
+            }
+        }
+        
+        function closeDrifterModal() {
+            const modal = document.getElementById('drifter-modal');
+            modal.classList.remove('show');
+        }
+        
+        function selectDrifter(drifterId, drifterName) {
+            console.log('selectDrifter called with:', drifterId, drifterName);
+            
+            // Close the modal
+            closeDrifterModal();
+            
+            // Use the existing equipDrifterToBuild function
+            equipDrifterToBuild(drifterId, drifterName);
+        }
+        
+        function loadDrifterModalImages() {
+            // Load images for drifter options in the modal
+            document.querySelectorAll('.drifter-modal-icon').forEach(img => {
+                const drifterName = img.getAttribute('data-drifter-name');
+                const iconId = getDrifterIconId(drifterName);
+                img.src = `/static/icons/${iconId}.png`;
+            });
+        }
+        
         // Close modal when clicking outside
         document.addEventListener('click', function(e) {
-            const modal = document.getElementById('skill-modal');
-            if (e.target === modal) {
+            const skillModal = document.getElementById('skill-modal');
+            const drifterModal = document.getElementById('drifter-modal');
+            
+            if (e.target === skillModal) {
                 closeSkillModal();
+            }
+            if (e.target === drifterModal) {
+                closeDrifterModal();
             }
         });
         
@@ -2197,6 +2268,45 @@
                 <h3 class="skill-modal-title" id="skill-modal-title">Skill Name</h3>
             </div>
             <p class="skill-modal-description" id="skill-modal-description">Skill description will appear here.</p>
+        </div>
+    </div>
+
+    <!-- Drifter Selection Modal -->
+    <div id="drifter-modal" class="skill-modal">
+        <div class="skill-modal-content" style="max-width: 600px; width: 95%;">
+            <button class="skill-modal-close" onclick="closeDrifterModal()">&times;</button>
+            <div class="skill-modal-header">
+                <div class="skill-modal-icon">🎭</div>
+                <h3 class="skill-modal-title">Select Drifter</h3>
+            </div>
+            <p class="skill-modal-description" style="margin-bottom: 20px;">Choose a drifter for this recommended build:</p>
+            
+            <!-- Drifter Grid -->
+            <div class="drifter-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; max-height: 400px; overflow-y: auto;">
+                {% for attribute, items in gear_by_type.drifter.items %}
+                    {% for item_data in items %}
+                    <div class="drifter-option" 
+                         onclick="selectDrifter({{ item_data.gear_item.id }}, '{{ item_data.gear_item.name }}')"
+                         style="background: linear-gradient(135deg, #2d3748, #4a5568); 
+                                border: 2px solid #64b5f6; 
+                                border-radius: 8px; 
+                                padding: 12px; 
+                                text-align: center; 
+                                cursor: pointer; 
+                                transition: all 0.3s ease;
+                                {% if build.drifter and build.drifter.id == item_data.gear_item.id %}border-color: #48bb78; background: linear-gradient(135deg, #2f855a, #38a169);{% endif %}">
+                        <img src="" alt="{{ item_data.gear_item.name }}" class="drifter-modal-icon" 
+                             style="width: 48px; height: 48px; border-radius: 4px; margin-bottom: 8px;" 
+                             data-drifter-name="{{ item_data.gear_item.name }}"
+                             onerror="this.style.display='none';">
+                        <div style="color: white; font-size: 0.9rem; font-weight: 500;">{{ item_data.gear_item.name }}</div>
+                        {% if build.drifter and build.drifter.id == item_data.gear_item.id %}
+                        <div style="color: #48bb78; font-size: 0.8rem; margin-top: 4px;">✓ Equipped</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 
