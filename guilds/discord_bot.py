@@ -43,8 +43,20 @@ class CreatePlayerView(discord.ui.View):
             from .models import Guild
             guilds = Guild.objects.filter(is_active=True)
             
+            guild_options = []
+            
+            # Always add "No Guild" option
+            guild_options.append(
+                discord.SelectOption(
+                    label="No Guild",
+                    value="none",
+                    description="No guild selected",
+                    default=True
+                )
+            )
+            
+            # Add existing guilds if any
             if guilds.exists():
-                guild_options = []
                 for guild in guilds:
                     guild_options.append(
                         discord.SelectOption(
@@ -53,12 +65,24 @@ class CreatePlayerView(discord.ui.View):
                             description=f"Members: {guild.players.count()}"
                         )
                     )
-                
-                guild_select = self.GuildSelect(self)
-                guild_select.options = guild_options
-                self.add_item(guild_select)
+            
+            # Always create and add the guild select dropdown
+            guild_select = self.GuildSelect(self)
+            guild_select.options = guild_options
+            self.add_item(guild_select)
         except Exception as e:
             print(f"Error loading guilds: {e}")
+            # Even if there's an error, create a basic guild dropdown
+            guild_select = self.GuildSelect(self)
+            guild_select.options = [
+                discord.SelectOption(
+                    label="No Guild",
+                    value="none",
+                    description="No guild selected",
+                    default=True
+                )
+            ]
+            self.add_item(guild_select)
     
     # Faction Select
     class FactionSelect(discord.ui.Select):
