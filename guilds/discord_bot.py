@@ -206,20 +206,20 @@ class CreatePlayerView(discord.ui.View):
             role_info = f"\n**Rol:** {player.get_game_role_display()}" if player.game_role else ""
             
             embed = discord.Embed(
-                title="✅ ¡Jugador creado exitosamente!",
+                title="✅ Player created successfully!",
                 color=0x4a9eff
             )
             embed.add_field(
-                name="📊 Información del Jugador",
-                value=f"**Nombre:** {player.in_game_name}\n"
-                      f"**Nivel:** {player.character_level}\n"
-                      f"**Facción:** {player.get_faction_display()}"
+                name="📊 Player Information",
+                value=f"**Name:** {player.in_game_name}\n"
+                      f"**Level:** {player.character_level}\n"
+                      f"**Faction:** {player.get_faction_display()}"
                       f"{guild_info}"
                       f"{role_info}",
                 inline=False
             )
             embed.add_field(
-                name="🔗 Link del Loadout",
+                name="🔗 Loadout Link",
                 value=f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout",
                 inline=False
             )
@@ -388,7 +388,7 @@ class CommandMenuView(discord.ui.View):
             await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
             await interaction.response.send_message(
-                "❌ No hay guilds activas disponibles.",
+                "❌ No active guilds available.",
                 ephemeral=True
             )
     
@@ -425,32 +425,32 @@ class CommandMenuView(discord.ui.View):
         
         if not events_data:
             await interaction.response.send_message(
-                "📅 No hay eventos activos disponibles.",
+                "📅 No active events available.",
                 ephemeral=True
             )
             return
         
         embed = discord.Embed(
-            title="📅 Eventos Activos",
+            title="📅 Active Events",
             color=0x4a9eff
         )
         
         for event_data in events_data:
-            participants_text = f"{event_data['participant_count']} participantes"
+            participants_text = f"{event_data['participant_count']} participants"
             if event_data['max_participants']:
-                participants_text += f" / {event_data['max_participants']} máx"
+                participants_text += f" / {event_data['max_participants']} max"
             
             embed.add_field(
                 name=f"🎯 {event_data['title']}",
-                value=f"**Fecha:** {event_data['discord_timestamp']}\n"
-                      f"**Creado por:** {event_data['created_by_discord_name']}\n"
-                      f"**Participantes:** {participants_text}\n"
-                      f"**Tipo:** {event_data['event_type_display']}",
+                value=f"**Date:** {event_data['discord_timestamp']}\n"
+                      f"**Created by:** {event_data['created_by_discord_name']}\n"
+                      f"**Participants:** {participants_text}\n"
+                      f"**Type:** {event_data['event_type_display']}",
                 inline=True
             )
         
         if len(events_data) == 10:
-            embed.set_footer(text="Mostrando 10 eventos más recientes")
+            embed.set_footer(text="Showing 10 most recent events")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
     
@@ -487,7 +487,7 @@ class CommandMenuView(discord.ui.View):
         config = await _get_bot_config()
         if not config or not config.event_announcements_channel_id:
             await interaction.response.send_message(
-                "❌ No se ha configurado el canal de anuncios de eventos. Contacta al administrador.",
+                "❌ Event announcements channel not configured. Contact administrator.",
                 ephemeral=True
             )
             return
@@ -496,7 +496,7 @@ class CommandMenuView(discord.ui.View):
         announcement_channel = self.bot_instance.get_channel(config.event_announcements_channel_id)
         if not announcement_channel:
             await interaction.response.send_message(
-                "❌ No se pudo encontrar el canal de anuncios de eventos.",
+                "❌ Could not find event announcements channel.",
                 ephemeral=True
             )
             return
@@ -505,37 +505,37 @@ class CommandMenuView(discord.ui.View):
         
         if not events_data:
             await interaction.response.send_message(
-                "❌ No hay eventos activos para publicar.",
+                "❌ No active events to publish.",
                 ephemeral=True
             )
             return
         
         embed = discord.Embed(
-            title="📢 EVENTOS ACTIVOS - WARBORNE",
-            description="¡Únete a estos eventos épicos!",
+            title="📢 ACTIVE EVENTS - WARBORNE",
+            description="Join these epic events!",
             color=0xff6b35  # Orange color for announcements
         )
         
         for event_data in events_data:
-            participants_text = f"{event_data['participant_count']} participantes"
+            participants_text = f"{event_data['participant_count']} participants"
             if event_data['max_participants']:
-                participants_text += f" / {event_data['max_participants']} máx"
+                participants_text += f" / {event_data['max_participants']} max"
             
             embed.add_field(
                 name=f"🎯 {event_data['title']}",
-                value=f"**📅 Fecha:** {event_data['discord_timestamp']}\n"
-                      f"**👤 Creado por:** {event_data['created_by_discord_name']}\n"
-                      f"**👥 Participantes:** {participants_text}\n"
-                      f"**🏷️ Tipo:** {event_data['event_type_display']}",
+                value=f"**📅 Date:** {event_data['discord_timestamp']}\n"
+                      f"**👤 Created by:** {event_data['created_by_discord_name']}\n"
+                      f"**👥 Participants:** {participants_text}\n"
+                      f"**🏷️ Type:** {event_data['event_type_display']}",
                 inline=True
             )
         
         if len(events_data) == 10:
-            embed.set_footer(text="Mostrando 10 eventos más recientes")
+            embed.set_footer(text="Showing 10 most recent events")
         
         embed.add_field(
-            name="🚀 ¿Cómo participar?",
-            value="Usa `!menu` y selecciona el evento que te interese para unirte.",
+            name="🚀 How to participate?",
+            value="Use `!menu` and select the event you're interested in to join.",
             inline=False
         )
         
@@ -544,7 +544,7 @@ class CommandMenuView(discord.ui.View):
         
         # Confirm to user
         await interaction.response.send_message(
-            f"✅ Eventos publicados exitosamente en {announcement_channel.mention}",
+            f"✅ Events published successfully in {announcement_channel.mention}",
             ephemeral=True
         )
     
@@ -580,7 +580,7 @@ class CommandMenuView(discord.ui.View):
                 
                 if not event:
                     await interaction.response.send_message(
-                        f"❌ No se encontró un evento activo con el título '{self.event_title.value}'",
+                        f"❌ No active event found with title '{self.event_title.value}'",
                         ephemeral=True
                     )
                     return
@@ -625,7 +625,7 @@ class CommandMenuView(discord.ui.View):
             async def on_submit(self, interaction: discord.Interaction):
                 if self.confirmation.value.upper() != 'DELETE':
                     await interaction.response.send_message(
-                        "❌ Debes escribir 'DELETE' para confirmar la eliminación.",
+                        "❌ You must type 'DELETE' to confirm deletion.",
                         ephemeral=True
                     )
                     return
@@ -642,14 +642,14 @@ class CommandMenuView(discord.ui.View):
                     ).first()
                     
                     if not event:
-                        return False, f"No se encontró un evento activo con el título '{title}'"
+                        return False, f"No active event found with title '{title}'"
                     
                     # Mark as cancelled instead of deleting to preserve history
                     event.is_cancelled = True
                     event.is_active = False
                     event.save()
                     
-                    return True, f"Evento '{event.title}' cancelado exitosamente"
+                    return True, f"Event '{event.title}' cancelled successfully"
                 
                 success, message = await find_and_delete_event(self.event_title.value)
                 
@@ -666,7 +666,7 @@ class CommandMenuView(discord.ui.View):
         """Button to test bot ping"""
         latency = round(self.bot_instance.latency * 1000)
         await interaction.response.send_message(
-            f"🏓 Pong! Latencia: {latency}ms",
+            f"🏓 Pong! Latency: {latency}ms",
             ephemeral=True
         )
 
@@ -999,12 +999,12 @@ class WarborneBot(commands.Bot):
                 else:
                     base_url = self.config.get('base_url', 'http://127.0.0.1:8000')
                     loadout_url = f"{base_url}/guilds/player/{player.id}/loadout/"
-                    await ctx.send(f"✅ **¡Jugador creado exitosamente!**\n"
-                                 f"**Nombre:** {player.in_game_name}\n"
-                                 f"**Nivel:** {player.character_level}\n"
-                                 f"**Facción:** {player.get_faction_display()}\n"
-                                 f"**Link del Loadout:** {loadout_url}\n"
-                                 f"💡 Ahora puedes modificar tu equipamiento desde la página web!")
+                    await ctx.send(f"✅ **Player created successfully!**\n"
+                                 f"**Name:** {player.in_game_name}\n"
+                                 f"**Level:** {player.character_level}\n"
+                                 f"**Faction:** {player.get_faction_display()}\n"
+                                 f"**Loadout Link:** {loadout_url}\n"
+                                 f"💡 Now you can modify your equipment from the web page!")
             except Exception as e:
                 await ctx.send(f"❌ Error: {str(e)}")
         
@@ -1129,17 +1129,17 @@ class WarborneBot(commands.Bot):
             
             if general_channel:
                 try:
-                    await general_channel.send("🤖 ¡Hola! Warborne Bot está listo para la acción!\n"
-                                              "**Comandos disponibles:**\n"
-                                              "`!menu` - 🎮 Menú interactivo con todos los comandos\n"
-                                              "`!createevent` - Crear evento de guild\n"
-                                              "`!createplayer [nombre]` - Crear tu jugador (usa tu nombre de Discord por defecto)\n"
-                                              "`!myplayer` - Ver tu jugador\n"
-                                              "`!buildplayer <nombre>` - Ver loadout de jugador\n"
-                                              "`!guildinfo` - Información de guilds\n"
-                                              "`!ping` - Probar bot")
+                    await general_channel.send("🤖 Hello! Warborne Bot is ready for action!\n"
+                                              "**Available commands:**\n"
+                                              "`!menu` - 🎮 Interactive menu with all commands\n"
+                                              "`!createevent` - Create guild event\n"
+                                              "`!createplayer [name]` - Create your player (uses your Discord name by default)\n"
+                                              "`!myplayer` - View your player\n"
+                                              "`!buildplayer <name>` - View player loadout\n"
+                                              "`!guildinfo` - Guild information\n"
+                                              "`!ping` - Test bot")
                 except Exception as e:
-                    print(f"No se pudo enviar mensaje a {guild.name}: {e}")
+                    print(f"Could not send message to {guild.name}: {e}")
             
         await self.update_bot_status(True)
     
@@ -1165,14 +1165,14 @@ class WarborneBot(commands.Bot):
     async def on_command_error(self, ctx, error):
         """Handle command errors"""
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send("❌ Comando no encontrado. Comandos disponibles:\n"
-                          "`!menu` - 🎮 Menú interactivo con todos los comandos\n"
-                          "`!createevent` - Crear evento de guild\n"
-                          "`!createplayer [nombre]` - Crear tu jugador\n"
-                          "`!myplayer` - Ver tu jugador\n"
-                          "`!buildplayer <nombre>` - Ver loadout de jugador\n"
-                          "`!guildinfo` - Información de guilds\n"
-                          "`!ping` - Probar bot")
+            await ctx.send("❌ Command not found. Available commands:\n"
+                       "`!menu` - 🎮 Interactive menu with all commands\n"
+                       "`!createevent` - Create guild event\n"
+                       "`!createplayer [name]` - Create your player\n"
+                       "`!myplayer` - View your player\n"
+                       "`!buildplayer <name>` - View player loadout\n"
+                       "`!guildinfo` - Guild information\n"
+                       "`!ping` - Test bot")
         else:
             await ctx.send(f"❌ Error: {str(error)}")
     
@@ -1555,7 +1555,7 @@ def run_bot():
             ).select_related('player'))
             
             if len(participants) < 2:
-                return False, "Se necesitan al menos 2 participantes para crear parties"
+                return False, "At least 2 participants needed to create parties"
             
             # Clear existing parties for this event
             Party.objects.filter(event=event).delete()
@@ -1640,6 +1640,6 @@ def run_bot():
                     )
                     party_members_created += 1
             
-            return True, f"Parties creadas exitosamente: {num_parties} parties con {party_members_created} participantes distribuidos"
+            return True, f"Parties created successfully: {num_parties} parties with {party_members_created} participants distributed"
         
         return await create_parties()
