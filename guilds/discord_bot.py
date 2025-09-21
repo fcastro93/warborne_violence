@@ -332,22 +332,45 @@ class WarborneBot(commands.Bot):
                     await ctx.send("❌ No tienes un jugador registrado. Usa `!createplayer <nombre>` para crear uno.")
             except Exception as e:
                 await ctx.send(f"❌ Error: {str(e)}")
+        
+        @self.command(name="createevent")
+        async def createevent(ctx):
+            """Create a new guild event using modal"""
+            print(f"🔥 DEBUG: createevent command called by {ctx.author.name}")
+            
+            # Create a simple view with a button that opens the modal
+            class EventButton(discord.ui.View):
+                def __init__(self, bot_instance):
+                    super().__init__(timeout=120)
+                    self.bot_instance = bot_instance
+                
+                @discord.ui.button(label="📅 Create Event", style=discord.ButtonStyle.primary, emoji="🎯")
+                async def create_event_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await interaction.response.send_modal(CreateEventModal(self.bot_instance))
+            
+            # Send message with button
+            embed = discord.Embed(
+                title="🎯 Create Guild Event",
+                description="Click the button below to create a new guild event!",
+                color=0x4a9eff
+            )
+            embed.add_field(
+                name="Event Types",
+                value="• Guild War\n• PvP Fight\n• Resource Farming\n• Boss Raid\n• Social Event\n• Training",
+                inline=True
+            )
+            embed.add_field(
+                name="Features",
+                value="• Automatic timestamps\n• Participant tracking\n• Event announcements\n• Discord integration",
+                inline=True
+            )
+            
+            view = EventButton(self)
+            await ctx.send(embed=embed, view=view)
     
     async def setup_hook(self):
-        """Setup hook for slash commands"""
-        # Register slash commands
-        @self.tree.command(name="createevent", description="Create a new guild event")
-        async def createevent(interaction: discord.Interaction):
-            """Slash command to create a new event"""
-            print(f"🔥 DEBUG: createevent slash command called by {interaction.user.name}")
-            await interaction.response.send_modal(CreateEventModal(self))
-        
-        # Sync commands
-        try:
-            synced = await self.tree.sync()
-            print(f'✅ Synced {len(synced)} slash commands')
-        except Exception as e:
-            print(f'❌ Failed to sync commands: {e}')
+        """Setup hook - no slash commands needed"""
+        pass
     
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -374,7 +397,7 @@ class WarborneBot(commands.Bot):
                 try:
                     await general_channel.send("🤖 ¡Hola! Warborne Bot está listo para la acción!\n"
                                               "**Comandos disponibles:**\n"
-                                              "`/createevent` - Crear evento de guild\n"
+                                              "`!createevent` - Crear evento de guild\n"
                                               "`!createplayer [nombre]` - Crear tu jugador (usa tu nombre de Discord por defecto)\n"
                                               "`!myplayer` - Ver tu jugador\n"
                                               "`!buildplayer <nombre>` - Ver loadout de jugador\n"
@@ -389,7 +412,7 @@ class WarborneBot(commands.Bot):
         """Handle command errors"""
         if isinstance(error, commands.CommandNotFound):
             await ctx.send("❌ Comando no encontrado. Comandos disponibles:\n"
-                          "`/createevent` - Crear evento de guild\n"
+                          "`!createevent` - Crear evento de guild\n"
                           "`!createplayer [nombre]` - Crear tu jugador\n"
                           "`!myplayer` - Ver tu jugador\n"
                           "`!buildplayer <nombre>` - Ver loadout de jugador\n"

@@ -71,7 +71,7 @@ def configure_channels():
     print(f"   - Línea 117: Cambia '1234567890123456789' por '{announcements_channel_id}'")
     print()
     print("🚀 Comandos disponibles:")
-    print("   - /createevent - Crear un nuevo evento")
+    print("   - !createevent - Crear un nuevo evento")
     print("   - !createplayer [nombre] - Crear jugador")
     print("   - !myplayer - Ver tu jugador")
     print("   - !buildplayer <nombre> - Ver loadout de jugador")
