@@ -640,6 +640,89 @@ class CommandMenuView(discord.ui.View):
         
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
     
+    @discord.ui.button(label="🏰 Create Guild Parties", style=discord.ButtonStyle.secondary, emoji="🏰")
+    async def create_guild_parties_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to create guild-based parties for events"""
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def get_active_events_for_dropdown():
+            from .models import Event
+            events = Event.objects.filter(is_active=True, is_cancelled=False).order_by('event_datetime')
+            
+            event_options = []
+            for event in events:
+                # Create a shorter display name for the dropdown
+                display_name = event.title[:90] + "..." if len(event.title) > 90 else event.title
+                event_options.append(
+                    discord.SelectOption(
+                        label=display_name,
+                        value=str(event.id),
+                        description=f"Date: {event.event_datetime.strftime('%Y-%m-%d %H:%M')} | Type: {event.get_event_type_display()}"
+                    )
+                )
+            
+            return event_options
+        
+        event_options = await get_active_events_for_dropdown()
+        
+        if not event_options:
+            await interaction.response.send_message(
+                "❌ No active events available for guild party creation.",
+                ephemeral=True
+            )
+            return
+        
+        # Create a view with dropdown for event selection
+        class GuildEventSelectionView(discord.ui.View):
+            def __init__(self, command_menu_view, event_options):
+                super().__init__(timeout=300)
+                self.command_menu_view = command_menu_view
+                self.add_item(GuildEventSelectDropdown(event_options, command_menu_view))
+        
+        class GuildEventSelectDropdown(discord.ui.Select):
+            def __init__(self, event_options, command_menu_view):
+                super().__init__(
+                    placeholder="Choose an event to create guild parties for...",
+                    min_values=1,
+                    max_values=1,
+                    options=event_options
+                )
+                self.command_menu_view = command_menu_view
+            
+            async def callback(self, interaction: discord.Interaction):
+                from asgiref.sync import sync_to_async
+                
+                @sync_to_async
+                def get_event():
+                    from .models import Event
+                    try:
+                        return Event.objects.get(id=int(self.values[0]))
+                    except Event.DoesNotExist:
+                        return None
+                
+                event = await get_event()
+                if not event:
+                    await interaction.response.send_message("❌ Event not found.", ephemeral=True)
+                    return
+                
+                # Call the guild parties creation method
+                success, message = await self.command_menu_view.bot_instance.create_guild_balanced_parties(event)
+                
+                if success:
+                    await interaction.response.send_message(f"✅ {message}", ephemeral=True)
+                else:
+                    await interaction.response.send_message(f"❌ {message}", ephemeral=True)
+        
+        view = GuildEventSelectionView(self, event_options)
+        embed = discord.Embed(
+            title="🏰 Create Guild Parties",
+            description="Select an event from the dropdown below to create guild-based parties (players grouped by guild):",
+            color=0x7289da
+        )
+        
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+    
     @discord.ui.button(label="🗑️ Delete Event", style=discord.ButtonStyle.danger, emoji="🗑️")
     async def delete_event_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Button to delete an event"""
@@ -1655,6 +1738,137 @@ class WarborneBot(commands.Bot):
             return True, f"Parties created successfully: {num_parties} parties with {party_members_created} participants distributed"
         
         return await create_parties()
+
+    async def create_guild_balanced_parties(self, event):
+        """Create guild-based balanced parties for an event"""
+        from asgiref.sync import sync_to_async
+        from .models import Party, PartyMember, EventParticipant, Guild
+        
+        @sync_to_async
+        def create_guild_parties():
+            # Get all active participants with their players and guilds
+            participants = list(EventParticipant.objects.filter(
+                event=event,
+                is_active=True,
+                player__isnull=False
+            ).select_related('player', 'player__guild'))
+            
+            if len(participants) < 2:
+                return False, "At least 2 participants needed to create guild parties"
+            
+            # Clear existing parties for this event
+            Party.objects.filter(event=event).delete()
+            
+            # Group participants by guild
+            participants_by_guild = {}
+            for participant in participants:
+                guild = participant.player.guild
+                guild_name = guild.name if guild else "No Guild"
+                if guild_name not in participants_by_guild:
+                    participants_by_guild[guild_name] = []
+                participants_by_guild[guild_name].append(participant)
+            
+            # Define role requirements per party (minimum)
+            ROLE_REQUIREMENTS = {
+                'tank': 4,           # 4 tanks per party
+                'healer': 2,         # 2 healers per party
+                'ranged_dps': 3,     # 3 ranged DPS
+                'melee_dps': 3,      # 3 melee DPS
+                'defensive_tank': 1, # 1 defensive tank
+                'offensive_tank': 1, # 1 offensive tank
+                'offensive_support': 1, # 1 offensive support
+            }
+            
+            MAX_PARTY_SIZE = 15
+            total_parties_created = 0
+            total_members_created = 0
+            guild_results = []
+            
+            # Process each guild separately
+            for guild_name, guild_participants in participants_by_guild.items():
+                if len(guild_participants) < 2:
+                    guild_results.append(f"{guild_name}: {len(guild_participants)} participants (minimum 2 needed)")
+                    continue
+                
+                # Group participants by role within this guild
+                participants_by_role = {}
+                for participant in guild_participants:
+                    role = participant.player.game_role or 'unknown'
+                    if role not in participants_by_role:
+                        participants_by_role[role] = []
+                    participants_by_role[role].append(participant)
+                
+                # Calculate how many parties we need for this guild
+                num_parties = max(1, (len(guild_participants) + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
+                
+                # Create party objects for this guild
+                parties = []
+                for i in range(num_parties):
+                    party = Party.objects.create(
+                        event=event,
+                        party_number=total_parties_created + i + 1,
+                        max_members=MAX_PARTY_SIZE
+                    )
+                    parties.append(party)
+                
+                # Distribute participants across parties for this guild
+                party_assignments = [[] for _ in range(num_parties)]
+                party_role_counts = [{} for _ in range(num_parties)]
+                
+                # Initialize role counts
+                for party_idx in range(num_parties):
+                    for role in ROLE_REQUIREMENTS.keys():
+                        party_role_counts[party_idx][role] = 0
+                
+                # Distribute participants by role, trying to balance within guild
+                for role, role_participants in participants_by_role.items():
+                    if role == 'unknown':
+                        # Distribute unknown roles evenly
+                        for i, participant in enumerate(role_participants):
+                            party_idx = i % num_parties
+                            party_assignments[party_idx].append(participant)
+                    else:
+                        # Distribute known roles to balance requirements
+                        for i, participant in enumerate(role_participants):
+                            # Find party with least of this role
+                            best_party = 0
+                            min_count = party_role_counts[0].get(role, 0)
+                            
+                            for party_idx in range(1, num_parties):
+                                current_count = party_role_counts[party_idx].get(role, 0)
+                                if current_count < min_count:
+                                    min_count = current_count
+                                    best_party = party_idx
+                            
+                            party_assignments[best_party].append(participant)
+                            party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
+                
+                # Create PartyMember objects for this guild
+                guild_members_created = 0
+                for party_idx, party in enumerate(parties):
+                    for participant in party_assignments[party_idx]:
+                        PartyMember.objects.create(
+                            party=party,
+                            event_participant=participant,
+                            player=participant.player,
+                            assigned_role=participant.player.game_role
+                        )
+                        guild_members_created += 1
+                
+                total_parties_created += num_parties
+                total_members_created += guild_members_created
+                guild_results.append(f"{guild_name}: {num_parties} parties with {guild_members_created} participants")
+            
+            # Create summary message
+            result_message = f"Guild parties created successfully:\n"
+            result_message += f"Total: {total_parties_created} parties with {total_members_created} participants\n\n"
+            result_message += "Guild breakdown:\n"
+            for result in guild_results:
+                result_message += f"• {result}\n"
+            
+            return True, result_message
+        
+        return await create_guild_parties()
 
 
 def run_bot():
