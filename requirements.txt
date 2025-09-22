@@ -25,3 +25,9 @@ supervisor==4.2.5
 
 # Environment management
 python-dotenv==1.0.0
+
+# CORS headers
+django-cors-headers==4.3.1
+
+# REST Framework
+djangorestframework==3.14.0

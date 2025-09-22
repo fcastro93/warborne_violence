@@ -28,6 +28,9 @@ urlpatterns = [
     path('', redirect_to_dashboard, name='home'),
     path('admin/', admin.site.urls),
     
+    # API URLs
+    path('api/', include('guilds.api_urls')),
+    
     # Direct dashboard URLs
     path('dashboard/', guilds_views.staff_dashboard, name='dashboard'),
             path('players/', guilds_views.players_management, name='players'),
