@@ -9,7 +9,7 @@ services:
         value: "3.11"
       - key: NODE_VERSION
         value: "18"
-    http_port: 80
+    http_port: 8000
     envs:
       - key: SECRET_KEY
         value: $SECRET_KEY
@@ -39,8 +39,8 @@ services:
       memory: 1
     healthcheck:
       http:
-        path: /health/
-        port: 80
+        path: /admin/
+        port: 8000
         interval: 30s
         timeout: 10s
         retries: 3

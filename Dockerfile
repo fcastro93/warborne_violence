@@ -1,22 +1,4 @@
-# Multi-stage build for Django + React
-FROM node:18-alpine AS react-build
-
-# Set working directory for React build
-WORKDIR /app/frontend
-
-# Copy package files
-COPY temp-frontend/package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy React source code
-COPY temp-frontend/ ./
-
-# Build React app for production
-RUN npm run build
-
-# Python stage for Django
+# Simple Python-only build for now
 FROM python:3.11-slim
 
 # Set environment variables
@@ -45,9 +27,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy Django application
 COPY backend/ ./
 
-# Copy React build from previous stage
-COPY --from=react-build /app/frontend/build ./frontend/build
-
 # Copy Nginx configuration
 COPY nginx/nginx.conf /etc/nginx/sites-available/default
 
@@ -64,12 +43,12 @@ RUN useradd --create-home --shell /bin/bash app && \
     chmod +x /app/start-both.sh
 USER app
 
-# Expose port 80
-EXPOSE 80
+# Expose port 8000
+EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/health/ || exit 1
+    CMD curl -f http://localhost:8000/admin/ || exit 1
 
 # Start both Django and Nginx
 CMD ["./start-both.sh"]

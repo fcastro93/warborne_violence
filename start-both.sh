@@ -93,15 +93,21 @@ start_django() {
         --log-level info
 }
 
-# Function to start Nginx
-start_nginx() {
-    echo "🌐 Starting Nginx..."
-    # Test nginx configuration
-    nginx -t
-    
-    # Start nginx in foreground
-    echo "✅ Starting Nginx in foreground..."
-    exec nginx -g "daemon off;"
+# Function to start Django only (no Nginx for now)
+start_django_only() {
+    echo "🐍 Starting Django server only..."
+    exec gunicorn warborne_tools.wsgi:application \
+        --bind 0.0.0.0:8000 \
+        --workers 2 \
+        --worker-class sync \
+        --worker-connections 1000 \
+        --max-requests 1000 \
+        --max-requests-jitter 100 \
+        --timeout 30 \
+        --keep-alive 2 \
+        --access-logfile logs/django_access.log \
+        --error-logfile logs/django_error.log \
+        --log-level info
 }
 
 # Main execution
@@ -114,11 +120,8 @@ main() {
     # Setup Django
     setup_django
     
-    # Start Django server
-    start_django
-    
-    # Start Nginx (this will run in foreground)
-    start_nginx
+    # Start Django server only (no Nginx for now)
+    start_django_only
 }
 
 # Handle shutdown gracefully
