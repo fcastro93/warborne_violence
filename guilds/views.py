@@ -941,12 +941,6 @@ def staff_dashboard(request):
         
         completion_rate = (players_with_loadouts / total_players * 100) if total_players > 0 else 0
         
-        # Get more detailed statistics
-        players_with_discord = Player.objects.filter(
-            discord_user_id__isnull=False
-        ).exclude(discord_user_id=0).count()
-        
-        discord_integration_rate = (players_with_discord / total_players * 100) if total_players > 0 else 0
         
         # Get gear statistics
         total_gear_items = GearItem.objects.count()
@@ -1057,13 +1051,11 @@ def players_management(request):
             'players': players,
             'total_players': total_players,
             'active_players': active_players,
-            'players_with_discord': players_with_discord,
             'players_with_loadouts': players_with_loadouts,
             'role_distribution': role_distribution,
             'guild_distribution': guild_distribution,
             'recent_players': recent_players,
             'incomplete_profiles': incomplete_profiles,
-            'discord_integration_rate': round((players_with_discord / total_players * 100) if total_players > 0 else 0, 1),
             'loadout_completion_rate': round((players_with_loadouts / total_players * 100) if total_players > 0 else 0, 1),
         }
         
@@ -1075,7 +1067,6 @@ def players_management(request):
             'players': [],
             'total_players': 0,
             'active_players': 0,
-            'players_with_discord': 0,
             'players_with_loadouts': 0,
             'error': str(e)
         })
