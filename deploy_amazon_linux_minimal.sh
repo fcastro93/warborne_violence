@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# EC2 Deployment Script for Warborne Guild Tools - Amazon Linux (Systemd Only)
-# This script sets up the Django application on an Amazon Linux EC2 instance using systemd
+# EC2 Deployment Script for Warborne Guild Tools - Amazon Linux (Minimal)
+# This script sets up the Django application on an Amazon Linux EC2 instance with minimal dependencies
 
 set -e
 
-echo "🚀 Starting EC2 deployment for Warborne Guild Tools on Amazon Linux..."
+echo "🚀 Starting minimal EC2 deployment for Warborne Guild Tools on Amazon Linux..."
 
 # Update system packages
 echo "📦 Updating system packages..."
 sudo yum update -y
 
-# Install required system packages
-echo "🔧 Installing system dependencies..."
+# Install only essential packages (skip curl to avoid conflicts)
+echo "🔧 Installing essential system dependencies..."
 sudo yum install -y \
     python3.11 \
     python3.11-pip \
@@ -25,11 +25,6 @@ sudo yum install -y \
     postgresql15-devel \
     openssl-devel \
     libffi-devel
-
-# Handle curl conflict by removing curl-minimal and installing full curl
-echo "🔧 Resolving curl package conflict..."
-sudo yum remove -y curl-minimal || true
-sudo yum install -y curl
 
 # Start and enable PostgreSQL
 echo "🗄️ Setting up PostgreSQL..."
@@ -76,7 +71,7 @@ echo "⚙️ Creating environment configuration..."
 cat > /app/.env << EOF
 SECRET_KEY=$(python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 DEBUG=False
-ALLOWED_HOSTS=localhost,127.0.0.1,$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+ALLOWED_HOSTS=localhost,127.0.0.1,$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || echo "localhost")
 
 DB_NAME=warborne_tools
 DB_USER=warborne_user
@@ -87,7 +82,7 @@ DB_PORT=5432
 DISCORD_BOT_TOKEN=
 DISCORD_CLIENT_ID=
 DISCORD_CLIENT_SECRET=
-BASE_URL=http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+BASE_URL=http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || echo "localhost")
 EOF
 
 # Set up Django application
@@ -139,7 +134,7 @@ if systemctl is-active --quiet firewalld; then
 fi
 
 echo "✅ Deployment completed successfully!"
-echo "🌐 Your application should be available at: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
+echo "🌐 Your application should be available at: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || echo "localhost")"
 echo "👤 Admin login: admin / admin123"
 echo ""
 echo "📋 Next steps:"

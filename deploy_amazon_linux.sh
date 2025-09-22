@@ -13,7 +13,7 @@ sudo yum update -y
 
 # Install required system packages
 echo "🔧 Installing system dependencies..."
-sudo yum install -y \
+sudo yum install -y --allowerasing \
     python3.11 \
     python3.11-pip \
     postgresql15 \
