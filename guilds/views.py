@@ -1568,6 +1568,13 @@ def react_frontend(request):
                 content = f.read()
             return HttpResponse(content, content_type='text/html')
         
+        # Fallback to the Material-UI dashboard
+        material_ui_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'public', 'material-ui-dashboard.html')
+        if os.path.exists(material_ui_path):
+            with open(material_ui_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return HttpResponse(content, content_type='text/html')
+        
         # Fallback to the public index.html
         react_public_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'public', 'index.html')
         if os.path.exists(react_public_path):
