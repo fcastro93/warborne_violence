@@ -1,42 +1,74 @@
-FROM python:3.13-slim
+# Multi-stage build for Django + React
+FROM node:18-alpine AS react-build
+
+# Set working directory for React build
+WORKDIR /app/frontend
+
+# Copy package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy React source code
+COPY frontend/ ./
+
+# Build React app for production
+RUN npm run build
+
+# Python stage for Django
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    nginx \
+    postgresql-client \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        postgresql-client \
-        build-essential \
-        libpq-dev \
-        gcc \
-        python3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 # Install Python dependencies
-COPY requirements-prod.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Set environment variables for build
-ENV DISABLE_COLLECTSTATIC=1
-ENV DEBUG=False
-ENV DJANGO_SETTINGS_MODULE=warborne_tools.settings_production
+# Copy Django application
+COPY backend/ ./
 
-# Copy project
-COPY . /app/
+# Copy React build from previous stage
+COPY --from=react-build /app/frontend/build ./frontend/build
 
-# Create logs directory
-RUN mkdir -p logs
+# Copy Nginx configuration
+COPY nginx/nginx.conf /etc/nginx/sites-available/default
 
-# Make start script executable
-RUN chmod +x start.sh
+# Create necessary directories
+RUN mkdir -p logs media staticfiles
 
-# Expose port
-EXPOSE 8000
+# Create startup script
+COPY start-both.sh ./
+RUN chmod +x start-both.sh
 
-# Run the application
-CMD ["./start.sh"]
+# Create a non-root user for security
+RUN useradd --create-home --shell /bin/bash app && \
+    chown -R app:app /app
+USER app
+
+# Expose port 80
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/health/ || exit 1
+
+# Start both Django and Nginx
+CMD ["./start-both.sh"]

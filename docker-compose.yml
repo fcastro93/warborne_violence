@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - SECRET_KEY=your-secret-key-here
+      - DEBUG=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DJANGO_SETTINGS_MODULE=warborne_tools.settings_production
+      - DB_NAME=neondb
+      - DB_USER=neondb_owner
+      - DB_PASSWORD=npg_UplStky0JD9E
+      - DB_HOST=ep-broad-salad-adbzgcjy-pooler.c-2.us-east-1.aws.neon.tech
+      - DB_PORT=5432
+    volumes:
+      - ./logs:/app/logs
+      - ./media:/app/media
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Local development with separate services
+  django-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=dev-secret-key
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DJANGO_SETTINGS_MODULE=warborne_tools.settings_local
+    volumes:
+      - ./backend:/app
+      - ./logs:/app/logs
+    profiles:
+      - dev
+
+  react-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    profiles:
+      - dev
