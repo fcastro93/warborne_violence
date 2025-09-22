@@ -1,0 +1,31 @@
+# Force Docker deployment by ignoring buildpack triggers
+frontend/package.json
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/pnpm-lock.yaml
+frontend/node_modules/
+frontend/.npm/
+frontend/.yarn/
+
+# Ignore development files
+*.md
+.env*
+docker-compose.yml
+test-*.sh
+backend/Dockerfile.dev
+frontend/Dockerfile.dev
+
+# Ignore git and logs
+.git/
+logs/
+*.log
+
+# Ignore temporary files
+temp.txt
+*.tmp
+
+# Ignore any remaining buildpack files
+Procfile
+app.json
+.buildpacks
+.slugignore

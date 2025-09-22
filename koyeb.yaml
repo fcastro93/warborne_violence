@@ -7,6 +7,7 @@ services:
         - PYTHON_VERSION=3.11
         - NODE_VERSION=18
     run: ./start-both.sh
+    buildpack: false
     envs:
       - key: PYTHON_VERSION
         value: "3.11"
