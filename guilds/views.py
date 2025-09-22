@@ -1561,21 +1561,21 @@ def react_frontend(request):
     Serve the React frontend application
     """
     try:
-        # Try to serve the React build files
-        react_build_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build', 'index.html')
-        if os.path.exists(react_build_path):
-            with open(react_build_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            return HttpResponse(content, content_type='text/html')
-        
-        # Fallback to the Material-UI dashboard
+        # First priority: Material-UI dashboard
         material_ui_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'public', 'material-ui-dashboard.html')
         if os.path.exists(material_ui_path):
             with open(material_ui_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             return HttpResponse(content, content_type='text/html')
         
-        # Fallback to the public index.html
+        # Second priority: React build files
+        react_build_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build', 'index.html')
+        if os.path.exists(react_build_path):
+            with open(react_build_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return HttpResponse(content, content_type='text/html')
+        
+        # Third priority: public index.html
         react_public_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'public', 'index.html')
         if os.path.exists(react_public_path):
             with open(react_public_path, 'r', encoding='utf-8') as f:
