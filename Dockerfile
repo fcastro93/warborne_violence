@@ -60,7 +60,8 @@ RUN chmod +x start-both.sh
 
 # Create a non-root user for security
 RUN useradd --create-home --shell /bin/bash app && \
-    chown -R app:app /app
+    chown -R app:app /app && \
+    chmod +x /app/start-both.sh
 USER app
 
 # Expose port 80
