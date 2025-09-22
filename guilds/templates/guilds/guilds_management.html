@@ -468,7 +468,7 @@
                 <div class="popularity-item">
                     <span class="equipment-name">{{ weapon }}</span>
                     <div class="popularity-bar">
-                        <div class="popularity-fill" style="width: {% widthratio count overall_equipment_stats.weapons.values|max 100 %}%"></div>
+                        <div class="popularity-fill" style="width: {% widthratio count overall_equipment_stats.weapons.values.0 100 %}%"></div>
                     </div>
                     <span class="equipment-count">{{ count }}</span>
                 </div>
@@ -482,7 +482,7 @@
                 <div class="popularity-item">
                     <span class="equipment-name">{{ helmet }}</span>
                     <div class="popularity-bar">
-                        <div class="popularity-fill" style="width: {% widthratio count overall_equipment_stats.helmets.values|max 100 %}%"></div>
+                        <div class="popularity-fill" style="width: {% widthratio count overall_equipment_stats.helmets.values.0 100 %}%"></div>
                     </div>
                     <span class="equipment-count">{{ count }}</span>
                 </div>
@@ -496,7 +496,7 @@
                 <div class="popularity-item">
                     <span class="equipment-name">{{ drifter }}</span>
                     <div class="popularity-bar">
-                        <div class="popularity-fill" style="width: {% widthratio count overall_equipment_stats.drifters.values|max 100 %}%"></div>
+                        <div class="popularity-fill" style="width: {% widthratio count overall_equipment_stats.drifters.values.0 100 %}%"></div>
                     </div>
                     <span class="equipment-count">{{ count }}</span>
                 </div>
