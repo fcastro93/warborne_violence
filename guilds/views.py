@@ -915,9 +915,7 @@ def staff_dashboard(request):
         recent_events = Event.objects.order_by('-created_at')[:5]
         
         # Get guild statistics
-        guilds_with_members = Guild.objects.annotate(
-            member_count=Count('players', filter=Q(players__is_active=True))
-        ).order_by('-member_count')[:5]
+        guilds_with_members = Guild.objects.all()[:5]
         
         # Get role distribution
         role_distribution = Player.objects.values('game_role').annotate(
@@ -1025,12 +1023,7 @@ def guild_analytics(request):
     """Guild analytics and statistics page"""
     try:
         # Get guild statistics
-        guilds = Guild.objects.annotate(
-            member_count=Count('players', filter=Q(players__is_active=True)),
-            players_with_loadouts=Count('players', filter=Q(
-                players__gear_items__isnull=False
-            ))
-        ).order_by('-member_count')
+        guilds = Guild.objects.all()
         
         # Get role distribution by guild
         guild_role_stats = {}
@@ -1040,11 +1033,14 @@ def guild_analytics(request):
             )
             guild_role_stats[guild.id] = list(role_stats)
         
+        # Get total members across all guilds
+        total_members = Player.objects.filter(is_active=True).count()
+        
         context = {
             'guilds': guilds,
             'guild_role_stats': guild_role_stats,
             'total_guilds': guilds.count(),
-            'total_members': sum(g.member_count for g in guilds),
+            'total_members': total_members,
         }
         
         return render(request, 'guilds/guild_analytics.html', context)
