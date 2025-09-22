@@ -1560,79 +1560,537 @@ def react_frontend(request):
     """
     Serve the React frontend application
     """
-    try:
-        # First priority: Material-UI dashboard
-        material_ui_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'public', 'material-ui-dashboard.html')
-        if os.path.exists(material_ui_path):
-            with open(material_ui_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            # Add cache-busting header
-            response = HttpResponse(content, content_type='text/html')
-            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-            response['Pragma'] = 'no-cache'
-            response['Expires'] = '0'
-            return response
+    # Return Material-UI dashboard directly as string
+    material_ui_dashboard = """
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="description" content="Warborne Guild Tools - Material-UI Dashboard" />
         
-        # Second priority: React build files
-        react_build_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build', 'index.html')
-        if os.path.exists(react_build_path):
-            with open(react_build_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            return HttpResponse(content, content_type='text/html')
+        <!-- Material-UI Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        />
         
-        # Third priority: public index.html
-        react_public_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'public', 'index.html')
-        if os.path.exists(react_public_path):
-            with open(react_public_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            return HttpResponse(content, content_type='text/html')
+        <title>Warborne Guild Tools - Material-UI Dashboard</title>
         
-        # Debug: Show what files exist
-        debug_info = f"""
-        <h1>Debug Info</h1>
-        <p>Material-UI path: {material_ui_path}</p>
-        <p>Exists: {os.path.exists(material_ui_path)}</p>
-        <p>React build path: {react_build_path}</p>
-        <p>Exists: {os.path.exists(react_build_path)}</p>
-        <p>React public path: {react_public_path}</p>
-        <p>Exists: {os.path.exists(react_public_path)}</p>
-        <p>Current directory: {os.getcwd()}</p>
-        <p>File directory: {os.path.dirname(__file__)}</p>
-        """
-        
-        # Final fallback with debug info
-        return HttpResponse(f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Warborne Guild Tools - Debug</title>
-                <style>
-                    body {{ font-family: Arial, sans-serif; margin: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }}
-                    .container {{ max-width: 800px; margin: 0 auto; text-align: center; }}
-                    .card {{ background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0; }}
-                    .debug {{ background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; text-align: left; }}
-                    a {{ color: white; text-decoration: none; margin: 10px; padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 8px; display: inline-block; }}
-                    a:hover {{ background: rgba(255,255,255,0.3); }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>⚔️ Warborne Guild Tools - Debug</h1>
-                    <div class="card">
-                        <h2>Welcome to Warborne Guild Management System</h2>
-                        <p>Your Django backend is running successfully!</p>
-                        <p>React frontend will be available once built.</p>
-                        <div class="debug">
-                            {debug_info}
-                        </div>
-                        <a href="/admin/">Django Admin</a>
-                        <a href="/dashboard/">Staff Dashboard</a>
-                        <a href="/players/">Player Management</a>
-                        <a href="/loadouts/">Loadout Management</a>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+          }
+          
+          .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+          }
+          
+          /* Sidebar */
+          .sidebar {
+            width: 240px;
+            background-color: #fff;
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+          }
+          
+          .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+          }
+          
+          .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+          }
+          
+          .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+          }
+          
+          .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1976d2;
+          }
+          
+          .nav-section {
+            padding: 0 20px 20px;
+          }
+          
+          .nav-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+          }
+          
+          .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin: 4px 0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #666;
+            transition: all 0.2s;
+            cursor: pointer;
+          }
+          
+          .nav-item:hover {
+            background-color: #f5f5f5;
+            color: #1976d2;
+          }
+          
+          .nav-item.active {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            font-weight: 500;
+          }
+          
+          .nav-icon {
+            margin-right: 12px;
+            font-size: 20px;
+            width: 20px;
+            text-align: center;
+          }
+          
+          /* Main Content */
+          .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 20px;
+            background-color: #f5f5f5;
+          }
+          
+          .header {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          
+          .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 28px;
+            font-weight: 600;
+          }
+          
+          /* Stats Grid */
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+          }
+          
+          .stat-card {
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+            position: relative;
+            overflow: hidden;
+          }
+          
+          .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+          }
+          
+          .stat-card.users::before {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+          }
+          
+          .stat-card.guilds::before {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+          }
+          
+          .stat-card.loadouts::before {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+          }
+          
+          .stat-card.active::before {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+          }
+          
+          .stat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+          }
+          
+          .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: white;
+            font-size: 20px;
+          }
+          
+          .stat-icon.users {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+          }
+          
+          .stat-icon.guilds {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+          }
+          
+          .stat-icon.loadouts {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+          }
+          
+          .stat-icon.active {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+          }
+          
+          .stat-title {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+            font-weight: 500;
+          }
+          
+          .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin: 8px 0;
+          }
+          
+          .stat-trend {
+            font-size: 12px;
+            color: #4caf50;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+          }
+          
+          .trend-icon {
+            margin-right: 4px;
+          }
+          
+          /* Content Grid */
+          .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+          }
+          
+          .content-card {
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+          }
+          
+          .content-card h3 {
+            margin: 0 0 20px 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+          }
+          
+          .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+          }
+          
+          .action-btn {
+            padding: 12px 20px;
+            border: 1px solid #1976d2;
+            background-color: #1976d2;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-size: 14px;
+          }
+          
+          .action-btn:hover {
+            background-color: #1565c0;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+          }
+          
+          .action-btn.secondary {
+            background-color: transparent;
+            color: #1976d2;
+          }
+          
+          .action-btn.secondary:hover {
+            background-color: #e3f2fd;
+          }
+          
+          .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+          }
+          
+          .activity-item:last-child {
+            border-bottom: none;
+          }
+          
+          .activity-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 12px;
+            font-size: 16px;
+          }
+          
+          .activity-content {
+            flex: 1;
+          }
+          
+          .activity-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin: 0 0 4px 0;
+          }
+          
+          .activity-subtitle {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+          }
+          
+          /* Responsive */
+          @media (max-width: 768px) {
+            .dashboard-container {
+              flex-direction: column;
+            }
+            
+            .sidebar {
+              width: 100%;
+              height: auto;
+              position: relative;
+            }
+            
+            .main-content {
+              margin-left: 0;
+            }
+            
+            .content-grid {
+              grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="dashboard-container">
+          <!-- Sidebar -->
+          <div class="sidebar">
+            <div class="sidebar-header">
+              <div class="sidebar-logo">
+                <div class="logo-icon">⚔️</div>
+                <div class="logo-text">Warborne</div>
+              </div>
+            </div>
+            
+            <div class="nav-section">
+              <div class="nav-title">Overview</div>
+              <a href="#" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                Dashboard
+              </a>
+            </div>
+            
+            <div class="nav-section">
+              <div class="nav-title">Management</div>
+              <a href="/players/" class="nav-item">
+                <span class="nav-icon">👥</span>
+                Players
+              </a>
+              <a href="/loadouts/" class="nav-item">
+                <span class="nav-icon">⚔️</span>
+                Loadouts
+              </a>
+              <a href="/guilds/" class="nav-item">
+                <span class="nav-icon">🏰</span>
+                Guilds
+              </a>
+            </div>
+            
+            <div class="nav-section">
+              <div class="nav-title">Administration</div>
+              <a href="/admin/" class="nav-item" target="_blank">
+                <span class="nav-icon">⚙️</span>
+                Admin
+              </a>
+            </div>
+          </div>
+          
+          <!-- Main Content -->
+          <div class="main-content">
+            <div class="header">
+              <h1>Dashboard</h1>
+            </div>
+            
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+              <div class="stat-card users">
+                <div class="stat-header">
+                  <div class="stat-icon users">👥</div>
+                  <div>
+                    <h3 class="stat-title">Total Players</h3>
+                    <div class="stat-value">42</div>
+                    <div class="stat-trend">
+                      <span class="trend-icon">📈</span>
+                      +25% Last 30 days
                     </div>
+                  </div>
                 </div>
-            </body>
-            </html>
-            """, content_type='text/html')
-    except Exception as e:
-        return HttpResponse(f"Error loading React frontend: {str(e)}", content_type='text/html')
+              </div>
+              
+              <div class="stat-card guilds">
+                <div class="stat-header">
+                  <div class="stat-icon guilds">🏰</div>
+                  <div>
+                    <h3 class="stat-title">Total Guilds</h3>
+                    <div class="stat-value">3</div>
+                    <div class="stat-trend">
+                      <span class="trend-icon">📈</span>
+                      +5% Last 30 days
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="stat-card loadouts">
+                <div class="stat-header">
+                  <div class="stat-icon loadouts">⚔️</div>
+                  <div>
+                    <h3 class="stat-title">Total Loadouts</h3>
+                    <div class="stat-value">156</div>
+                    <div class="stat-trend">
+                      <span class="trend-icon">📈</span>
+                      +35% Last 30 days
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="stat-card active">
+                <div class="stat-header">
+                  <div class="stat-icon active">🟢</div>
+                  <div>
+                    <h3 class="stat-title">Active Players</h3>
+                    <div class="stat-value">28</div>
+                    <div class="stat-trend">
+                      <span class="trend-icon">📈</span>
+                      +15% Last 30 days
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Content Grid -->
+            <div class="content-grid">
+              <div class="content-card">
+                <h3>Quick Actions</h3>
+                <div class="quick-actions">
+                  <a href="#" class="action-btn">Add New Player</a>
+                  <a href="#" class="action-btn secondary">Create Loadout</a>
+                  <a href="#" class="action-btn secondary">Manage Guild</a>
+                  <a href="#" class="action-btn secondary">View Reports</a>
+                </div>
+              </div>
+              
+              <div class="content-card">
+                <h3>Recent Activity</h3>
+                <div class="activity-item">
+                  <div class="activity-avatar">👥</div>
+                  <div class="activity-content">
+                    <h4 class="activity-title">New player joined</h4>
+                    <p class="activity-subtitle">PlayerOne joined Warborne Elite</p>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-avatar">⚔️</div>
+                  <div class="activity-content">
+                    <h4 class="activity-title">Loadout created</h4>
+                    <p class="activity-subtitle">Tank Build by PlayerTwo</p>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-avatar">🔔</div>
+                  <div class="activity-content">
+                    <h4 class="activity-title">Guild event</h4>
+                    <p class="activity-subtitle">Raid scheduled for tomorrow</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+    
+    # Add cache-busting headers
+    response = HttpResponse(material_ui_dashboard, content_type='text/html')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response
