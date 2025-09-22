@@ -2,8 +2,8 @@ name: warborne-tools
 services:
   - name: web
     image:
-      dockerfile: Dockerfile
-    run: ./start-both.sh
+      buildpack: heroku/python
+    run: python manage.py migrate && python manage.py create_bot_config && gunicorn warborne_tools.wsgi:application --bind 0.0.0.0:$PORT
     envs:
       - key: PYTHON_VERSION
         value: "3.11"
