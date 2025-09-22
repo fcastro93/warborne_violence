@@ -1,0 +1,638 @@
+{% extends 'guilds/base.html' %}
+{% load static %}
+
+{% block title %}Player Loadouts Management - Warborne Violence{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filters-card {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        margin-bottom: 2rem;
+    }
+    
+    .filters-header {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px 15px 0 0;
+        margin: -1rem -1rem 1rem -1rem;
+    }
+    
+    .filter-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-label {
+        color: #ecf0f1;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .filter-input {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 8px;
+        color: #ecf0f1;
+        padding: 0.75rem;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-input:focus {
+        background: rgba(255,255,255,0.2);
+        border-color: #e74c3c;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+    }
+    
+    .filter-input::placeholder {
+        color: #bdc3c7;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #f39c12;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #ecf0f1;
+    }
+    
+    .players-table {
+        background: rgba(255,255,255,0.95);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .player-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255,255,255,0.8);
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .player-row:hover {
+        background: rgba(231, 76, 60, 0.1);
+        transform: translateX(5px);
+        border-left-color: #e74c3c;
+    }
+    
+    .player-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .player-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .player-details h5 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .player-details p {
+        margin: 0;
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+    
+    .role-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-align: center;
+    }
+    
+    .role-tank {
+        background: #3498db;
+        color: white;
+    }
+    
+    .role-dps {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .role-support {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .role-other {
+        background: #95a5a6;
+        color: white;
+    }
+    
+    .guild-badge {
+        background: #f39c12;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-align: center;
+    }
+    
+    .loadout-info {
+        text-align: center;
+    }
+    
+    .loadout-count {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #27ae60;
+    }
+    
+    .participation-status {
+        text-align: center;
+    }
+    
+    .status-active {
+        color: #27ae60;
+        font-weight: bold;
+    }
+    
+    .status-inactive {
+        color: #f39c12;
+        font-weight: bold;
+    }
+    
+    .status-never {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+    
+    .equipment-preview {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .equipment-item {
+        background: #ecf0f1;
+        color: #2c3e50;
+        padding: 0.25rem 0.5rem;
+        border-radius: 15px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .table-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+        gap: 1rem;
+        padding: 1rem;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .analytics-section {
+        background: rgba(255,255,255,0.95);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+    
+    .chart-container {
+        background: rgba(255,255,255,0.8);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+    
+    .chart-title {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .chart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        background: rgba(255,255,255,0.5);
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .chart-bar {
+        flex: 1;
+        height: 8px;
+        background: rgba(231, 76, 60, 0.2);
+        border-radius: 4px;
+        margin: 0 1rem;
+        overflow: hidden;
+    }
+    
+    .chart-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #e74c3c, #f39c12);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .btn-apply-filters {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-apply-filters:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        color: white;
+    }
+    
+    .btn-clear-filters {
+        background: transparent;
+        border: 2px solid #95a5a6;
+        color: #95a5a6;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-clear-filters:hover {
+        background: #95a5a6;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .filter-results {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-user-shield text-danger"></i> Player Loadouts Management</h1>
+                <div class="btn-group">
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-danger">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                    <a href="{% url 'players' %}" class="btn btn-danger">
+                        <i class="fas fa-users"></i> View All Players
+                    </a>
+                </div>
+            </div>
+            
+            {% if error %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                </div>
+            {% endif %}
+            
+            <!-- Filters Section -->
+            <div class="filters-card card">
+                <div class="filters-header">
+                    <h3><i class="fas fa-filter"></i> Filters & Search</h3>
+                    <p class="mb-0">Filter players by equipment, role, participation, and more</p>
+                </div>
+                
+                <div class="card-body">
+                    <form method="GET" class="row">
+                        <div class="col-md-3">
+                            <div class="filter-group">
+                                <label class="filter-label">Equipment Item</label>
+                                <input type="text" name="item" class="filter-input" 
+                                       placeholder="Search by equipment name..."
+                                       value="{{ current_filters.item }}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="filter-group">
+                                <label class="filter-label">Game Role</label>
+                                <select name="role" class="filter-input">
+                                    <option value="">All Roles</option>
+                                    {% for role in all_roles %}
+                                        <option value="{{ role }}" {% if current_filters.role == role %}selected{% endif %}>
+                                            {{ role|title }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="filter-group">
+                                <label class="filter-label">Guild</label>
+                                <select name="guild" class="filter-input">
+                                    <option value="">All Guilds</option>
+                                    {% for guild in all_guilds %}
+                                        <option value="{{ guild }}" {% if current_filters.guild == guild %}selected{% endif %}>
+                                            {{ guild }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="filter-group">
+                                <label class="filter-label">Participation</label>
+                                <select name="participation" class="filter-input">
+                                    <option value="">All Players</option>
+                                    <option value="active" {% if current_filters.participation == 'active' %}selected{% endif %}>
+                                        Active (Last 30 days)
+                                    </option>
+                                    <option value="inactive" {% if current_filters.participation == 'inactive' %}selected{% endif %}>
+                                        Inactive (No recent participation)
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 text-center mt-3">
+                            <button type="submit" class="btn btn-apply-filters me-3">
+                                <i class="fas fa-search"></i> Apply Filters
+                            </button>
+                            <a href="{% url 'player_loadouts' %}" class="btn btn-clear-filters">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </a>
+                        </div>
+                    </form>
+                    
+                    {% if current_filters.item or current_filters.role or current_filters.guild or current_filters.participation %}
+                    <div class="filter-results">
+                        <i class="fas fa-info-circle"></i> 
+                        Showing {{ filtered_count }} of {{ total_players_with_loadouts }} players with loadouts
+                        {% if current_filters.item %} • Equipment: "{{ current_filters.item }}"{% endif %}
+                        {% if current_filters.role %} • Role: {{ current_filters.role|title }}{% endif %}
+                        {% if current_filters.guild %} • Guild: {{ current_filters.guild }}{% endif %}
+                        {% if current_filters.participation %} • Participation: {{ current_filters.participation|title }}{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_players_with_loadouts }}</div>
+                    <div class="stat-label">Total with Loadouts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ participation_stats.active }}</div>
+                    <div class="stat-label">Active Participants</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ participation_stats.inactive }}</div>
+                    <div class="stat-label">Inactive Participants</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ participation_stats.never }}</div>
+                    <div class="stat-label">Never Participated</div>
+                </div>
+            </div>
+            
+            <!-- Players Table -->
+            <div class="players-table">
+                <h3><i class="fas fa-list text-danger"></i> Players with Loadouts</h3>
+                
+                <div class="table-header">
+                    <div>Player</div>
+                    <div>Role</div>
+                    <div>Guild</div>
+                    <div>Loadout</div>
+                    <div>Participation</div>
+                    <div>Equipment</div>
+                </div>
+                
+                {% for player in players %}
+                <div class="player-row">
+                    <div class="player-info">
+                        <div class="player-avatar">
+                            {{ player.name|first|upper }}
+                        </div>
+                        <div class="player-details">
+                            <h5>{{ player.name }}</h5>
+                            <p>{{ player.created_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="role-badge role-{{ player.game_role|lower|default:'other' }}">
+                        {{ player.game_role|title|default:"Unknown" }}
+                    </div>
+                    
+                    <div class="guild-badge">
+                        {{ player.guild.name|default:"No Guild" }}
+                    </div>
+                    
+                    <div class="loadout-info">
+                        <div class="loadout-count">{{ player.gear_items.count }}</div>
+                        <small class="text-muted">items</small>
+                    </div>
+                    
+                    <div class="participation-status">
+                        {% if player.eventparticipant_set.exists %}
+                            {% with last_participation=player.eventparticipant_set.first.event.event_datetime %}
+                                {% if last_participation|timesince|slice:":1" == "0" or "day" in last_participation|timesince %}
+                                    <span class="status-active">Active</span>
+                                {% else %}
+                                    <span class="status-inactive">Inactive</span>
+                                {% endif %}
+                            {% endwith %}
+                        {% else %}
+                            <span class="status-never">Never</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="equipment-preview">
+                        {% for gear in player.gear_items.all|slice:":3" %}
+                            <span class="equipment-item">{{ gear.base_name|default:gear.name|truncatechars:10 }}</span>
+                        {% endfor %}
+                        {% if player.gear_items.count > 3 %}
+                            <span class="equipment-item">+{{ player.gear_items.count|add:"-3" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No players found</h4>
+                    <p class="text-muted">Try adjusting your filters or check if players have registered loadouts</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Analytics Section -->
+            <div class="analytics-section">
+                <h3><i class="fas fa-chart-bar text-danger"></i> Loadout Analytics</h3>
+                
+                <div class="analytics-grid">
+                    <!-- Role Distribution -->
+                    <div class="chart-container">
+                        <div class="chart-title">Role Distribution</div>
+                        {% for role in role_distribution %}
+                        <div class="chart-item">
+                            <span>{{ role.game_role|title|default:"Unknown" }}</span>
+                            <div class="chart-bar">
+                                <div class="chart-fill" style="width: {% widthratio role.count role_distribution.0.count 100 %}%"></div>
+                            </div>
+                            <span>{{ role.count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Guild Distribution -->
+                    <div class="chart-container">
+                        <div class="chart-title">Guild Distribution</div>
+                        {% for guild in guild_distribution %}
+                        <div class="chart-item">
+                            <span>{{ guild.guild__name|default:"No Guild" }}</span>
+                            <div class="chart-bar">
+                                <div class="chart-fill" style="width: {% widthratio guild.count guild_distribution.0.count 100 %}%"></div>
+                            </div>
+                            <span>{{ guild.count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Equipment Usage -->
+                    <div class="chart-container">
+                        <div class="chart-title">Popular Weapons</div>
+                        {% for weapon, count in equipment_stats.weapons.items|dictsortreversed:"1"|slice:":5" %}
+                        <div class="chart-item">
+                            <span>{{ weapon|truncatechars:15 }}</span>
+                            <div class="chart-bar">
+                                <div class="chart-fill" style="width: {% widthratio count equipment_stats.weapons.values.0 100 %}%"></div>
+                            </div>
+                            <span>{{ count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Drifter Usage -->
+                    <div class="chart-container">
+                        <div class="chart-title">Popular Drifters</div>
+                        {% for drifter, count in equipment_stats.drifters.items|dictsortreversed:"1"|slice:":5" %}
+                        <div class="chart-item">
+                            <span>{{ drifter|truncatechars:15 }}</span>
+                            <div class="chart-bar">
+                                <div class="chart-fill" style="width: {% widthratio count equipment_stats.drifters.values.0 100 %}%"></div>
+                            </div>
+                            <span>{{ count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth animations to chart bars
+    const chartBars = document.querySelectorAll('.chart-fill');
+    chartBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 500);
+    });
+    
+    // Add hover effects to player rows
+    const playerRows = document.querySelectorAll('.player-row');
+    playerRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px) scale(1.01)';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0) scale(1)';
+        });
+    });
+    
+    // Auto-submit form on filter change
+    const filterInputs = document.querySelectorAll('.filter-input');
+    filterInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            // Optional: Auto-submit on change
+            // this.form.submit();
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1209,6 +1209,163 @@ def guilds_management(request):
 
 
 @staff_member_required
+def player_loadouts_management(request):
+    """Player Loadouts management page with detailed insights and filters"""
+    try:
+        # Get filter parameters
+        item_filter = request.GET.get('item', '')
+        role_filter = request.GET.get('role', '')
+        participation_filter = request.GET.get('participation', '')
+        guild_filter = request.GET.get('guild', '')
+        
+        # Base query for players with loadouts
+        players_query = Player.objects.filter(
+            gear_items__isnull=False
+        ).distinct().select_related('guild').prefetch_related('gear_items', 'eventparticipant_set')
+        
+        # Apply filters
+        if item_filter:
+            players_query = players_query.filter(
+                gear_items__base_name__icontains=item_filter
+            )
+        
+        if role_filter:
+            players_query = players_query.filter(game_role=role_filter)
+        
+        if guild_filter:
+            players_query = players_query.filter(guild__name__icontains=guild_filter)
+        
+        # Apply participation filter
+        if participation_filter == 'active':
+            # Players who participated in events in the last 30 days
+            from datetime import timedelta
+            thirty_days_ago = timezone.now() - timedelta(days=30)
+            active_participants = EventParticipant.objects.filter(
+                event__event_datetime__gte=thirty_days_ago
+            ).values_list('player_id', flat=True)
+            players_query = players_query.filter(id__in=active_participants)
+        elif participation_filter == 'inactive':
+            # Players who haven't participated in events in the last 30 days
+            from datetime import timedelta
+            thirty_days_ago = timezone.now() - timedelta(days=30)
+            active_participants = EventParticipant.objects.filter(
+                event__event_datetime__gte=thirty_days_ago
+            ).values_list('player_id', flat=True)
+            players_query = players_query.exclude(id__in=active_participants)
+        
+        players = players_query.order_by('-created_at')
+        
+        # Get statistics
+        total_players_with_loadouts = Player.objects.filter(gear_items__isnull=False).distinct().count()
+        filtered_count = players.count()
+        
+        # Get role distribution for players with loadouts
+        role_distribution = Player.objects.filter(
+            gear_items__isnull=False
+        ).values('game_role').annotate(
+            count=Count('game_role')
+        ).order_by('-count')
+        
+        # Get guild distribution for players with loadouts
+        guild_distribution = Player.objects.filter(
+            gear_items__isnull=False
+        ).values('guild__name').annotate(
+            count=Count('guild')
+        ).order_by('-count')
+        
+        # Get equipment usage statistics
+        equipment_stats = {
+            'weapons': {},
+            'helmets': {},
+            'chest': {},
+            'boots': {},
+            'drifters': {}
+        }
+        
+        for player in Player.objects.filter(gear_items__isnull=False).prefetch_related('gear_items'):
+            # Count gear items
+            for gear in player.gear_items.all():
+                if hasattr(gear, 'gear_type') and gear.gear_type:
+                    gear_type = gear.gear_type.name.lower()
+                    if gear_type in equipment_stats:
+                        item_name = gear.base_name or gear.name
+                        if item_name in equipment_stats[gear_type]:
+                            equipment_stats[gear_type][item_name] += 1
+                        else:
+                            equipment_stats[gear_type][item_name] = 1
+            
+            # Count drifters
+            for i in range(1, 4):
+                drifter_field = getattr(player, f'drifter_{i}', None)
+                if drifter_field:
+                    drifter_name = drifter_field.name
+                    if drifter_name in equipment_stats['drifters']:
+                        equipment_stats['drifters'][drifter_name] += 1
+                    else:
+                        equipment_stats['drifters'][drifter_name] = 1
+        
+        # Get participation statistics
+        participation_stats = {
+            'active': 0,  # Participated in last 30 days
+            'inactive': 0,  # No participation in last 30 days
+            'never': 0  # Never participated
+        }
+        
+        from datetime import timedelta
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        for player in Player.objects.filter(gear_items__isnull=False):
+            if player.eventparticipant_set.exists():
+                if player.eventparticipant_set.filter(event__event_datetime__gte=thirty_days_ago).exists():
+                    participation_stats['active'] += 1
+                else:
+                    participation_stats['inactive'] += 1
+            else:
+                participation_stats['never'] += 1
+        
+        # Get filter options
+        all_roles = Player.objects.values_list('game_role', flat=True).distinct().exclude(game_role__isnull=True).exclude(game_role='')
+        all_guilds = Guild.objects.values_list('name', flat=True).distinct()
+        
+        # Get all unique equipment items for filter
+        all_weapons = GearItem.objects.filter(gear_type__name__iexact='weapon').values_list('base_name', flat=True).distinct()
+        all_helmets = GearItem.objects.filter(gear_type__name__iexact='helmet').values_list('base_name', flat=True).distinct()
+        all_chest = GearItem.objects.filter(gear_type__name__iexact='chest').values_list('base_name', flat=True).distinct()
+        all_boots = GearItem.objects.filter(gear_type__name__iexact='boots').values_list('base_name', flat=True).distinct()
+        all_equipment = list(all_weapons) + list(all_helmets) + list(all_chest) + list(all_boots)
+        
+        context = {
+            'players': players,
+            'total_players_with_loadouts': total_players_with_loadouts,
+            'filtered_count': filtered_count,
+            'role_distribution': role_distribution,
+            'guild_distribution': guild_distribution,
+            'equipment_stats': equipment_stats,
+            'participation_stats': participation_stats,
+            'all_roles': all_roles,
+            'all_guilds': all_guilds,
+            'all_equipment': all_equipment,
+            'current_filters': {
+                'item': item_filter,
+                'role': role_filter,
+                'participation': participation_filter,
+                'guild': guild_filter,
+            }
+        }
+        
+        return render(request, 'guilds/player_loadouts_management.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading player loadouts: {str(e)}')
+        return render(request, 'guilds/player_loadouts_management.html', {
+            'players': [],
+            'total_players_with_loadouts': 0,
+            'filtered_count': 0,
+            'error': str(e)
+        })
+
+
+@staff_member_required
 def events_management(request):
     """Events management page with detailed insights"""
     try:

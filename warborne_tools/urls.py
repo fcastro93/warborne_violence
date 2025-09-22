@@ -30,8 +30,9 @@ urlpatterns = [
     
     # Direct dashboard URLs
     path('dashboard/', guilds_views.staff_dashboard, name='dashboard'),
-    path('players/', guilds_views.players_management, name='players'),
-    path('events/', guilds_views.events_management, name='events'),
+            path('players/', guilds_views.players_management, name='players'),
+            path('player-loadouts/', guilds_views.player_loadouts_management, name='player_loadouts'),
+            path('events/', guilds_views.events_management, name='events'),
             path('guilds/', guilds_views.guilds_management, name='guilds'),
     path('analytics/', guilds_views.event_analytics, name='analytics'),
     path('bot/', guilds_views.bot_analytics, name='bot'),
