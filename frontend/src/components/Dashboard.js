@@ -1,5 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import {
+  Box,
+  Card,
+  CardContent,
+  Grid,
+  Typography,
+  Paper,
+  Button,
+  Chip,
+  Avatar,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Divider,
+  LinearProgress,
+} from '@mui/material';
+import {
+  People as PeopleIcon,
+  Groups as GroupsIcon,
+  Inventory as InventoryIcon,
+  TrendingUp as TrendingUpIcon,
+  Add as AddIcon,
+  Assessment as AssessmentIcon,
+  Notifications as NotificationsIcon,
+} from '@mui/icons-material';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -33,50 +59,217 @@ const Dashboard = () => {
     }
   };
 
+  const StatCard = ({ title, value, icon, color, trend }) => (
+    <Card>
+      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Avatar sx={{ bgcolor: color, mr: 2 }}>
+            {icon}
+          </Avatar>
+          <Box>
+            <Typography color="textSecondary" gutterBottom variant="h6">
+              {title}
+            </Typography>
+            <Typography variant="h4" component="div">
+              {value}
+            </Typography>
+          </Box>
+        </Box>
+        {trend && (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <TrendingUpIcon sx={{ color: 'success.main', mr: 1 }} />
+            <Typography variant="body2" color="success.main">
+              {trend}
+            </Typography>
+          </Box>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   if (loading) {
     return (
-      <div className="card">
-        <h2>Loading Dashboard...</h2>
-      </div>
+      <Box>
+        <Typography variant="h4" gutterBottom>
+          Loading Dashboard...
+        </Typography>
+        <LinearProgress />
+      </Box>
     );
   }
 
   return (
-    <div>
-      <div className="card">
-        <h2>📊 Guild Dashboard</h2>
-        <p>Welcome to the Warborne Guild Management System</p>
-      </div>
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        Dashboard
+      </Typography>
+      
+      <Grid container spacing={3}>
+        {/* Stats Cards */}
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Total Players"
+            value={stats.totalPlayers}
+            icon={<PeopleIcon />}
+            color="primary.main"
+            trend="+25% Last 30 days"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Total Guilds"
+            value={stats.totalGuilds}
+            icon={<GroupsIcon />}
+            color="secondary.main"
+            trend="+5% Last 30 days"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Total Loadouts"
+            value={stats.totalLoadouts}
+            icon={<InventoryIcon />}
+            color="success.main"
+            trend="+35% Last 30 days"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Active Players"
+            value={stats.activePlayers}
+            icon={<TrendingUpIcon />}
+            color="warning.main"
+            trend="+15% Last 30 days"
+          />
+        </Grid>
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>👥 Total Players</h3>
-          <div className="stat-number">{stats.totalPlayers}</div>
-        </div>
-        <div className="stat-card">
-          <h3>🏰 Total Guilds</h3>
-          <div className="stat-number">{stats.totalGuilds}</div>
-        </div>
-        <div className="stat-card">
-          <h3>⚔️ Total Loadouts</h3>
-          <div className="stat-number">{stats.totalLoadouts}</div>
-        </div>
-        <div className="stat-card">
-          <h3>🟢 Active Players</h3>
-          <div className="stat-number">{stats.activePlayers}</div>
-        </div>
-      </div>
+        {/* Quick Actions */}
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Quick Actions
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  sx={{ mb: 1 }}
+                >
+                  Add New Player
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<InventoryIcon />}
+                  sx={{ mb: 1 }}
+                >
+                  Create Loadout
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<GroupsIcon />}
+                  sx={{ mb: 1 }}
+                >
+                  Manage Guild
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<AssessmentIcon />}
+                  sx={{ mb: 1 }}
+                >
+                  View Reports
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
-      <div className="card">
-        <h3>🚀 Quick Actions</h3>
-        <div className="quick-actions">
-          <button className="btn">Add New Player</button>
-          <button className="btn">Create Loadout</button>
-          <button className="btn">Manage Guild</button>
-          <button className="btn">View Reports</button>
-        </div>
-      </div>
-    </div>
+        {/* Recent Activity */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Recent Activity
+              </Typography>
+              <List>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'primary.main' }}>
+                      <PeopleIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="New player joined"
+                    secondary="PlayerOne joined Warborne Elite"
+                  />
+                </ListItem>
+                <Divider />
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'success.main' }}>
+                      <InventoryIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Loadout created"
+                    secondary="Tank Build by PlayerTwo"
+                  />
+                </ListItem>
+                <Divider />
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'warning.main' }}>
+                      <NotificationsIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Guild event"
+                    secondary="Raid scheduled for tomorrow"
+                  />
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* System Status */}
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                System Status
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={4}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Chip label="Online" color="success" />
+                    <Typography variant="body2" color="textSecondary">
+                      Discord Bot
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Chip label="Online" color="success" />
+                    <Typography variant="body2" color="textSecondary">
+                      Database
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Chip label="Online" color="success" />
+                    <Typography variant="body2" color="textSecondary">
+                      API Services
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
