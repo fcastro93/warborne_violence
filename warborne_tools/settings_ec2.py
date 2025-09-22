@@ -129,10 +129,14 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# HTTPS settings (uncomment when using SSL)
-# SECURE_SSL_REDIRECT = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
+# HTTPS settings
+SECURE_SSL_REDIRECT = False  # Let nginx handle redirects
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://violenceguild.duckdns.org',
+    'https://13.58.1.161',
+]
 
 # Logging configuration
 LOGGING = {
