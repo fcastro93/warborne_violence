@@ -1036,10 +1036,6 @@ def players_management(request):
             count=Count('game_role')
         ).order_by('-count')
         
-        # Get faction distribution
-        faction_distribution = players.values('faction').annotate(
-            count=Count('faction')
-        ).order_by('-count')
         
         # Get guild distribution
         guild_distribution = players.filter(guild__isnull=False).values('guild__name').annotate(
@@ -1064,7 +1060,6 @@ def players_management(request):
             'players_with_discord': players_with_discord,
             'players_with_loadouts': players_with_loadouts,
             'role_distribution': role_distribution,
-            'faction_distribution': faction_distribution,
             'guild_distribution': guild_distribution,
             'recent_players': recent_players,
             'incomplete_profiles': incomplete_profiles,
