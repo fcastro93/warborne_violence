@@ -1567,9 +1567,16 @@ def react_frontend(request):
             with open(react_build_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             return HttpResponse(content, content_type='text/html')
-        else:
-            # Fallback to a simple HTML page if React build doesn't exist
-            return HttpResponse("""
+        
+        # Fallback to the public index.html
+        react_public_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'public', 'index.html')
+        if os.path.exists(react_public_path):
+            with open(react_public_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return HttpResponse(content, content_type='text/html')
+        
+        # Final fallback
+        return HttpResponse("""
             <!DOCTYPE html>
             <html>
             <head>
