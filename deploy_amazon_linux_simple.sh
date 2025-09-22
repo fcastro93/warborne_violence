@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# EC2 Deployment Script for Warborne Guild Tools - Amazon Linux
-# This script sets up the Django application on an Amazon Linux EC2 instance
+# EC2 Deployment Script for Warborne Guild Tools - Amazon Linux (Systemd Only)
+# This script sets up the Django application on an Amazon Linux EC2 instance using systemd
 
 set -e
 
@@ -26,10 +26,6 @@ sudo yum install -y \
     postgresql15-devel \
     openssl-devel \
     libffi-devel
-
-# Install supervisor via pip since it's not available in yum
-echo "📦 Installing supervisor via pip..."
-sudo pip3 install supervisor
 
 # Start and enable PostgreSQL
 echo "🗄️ Setting up PostgreSQL..."
@@ -118,61 +114,10 @@ sudo systemctl enable nginx
 
 # Set up systemd service
 echo "🔧 Setting up systemd service..."
-sudo cp warborne-tools.service /etc/systemd/system/
+sudo cp warborne-tools-amazon.service /etc/systemd/system/warborne-tools.service
 sudo systemctl daemon-reload
 sudo systemctl enable warborne-tools
 sudo systemctl start warborne-tools
-
-# Set up supervisor (alternative to systemd)
-echo "🔧 Setting up supervisor..."
-# Create supervisor config directory
-sudo mkdir -p /etc/supervisord.d
-sudo cp supervisor-amazon.conf /etc/supervisord.d/warborne-tools.ini
-
-# Create supervisor systemd service
-sudo tee /etc/systemd/system/supervisord.service > /dev/null << 'EOF'
-[Unit]
-Description=Supervisor process control system for UNIX
-Documentation=http://supervisord.org
-After=network.target
-
-[Service]
-Type=forking
-ExecStart=/usr/local/bin/supervisord -c /etc/supervisord.d/supervisord.conf
-ExecReload=/bin/kill -HUP $MAINPID
-KillMode=process
-Restart=on-failure
-RestartSec=42s
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Create main supervisor config
-sudo tee /etc/supervisord.d/supervisord.conf > /dev/null << 'EOF'
-[unix_http_server]
-file=/var/run/supervisor.sock
-chmod=0700
-
-[supervisord]
-logfile=/var/log/supervisor/supervisord.log
-pidfile=/var/run/supervisord.pid
-childlogdir=/var/log/supervisor
-nodaemon=true
-
-[rpcinterface:supervisor]
-supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
-
-[supervisorctl]
-serverurl=unix:///var/run/supervisor.sock
-
-[include]
-files = /etc/supervisord.d/*.ini
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl start supervisord
-sudo systemctl enable supervisord
 
 # Set proper permissions
 echo "🔐 Setting up permissions..."
@@ -198,3 +143,8 @@ echo "1. Configure your Discord bot tokens in /app/.env"
 echo "2. Set up SSL certificate for HTTPS (optional)"
 echo "3. Configure domain name (optional)"
 echo "4. Set up monitoring and backups"
+echo ""
+echo "🔧 Service management:"
+echo "- Check status: sudo systemctl status warborne-tools"
+echo "- View logs: sudo journalctl -u warborne-tools -f"
+echo "- Restart: sudo systemctl restart warborne-tools"
