@@ -28,7 +28,13 @@ sudo yum install -y \
 
 # Start and enable PostgreSQL
 echo "🗄️ Setting up PostgreSQL..."
-sudo postgresql-setup --initdb
+# Check if PostgreSQL is already initialized
+if [ ! -d "/var/lib/pgsql/data" ] || [ ! "$(ls -A /var/lib/pgsql/data)" ]; then
+    echo "Initializing PostgreSQL database..."
+    sudo postgresql-setup --initdb
+else
+    echo "PostgreSQL database already initialized, skipping..."
+fi
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
 
@@ -55,7 +61,12 @@ fi
 
 # Create virtual environment
 echo "🐍 Setting up Python virtual environment..."
-python3.11 -m venv /app/venv
+if [ ! -d "/app/venv" ]; then
+    echo "Creating new virtual environment..."
+    python3.11 -m venv /app/venv
+else
+    echo "Virtual environment already exists, using existing one..."
+fi
 source /app/venv/bin/activate
 
 # Install Python dependencies
@@ -65,13 +76,19 @@ pip install -r /app/requirements.txt
 
 # Set up PostgreSQL database
 echo "🗄️ Setting up PostgreSQL database..."
-sudo -u postgres psql << EOF
+# Check if database already exists
+if ! sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw warborne_tools; then
+    echo "Creating database and user..."
+    sudo -u postgres psql << EOF
 CREATE DATABASE warborne_tools;
 CREATE USER warborne_user WITH PASSWORD 'warborne_password';
 GRANT ALL PRIVILEGES ON DATABASE warborne_tools TO warborne_user;
 ALTER USER warborne_user CREATEDB;
 \q
 EOF
+else
+    echo "Database and user already exist, skipping..."
+fi
 
 # Create environment file
 echo "⚙️ Creating environment configuration..."
