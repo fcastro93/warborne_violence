@@ -1019,6 +1019,74 @@ def staff_dashboard(request):
 
 
 @staff_member_required
+def players_management(request):
+    """Players management page with detailed insights"""
+    try:
+        # Get all players with related data
+        players = Player.objects.select_related('guild', 'drifter_1', 'drifter_2', 'drifter_3').prefetch_related('gear_items')
+        
+        # Get statistics
+        total_players = players.count()
+        active_players = players.filter(is_active=True).count()
+        players_with_discord = players.filter(discord_user_id__isnull=False).exclude(discord_user_id=0).count()
+        players_with_loadouts = players.filter(gear_items__isnull=False).distinct().count()
+        
+        # Get role distribution
+        role_distribution = players.values('game_role').annotate(
+            count=Count('game_role')
+        ).order_by('-count')
+        
+        # Get faction distribution
+        faction_distribution = players.values('faction').annotate(
+            count=Count('faction')
+        ).order_by('-count')
+        
+        # Get guild distribution
+        guild_distribution = players.filter(guild__isnull=False).values('guild__name').annotate(
+            count=Count('guild')
+        ).order_by('-count')
+        
+        # Get recent players (last 7 days)
+        week_ago = timezone.now() - timedelta(days=7)
+        recent_players = players.filter(created_at__gte=week_ago).order_by('-created_at')
+        
+        # Get players with incomplete profiles
+        incomplete_profiles = players.filter(
+            Q(discord_user_id__isnull=True) | Q(discord_user_id=0) |
+            Q(game_role__isnull=True) | Q(game_role='') |
+            Q(drifter_1__isnull=True)
+        )
+        
+        context = {
+            'players': players,
+            'total_players': total_players,
+            'active_players': active_players,
+            'players_with_discord': players_with_discord,
+            'players_with_loadouts': players_with_loadouts,
+            'role_distribution': role_distribution,
+            'faction_distribution': faction_distribution,
+            'guild_distribution': guild_distribution,
+            'recent_players': recent_players,
+            'incomplete_profiles': incomplete_profiles,
+            'discord_integration_rate': round((players_with_discord / total_players * 100) if total_players > 0 else 0, 1),
+            'loadout_completion_rate': round((players_with_loadouts / total_players * 100) if total_players > 0 else 0, 1),
+        }
+        
+        return render(request, 'guilds/players_management.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading players management: {str(e)}')
+        return render(request, 'guilds/players_management.html', {
+            'players': [],
+            'total_players': 0,
+            'active_players': 0,
+            'players_with_discord': 0,
+            'players_with_loadouts': 0,
+            'error': str(e)
+        })
+
+
+@staff_member_required
 def guild_analytics(request):
     """Guild analytics and statistics page"""
     try:

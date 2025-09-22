@@ -20,6 +20,7 @@ urlpatterns = [
     
     # Staff Dashboard URLs
     path('dashboard/', views.staff_dashboard, name='staff_dashboard'),
+    path('players/', views.players_management, name='players_management'),
     path('guild-analytics/', views.guild_analytics, name='guild_analytics'),
     path('event-analytics/', views.event_analytics, name='event_analytics'),
     path('bot-analytics/', views.bot_analytics, name='bot_analytics'),

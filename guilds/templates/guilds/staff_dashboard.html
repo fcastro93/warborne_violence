@@ -89,7 +89,7 @@
             <h4><i class="fas fa-bolt text-warning"></i> Quick Actions</h4>
             <hr>
             <div class="d-grid gap-2">
-                <a href="/admin/guilds/player/add/" class="btn btn-primary btn-sm">
+                <a href="/admin/guilds/player/add/" class="btn btn-primary btn-sm" target="_blank">
                     <i class="fas fa-plus"></i> Add New Player
                 </a>
                 <a href="/admin/guilds/event/add/" class="btn btn-success btn-sm">
@@ -154,9 +154,9 @@
                     </table>
                 </div>
                 <div class="text-center">
-                    <a href="/admin/guilds/player/" class="btn btn-outline-primary btn-sm">
-                        View All Players
-                    </a>
+                <a href="{% url 'players_management' %}" class="btn btn-outline-primary btn-sm">
+                    View All Players
+                </a>
                 </div>
             {% else %}
                 <p class="text-muted text-center">No players yet</p>
