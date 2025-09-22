@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from .models import Player, PlayerGear, GearItem, GearMod, Drifter, DiscordBotConfig, Guild, Event, RecommendedBuild, Party, PartyMember
 import threading
 import json
+import os
 
 
 def discord_owner_or_staff_required(view_func):
@@ -1553,3 +1554,49 @@ def bot_analytics(request):
             'discord_integration_rate': 0,
             'error': str(e)
         })
+
+
+def react_frontend(request):
+    """
+    Serve the React frontend application
+    """
+    try:
+        # Try to serve the React build files
+        react_build_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build', 'index.html')
+        if os.path.exists(react_build_path):
+            with open(react_build_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return HttpResponse(content, content_type='text/html')
+        else:
+            # Fallback to a simple HTML page if React build doesn't exist
+            return HttpResponse("""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Warborne Guild Tools</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+                    .container { max-width: 800px; margin: 0 auto; text-align: center; }
+                    .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0; }
+                    a { color: white; text-decoration: none; margin: 10px; padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 8px; display: inline-block; }
+                    a:hover { background: rgba(255,255,255,0.3); }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>⚔️ Warborne Guild Tools</h1>
+                    <div class="card">
+                        <h2>Welcome to Warborne Guild Management System</h2>
+                        <p>Your Django backend is running successfully!</p>
+                        <p>React frontend will be available once built.</p>
+                        <a href="/admin/">Django Admin</a>
+                        <a href="/dashboard/">Staff Dashboard</a>
+                        <a href="/players/">Player Management</a>
+                        <a href="/loadouts/">Loadout Management</a>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """, content_type='text/html')
+    except Exception as e:
+        return HttpResponse(f"Error loading React frontend: {str(e)}", content_type='text/html')
