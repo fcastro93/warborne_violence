@@ -9,7 +9,7 @@ from functools import wraps
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import Player, PlayerGear, GearItem, Drifter, DiscordBotConfig, Guild, Event, RecommendedBuild
+from .models import Player, PlayerGear, GearItem, GearMod, Drifter, DiscordBotConfig, Guild, Event, RecommendedBuild, Party, PartyMember
 import threading
 import json
 
