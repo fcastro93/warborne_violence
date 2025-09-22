@@ -5,13 +5,13 @@ FROM node:18-alpine AS react-build
 WORKDIR /app/frontend
 
 # Copy package files
-COPY frontend/package*.json ./
+COPY temp-frontend/package*.json ./
 
 # Install dependencies
 RUN npm ci --only=production
 
 # Copy React source code
-COPY frontend/ ./
+COPY temp-frontend/ ./
 
 # Build React app for production
 RUN npm run build

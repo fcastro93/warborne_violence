@@ -1,11 +1,12 @@
 # Force Docker deployment by ignoring buildpack triggers
-frontend/package.json
-frontend/package-lock.json
-frontend/yarn.lock
-frontend/pnpm-lock.yaml
-frontend/node_modules/
-frontend/.npm/
-frontend/.yarn/
+frontend/
+temp-frontend/package.json
+temp-frontend/package-lock.json
+temp-frontend/yarn.lock
+temp-frontend/pnpm-lock.yaml
+temp-frontend/node_modules/
+temp-frontend/.npm/
+temp-frontend/.yarn/
 
 # Ignore development files
 *.md
