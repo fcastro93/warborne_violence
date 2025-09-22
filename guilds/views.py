@@ -1087,6 +1087,66 @@ def players_management(request):
 
 
 @staff_member_required
+def events_management(request):
+    """Events management page with detailed insights"""
+    try:
+        # Get all events with related data
+        events = Event.objects.all().order_by('-created_at')
+        
+        # Get statistics
+        total_events = events.count()
+        upcoming_events = events.filter(event_datetime__gte=timezone.now()).count()
+        past_events = events.filter(event_datetime__lt=timezone.now()).count()
+        
+        # Get events with participant counts
+        events_with_participants = events.annotate(
+            participant_count=Count('participants', filter=Q(participants__is_active=True))
+        )
+        
+        # Get recent events (last 7 days)
+        week_ago = timezone.now() - timedelta(days=7)
+        recent_events = events.filter(created_at__gte=week_ago).order_by('-created_at')
+        
+        # Get upcoming events (next 30 days)
+        month_from_now = timezone.now() + timedelta(days=30)
+        upcoming_events_list = events.filter(
+            event_datetime__gte=timezone.now(),
+            event_datetime__lte=month_from_now
+        ).order_by('event_datetime')
+        
+        # Get events by type
+        events_by_type = events.values('event_type').annotate(
+            count=Count('event_type')
+        ).order_by('-count')
+        
+        # Get events with low participation (less than 5 participants)
+        low_participation_events = events_with_participants.filter(participant_count__lt=5)
+        
+        context = {
+            'events': events_with_participants,
+            'total_events': total_events,
+            'upcoming_events': upcoming_events,
+            'past_events': past_events,
+            'recent_events': recent_events,
+            'upcoming_events_list': upcoming_events_list,
+            'events_by_type': events_by_type,
+            'low_participation_events': low_participation_events,
+        }
+        
+        return render(request, 'guilds/events_management.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading events management: {str(e)}')
+        return render(request, 'guilds/events_management.html', {
+            'events': [],
+            'total_events': 0,
+            'upcoming_events': 0,
+            'past_events': 0,
+            'error': str(e)
+        })
+
+
+@staff_member_required
 def guild_analytics(request):
     """Guild analytics and statistics page"""
     try:
