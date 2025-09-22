@@ -10,10 +10,11 @@ DEBUG = False
 
 # Allowed hosts
 ALLOWED_HOSTS = [
-    'strategic-brena-charfire-afecfd9e.koyeb.app',
     '*.koyeb.app',
     'localhost',
-    '127.0.0.1'
+    '127.0.0.1',
+    '13.58.1.161',
+    'violenceguild.duckdns.org'
 ]
 
 # Add any additional hosts from environment variables
