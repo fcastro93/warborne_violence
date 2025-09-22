@@ -54,7 +54,7 @@ source /app/venv/bin/activate
 # Install Python dependencies
 echo "📦 Installing Python dependencies..."
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r /app/requirements.txt
 
 # Set up PostgreSQL database
 echo "🗄️ Setting up PostgreSQL database..."
@@ -87,6 +87,7 @@ EOF
 
 # Set up Django application
 echo "🔧 Setting up Django application..."
+cd /app
 export DJANGO_SETTINGS_MODULE=warborne_tools.settings_ec2
 python manage.py migrate
 python manage.py collectstatic --noinput
@@ -94,6 +95,7 @@ python manage.py load_game_data || echo "Game data loading failed or already loa
 
 # Create superuser
 echo "👤 Creating admin user..."
+cd /app
 python manage.py shell << EOF
 from django.contrib.auth.models import User
 if not User.objects.filter(username='admin').exists():
