@@ -19,14 +19,25 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponseRedirect
+from guilds import views as guilds_views
 
-def redirect_to_admin(request):
-    return HttpResponseRedirect('/admin/')
+def redirect_to_dashboard(request):
+    return HttpResponseRedirect('/dashboard/')
 
 urlpatterns = [
-    path('', redirect_to_admin, name='home'),
+    path('', redirect_to_dashboard, name='home'),
     path('admin/', admin.site.urls),
-    path('guilds/', include('guilds.urls')),
+    
+    # Direct dashboard URLs
+    path('dashboard/', guilds_views.staff_dashboard, name='dashboard'),
+    path('players/', guilds_views.players_management, name='players'),
+    path('events/', guilds_views.events_management, name='events'),
+    path('guilds/', guilds_views.guild_analytics, name='guilds'),
+    path('analytics/', guilds_views.event_analytics, name='analytics'),
+    path('bot/', guilds_views.bot_analytics, name='bot'),
+    
+    # Legacy guilds URLs (for backward compatibility)
+    path('guilds-legacy/', include('guilds.urls')),
 ]
 
 # Servir archivos estáticos y media en desarrollo
