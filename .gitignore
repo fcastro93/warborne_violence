@@ -144,3 +144,6 @@ investigate_accessories.py
 
 # External repositories (don't include in our repo)
 repos/
+
+# React frontend (separate repository)
+frontend/
