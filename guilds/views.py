@@ -916,7 +916,7 @@ def staff_dashboard(request):
         
         # Get guild statistics
         guilds_with_members = Guild.objects.annotate(
-            member_count=Count('players')
+            member_count=Count('players', filter=Q(players__is_active=True))
         ).order_by('-member_count')[:5]
         
         # Get role distribution
@@ -1026,9 +1026,9 @@ def guild_analytics(request):
     try:
         # Get guild statistics
         guilds = Guild.objects.annotate(
-            member_count=Count('players'),
+            member_count=Count('players', filter=Q(players__is_active=True)),
             players_with_loadouts=Count('players', filter=Q(
-                players__weapon__isnull=False
+                players__gear_items__isnull=False
             ))
         ).order_by('-member_count')
         
