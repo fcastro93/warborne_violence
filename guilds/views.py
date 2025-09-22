@@ -946,7 +946,7 @@ def staff_dashboard(request):
         # Get more detailed statistics
         players_with_discord = Player.objects.filter(
             discord_user_id__isnull=False
-        ).exclude(discord_user_id='').count()
+        ).exclude(discord_user_id=0).count()
         
         discord_integration_rate = (players_with_discord / total_players * 100) if total_players > 0 else 0
         
