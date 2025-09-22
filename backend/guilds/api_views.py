@@ -14,7 +14,7 @@ def guild_stats(request):
             return Response({'error': 'No guild found'}, status=status.HTTP_404_NOT_FOUND)
         
         total_members = Player.objects.count()
-        active_events = Event.objects.filter(status='active').count()
+        active_events = Event.objects.filter(is_active=True, is_cancelled=False).count()
         total_gear = GearItem.objects.count()
         
         # Faction distribution
@@ -39,16 +39,25 @@ def guild_members(request):
     try:
         members = []
         for player in Player.objects.all()[:10]:  # Limit to 10 for now
+            # Get drifters from the three drifter fields
+            drifters = []
+            if player.drifter_1:
+                drifters.append(player.drifter_1.name)
+            if player.drifter_2:
+                drifters.append(player.drifter_2.name)
+            if player.drifter_3:
+                drifters.append(player.drifter_3.name)
+            
             members.append({
                 'id': player.id,
-                'name': player.name,
+                'name': player.in_game_name,
                 'role': player.role,
                 'game_role': player.game_role,
                 'faction': player.faction,
-                'level': player.level,
+                'level': player.character_level,
                 'status': 'Online' if player.is_active else 'Offline',
-                'avatar': player.name[:2].upper() if player.name else 'XX',
-                'drifters': [d.name for d in player.drifters.all()[:3]]
+                'avatar': player.in_game_name[:2].upper() if player.in_game_name else 'XX',
+                'drifters': drifters
             })
         
         return Response({'members': members})
@@ -61,14 +70,22 @@ def recent_events(request):
     try:
         events = []
         for event in Event.objects.all()[:5]:  # Limit to 5
+            # Determine status based on is_active and is_cancelled
+            if event.is_cancelled:
+                status = 'Cancelled'
+            elif event.is_active:
+                status = 'Active'
+            else:
+                status = 'Inactive'
+            
             events.append({
                 'id': event.id,
-                'title': event.name,
+                'title': event.title,
                 'type': event.event_type,
-                'participants': event.participants.count(),
-                'status': event.status,
-                'time': event.start_time.strftime('%Y-%m-%d %H:%M') if event.start_time else 'TBD',
-                'organizer': event.organizer.name if event.organizer else 'Unknown'
+                'participants': event.participant_count,
+                'status': status,
+                'time': event.event_datetime.strftime('%Y-%m-%d %H:%M') if event.event_datetime else 'TBD',
+                'organizer': event.created_by_discord_name if event.created_by_discord_name else 'Unknown'
             })
         
         return Response({'events': events})
@@ -83,17 +100,17 @@ def gear_overview(request):
         for item in GearItem.objects.all()[:5]:  # Limit to 5
             gear_items.append({
                 'id': item.id,
-                'name': item.name,
+                'name': item.base_name,
                 'skill': item.skill_name or 'Unknown Skill',
                 'type': item.gear_type.name if item.gear_type else 'Unknown',
                 'rarity': item.rarity or 'common',
                 'stats': {
-                    'damage': getattr(item, 'damage', 0),
-                    'defense': getattr(item, 'defense', 0),
-                    'health': getattr(item, 'health', 0)
+                    'damage': item.damage,
+                    'defense': item.defense,
+                    'health': item.health_bonus
                 },
-                'equipped': getattr(item, 'is_equipped', False),
-                'owner': item.owner.name if item.owner else 'Unknown'
+                'equipped': False,  # GearItem doesn't have an equipped field
+                'owner': 'Guild'  # Gear items are guild-owned
             })
         
         return Response({'gear_items': gear_items})
@@ -105,15 +122,39 @@ def recommended_builds(request):
     """Get recommended builds"""
     try:
         builds = []
-        for build in RecommendedBuild.objects.all()[:4]:  # Limit to 4
+        for build in RecommendedBuild.objects.filter(is_active=True)[:4]:  # Limit to 4
+            # Get gear items
+            gear_items = []
+            if build.weapon:
+                gear_items.append(build.weapon.base_name)
+            if build.helmet:
+                gear_items.append(build.helmet.base_name)
+            if build.chest:
+                gear_items.append(build.chest.base_name)
+            if build.boots:
+                gear_items.append(build.boots.base_name)
+            if build.consumable:
+                gear_items.append(build.consumable.base_name)
+            
+            # Get mods
+            mod_items = []
+            if build.mod1:
+                mod_items.append(build.mod1.name)
+            if build.mod2:
+                mod_items.append(build.mod2.name)
+            if build.mod3:
+                mod_items.append(build.mod3.name)
+            if build.mod4:
+                mod_items.append(build.mod4.name)
+            
             builds.append({
                 'id': build.id,
-                'title': build.name,
+                'title': build.title,
                 'role': build.role,
                 'description': build.description,
-                'gear': [item.name for item in build.recommended_gear.all()[:2]],
-                'mods': [mod.name for mod in build.recommended_mods.all()[:2]],
-                'rating': getattr(build, 'rating', 4.5)
+                'gear': gear_items[:2],  # Limit to 2 items
+                'mods': mod_items[:2],   # Limit to 2 mods
+                'rating': 4.5  # Default rating since it's not in the model
             })
         
         return Response({'builds': builds})
