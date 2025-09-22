@@ -1,0 +1,355 @@
+{% extends 'guilds/base.html' %}
+
+{% block title %}Staff Dashboard - Warborne Above Ashes{% endblock %}
+{% block page_title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistics Cards -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stats-card">
+            <div class="icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3>{{ total_players }}</h3>
+            <p>Total Players</p>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stats-card">
+            <div class="icon success">
+                <i class="fas fa-landmark"></i>
+            </div>
+            <h3>{{ active_guilds }}</h3>
+            <p>Active Guilds</p>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stats-card">
+            <div class="icon warning">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h3>{{ active_events }}</h3>
+            <p>Active Events</p>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stats-card">
+            <div class="icon danger">
+                <i class="fas fa-book"></i>
+            </div>
+            <h3>{{ total_builds }}</h3>
+            <p>Recommended Builds</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- System Health -->
+    <div class="col-lg-6 mb-4">
+        <div class="stats-card">
+            <h4><i class="fas fa-heartbeat text-primary"></i> System Health</h4>
+            <hr>
+            <div class="row">
+                <div class="col-6">
+                    <h5 class="text-primary">{{ completion_rate }}%</h5>
+                    <p class="mb-0">Loadout Completion</p>
+                    <small class="text-muted">{{ players_with_loadouts }} of {{ total_players }} players</small>
+                </div>
+                <div class="col-6">
+                    <h5 class="{% if bot_status == 'Active' %}text-success{% else %}text-danger{% endif %}">
+                        <i class="fas fa-circle"></i> {{ bot_status }}
+                    </h5>
+                    <p class="mb-0">Discord Bot</p>
+                    <small class="text-muted">Status</small>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-6">
+                    <h5 class="text-info">{{ discord_integration_rate }}%</h5>
+                    <p class="mb-0">Discord Integration</p>
+                    <small class="text-muted">{{ players_with_discord }} players linked</small>
+                </div>
+                <div class="col-6">
+                    <h5 class="text-warning">{{ recent_players_week }}</h5>
+                    <p class="mb-0">New Players (7d)</p>
+                    <small class="text-muted">This week</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-lg-6 mb-4">
+        <div class="stats-card">
+            <h4><i class="fas fa-bolt text-warning"></i> Quick Actions</h4>
+            <hr>
+            <div class="d-grid gap-2">
+                <a href="/admin/guilds/player/add/" class="btn btn-primary btn-sm" target="_blank">
+                    <i class="fas fa-plus"></i> Add New Player
+                </a>
+                <a href="/admin/guilds/event/add/" class="btn btn-success btn-sm" target="_blank">
+                    <i class="fas fa-calendar-plus"></i> Create Event
+                </a>
+                <a href="/admin/guilds/guild/add/" class="btn btn-info btn-sm" target="_blank">
+                    <i class="fas fa-landmark"></i> Add Guild
+                </a>
+                <a href="/admin/guilds/recommendedbuild/add/" class="btn btn-warning btn-sm" target="_blank">
+                    <i class="fas fa-book-medical"></i> Create Build
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Players -->
+    <div class="col-lg-6 mb-4">
+        <div class="stats-card">
+            <h4><i class="fas fa-user-clock text-primary"></i> Recent Players</h4>
+            <hr>
+            {% if recent_players %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Guild</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for player in recent_players %}
+                            <tr>
+                                <td>
+                                    <a href="/guilds/player/{{ player.id }}/loadout/" class="text-decoration-none">
+                                        {{ player.in_game_name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if player.guild %}
+                                        <span class="badge bg-info">{{ player.guild.name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">No Guild</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if player.game_role %}
+                                        <span class="badge bg-secondary">{{ player.get_game_role_display }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ player.created_at|date:"M d" }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                <a href="{% url 'players' %}" class="btn btn-outline-primary btn-sm">
+                    View All Players
+                </a>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">No players yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Events -->
+    <div class="col-lg-6 mb-4">
+        <div class="stats-card">
+            <h4><i class="fas fa-calendar-check text-success"></i> Recent Events</h4>
+            <hr>
+            {% if recent_events %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in recent_events %}
+                            <tr>
+                                <td>
+                                    <a href="/admin/guilds/event/{{ event.id }}/change/" class="text-decoration-none">
+                                        {{ event.title|truncatechars:20 }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <small>{{ event.event_date|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ event.event_type|title }}</span>
+                                </td>
+                                <td>
+                                    {% if event.event_date >= now %}
+                                        <span class="badge bg-success">Upcoming</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Past</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                    <a href="{% url 'events' %}" class="btn btn-outline-success btn-sm">
+                        View All Events
+                    </a>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">No events yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Equipment Statistics -->
+    <div class="col-lg-6 mb-4">
+        <div class="stats-card">
+            <h4><i class="fas fa-sword text-danger"></i> Equipment Database</h4>
+            <hr>
+            <div class="row">
+                <div class="col-4 text-center">
+                    <h5 class="text-danger">{{ total_gear_items }}</h5>
+                    <p class="mb-0 small">Gear Items</p>
+                </div>
+                <div class="col-4 text-center">
+                    <h5 class="text-warning">{{ total_gear_mods }}</h5>
+                    <p class="mb-0 small">Gear Mods</p>
+                </div>
+                <div class="col-4 text-center">
+                    <h5 class="text-info">{{ total_drifters }}</h5>
+                    <p class="mb-0 small">Drifters</p>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-6 text-center">
+                    <h5 class="text-success">{{ total_parties }}</h5>
+                    <p class="mb-0 small">Total Parties</p>
+                </div>
+                <div class="col-6 text-center">
+                    <h5 class="text-primary">{{ total_party_members }}</h5>
+                    <p class="mb-0 small">Party Members</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guild Statistics -->
+    <div class="col-lg-6 mb-4">
+        <div class="stats-card">
+            <h4><i class="fas fa-chart-bar text-info"></i> Top Guilds</h4>
+            <hr>
+            {% if guilds_with_members %}
+                {% for guild in guilds_with_members %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <strong>{{ guild.name }}</strong>
+                        {% if guild.faction != 'none' %}
+                            <span class="badge bg-secondary ms-1">{{ guild.faction|title }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="badge bg-primary">{{ guild.member_count }} members</span>
+                </div>
+                {% endfor %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'guilds_management' %}" class="btn btn-outline-info btn-sm">
+                        View Guild Analytics
+                    </a>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">No guilds with members yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+
+    <!-- Role Distribution -->
+    <div class="col-lg-6 mb-4">
+        <div class="stats-card">
+            <h4><i class="fas fa-users-cog text-warning"></i> Role Distribution</h4>
+            <hr>
+            {% if role_distribution %}
+                {% for role in role_distribution %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>
+                        {% if role.game_role %}
+                            {{ role.game_role|title }}
+                        {% else %}
+                            <em class="text-muted">No Role</em>
+                        {% endif %}
+                    </span>
+                    <span class="badge bg-warning">{{ role.count }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center">No role data available</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Error Message -->
+{% if error %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Error:</strong> {{ error }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Messages -->
+{% if messages %}
+<div class="row">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard every 5 minutes
+    setInterval(function() {
+        location.reload();
+    }, 300000);
+
+    // Add some interactivity to the stats cards
+    document.querySelectorAll('.stats-card').forEach(card => {
+        card.addEventListener('click', function() {
+            this.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+        });
+    });
+</script>
+{% endblock %}

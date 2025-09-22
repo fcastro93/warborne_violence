@@ -1,0 +1,2449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ player.in_game_name }} - Loadout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .left-panel {
+            width: 25%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .middle-panel {
+            width: 35%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .right-panel {
+            width: 40%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .header h1 {
+            color: #64b5f6;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(100, 181, 246, 0.5);
+            display: inline-block;
+        }
+        
+        .edit-name-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.6em;
+            margin-left: 8px;
+            padding: 3px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            vertical-align: middle;
+            opacity: 0.7;
+        }
+        
+        .edit-name-btn:hover {
+            color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+            opacity: 1;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 15px;
+        }
+        
+        .close:hover {
+            color: #fff;
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #4a9eff;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.3);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #4a9eff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3a8eef;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .header .subtitle {
+            color: #b0bec5;
+            font-size: 1.1rem;
+        }
+        
+        .player-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .info-label {
+            color: #90caf9;
+            font-weight: 600;
+        }
+        
+        .info-value {
+            color: #ffffff;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 5px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: #b0bec5;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .tab.active {
+            background: rgba(100, 181, 246, 0.2);
+            color: #64b5f6;
+            box-shadow: 0 0 15px rgba(100, 181, 246, 0.3);
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Drifter Stats */
+        .drifter-stats {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .drifter-stats-title {
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+            text-align: center;
+            border-bottom: 2px solid rgba(100, 181, 246, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border-left: 3px solid #64b5f6;
+        }
+        
+        .stat-label {
+            color: #90caf9;
+            font-size: 0.9rem;
+        }
+        
+        .stat-value {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .change-drifter-section {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .change-drifter-btn {
+            background: linear-gradient(135deg, #64b5f6, #42a5f5);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(100, 181, 246, 0.3);
+        }
+        
+        .change-drifter-btn:hover {
+            background: linear-gradient(135deg, #42a5f5, #1e88e5);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(100, 181, 246, 0.4);
+        }
+        
+        /* Skill Clickable */
+        .skill-clickable {
+            cursor: pointer;
+            border-bottom: 1px dotted #64b5f6;
+            transition: color 0.2s ease;
+        }
+        
+        .skill-clickable:hover {
+            color: #90caf9;
+            border-bottom-color: #90caf9;
+        }
+        
+        /* Skill Modal */
+        .skill-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .skill-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .skill-modal-content {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 2px solid #64b5f6;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .skill-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .skill-modal-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .skill-modal-title {
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .skill-modal-description {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+        
+        .skill-modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .skill-modal-close:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Gear Slots */
+        .gear-slots {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 60px;
+        }
+        
+        /* First row: 5 slots (weapon, helmet, chest, boots, consumable) */
+        .gear-slot:nth-child(-n+5) {
+            grid-column: span 1;
+        }
+        
+        /* Second row: 4 mod slots centered */
+        .gear-slot:nth-child(n+6) {
+            grid-column: span 1;
+            margin-top: 40px;
+        }
+        
+        .gear-slot {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        
+        .gear-slot.equipped {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        
+        
+        .gear-slot.unequip-zone {
+            border-style: dashed;
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        
+        .gear-icon {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        
+        .gear-fallback {
+            font-size: 54px;
+            opacity: 0.7;
+        }
+        
+        .gear-empty {
+            font-size: 20px;
+            opacity: 0.3;
+        }
+        
+        .slot-label {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #b0bec5;
+            white-space: nowrap;
+        }
+        
+        /* Text elements inside equipped slots */
+        .gear-slot-name {
+            font-size: 0.8rem;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 3px;
+            line-height: 1.1;
+        }
+        
+        .gear-slot-skill {
+            font-size: 0.7rem;
+            color: #64b5f6;
+            font-style: italic;
+            text-align: center;
+            margin-bottom: 3px;
+            line-height: 1.1;
+        }
+        
+        .gear-slot-stats {
+            font-size: 0.7rem;
+            color: #4caf50;
+            text-align: center;
+            line-height: 1.1;
+        }
+        
+        /* Inventory */
+        .inventory-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            color: #64b5f6;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(100, 181, 246, 0.3);
+        }
+        
+         .gear-item {
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             padding: 10px;
+             background: rgba(255, 255, 255, 0.05);
+             border-radius: 8px;
+             margin-bottom: 8px;
+             transition: all 0.3s ease;
+             border-left: 3px solid transparent;
+             cursor: default;
+             position: relative;
+             border: 2px solid transparent;
+             aspect-ratio: 1;
+             text-align: center;
+         }
+        
+        /* Rarity colors */
+        .gear-item.rarity-common {
+            border-color: #9e9e9e;
+            background: rgba(158, 158, 158, 0.1);
+        }
+        
+        .gear-item.rarity-rare {
+            border-color: #2196f3;
+            background: rgba(33, 150, 243, 0.1);
+        }
+        
+        .gear-item.rarity-epic {
+            border-color: #9c27b0;
+            background: rgba(156, 39, 176, 0.1);
+        }
+        
+        .gear-item.rarity-legendary {
+            border-color: #ff9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+        
+        .gear-item.equipped {
+            border-left-color: #4caf50;
+            background: rgba(76, 175, 80, 0.2);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+        }
+        
+         .gear-item:hover {
+             background: rgba(255, 255, 255, 0.15);
+             transform: scale(1.02);
+             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+         }
+        
+        .gear-item.not-owned {
+            opacity: 0.6;
+            border-left-color: #666;
+        }
+        
+        .gear-item.not-owned:hover {
+            opacity: 0.8;
+        }
+        
+        .item-tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        
+        .item-tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+         .items-grid {
+             display: grid;
+             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+             gap: 10px;
+             padding: 10px 0;
+             flex: 1;
+             overflow-y: auto;
+             align-content: start;
+         }
+        
+        .attribute-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(100, 181, 246, 0.3);
+        }
+        
+        .attribute-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #64b5f6;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .attribute-tab.active {
+            color: white;
+            border-bottom-color: #64b5f6;
+            background: rgba(100, 181, 246, 0.1);
+        }
+        
+        .attribute-tab:hover {
+            background: rgba(100, 181, 246, 0.1);
+        }
+        
+        .attribute-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            min-height: 0;
+        }
+        
+        .attribute-content.active {
+            display: flex;
+        }
+        
+        /* Search filter for mods */
+        .mod-search-container {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .mod-search-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .mod-search-input:focus {
+            outline: none;
+            border-color: #64b5f6;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 10px rgba(100, 181, 246, 0.3);
+        }
+        
+        .mod-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+        }
+        
+        /* Gear filters for other categories */
+        .gear-filters {
+            margin-bottom: 20px;
+        }
+        
+        .search-container {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #64b5f6;
+            box-shadow: 0 0 10px rgba(100, 181, 246, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .rarity-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .rarity-filter {
+            padding: 8px 16px;
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 6px;
+            background: rgba(30, 30, 30, 0.8);
+            color: #64b5f6;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .rarity-filter:hover {
+            background: rgba(100, 181, 246, 0.1);
+            border-color: #64b5f6;
+        }
+        
+        .rarity-filter.active {
+            background: #64b5f6;
+            color: white;
+            border-color: #64b5f6;
+        }
+        
+         .gear-icon-small {
+             width: 60px;
+             height: 60px;
+             margin-bottom: 6px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             flex-shrink: 0;
+         }
+        
+        .item-icon {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            object-position: center;
+            border-radius: 4px;
+            display: block;
+        }
+        
+        .item-fallback {
+            font-size: 24px;
+            opacity: 0.7;
+        }
+        
+         .item-details {
+             flex: 1;
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             justify-content: center;
+             width: 100%;
+         }
+        
+        .item-name {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .item-skill {
+            font-size: 0.85rem;
+            color: #64b5f6;
+            font-style: italic;
+            margin-bottom: 4px;
+        }
+        
+        .item-type {
+            color: #90caf9;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+        
+        .item-stats {
+            color: #b0bec5;
+            font-size: 0.8rem;
+        }
+        
+        .item-stats div {
+            margin-bottom: 2px;
+        }
+        
+        .equipped-badge {
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+         .action-buttons {
+             display: flex;
+             gap: 5px;
+             margin-top: 8px;
+             justify-content: center;
+         }
+        
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .equip-btn {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .equip-btn:hover {
+            background: #45a049;
+        }
+        
+        .unequip-btn {
+            background: #f44336;
+            color: white;
+        }
+        
+        .unequip-btn:hover {
+            background: #da190b;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: #4caf50;
+        }
+        
+        .notification.error {
+            background: #f44336;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #64b5f6;
+            text-decoration: none;
+            padding: 8px 16px;
+            background: rgba(100, 181, 246, 0.1);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background: rgba(100, 181, 246, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #b0bec5;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+        
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .left-panel, .middle-panel, .right-panel {
+                width: 100%;
+            }
+        }
+        
+        /* Role selector styles */
+        .role-selector {
+            display: inline-block;
+        }
+        
+        .role-dropdown {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            border-radius: 5px;
+            color: white;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .role-dropdown:hover {
+            border-color: rgba(100, 181, 246, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .role-dropdown:focus {
+            outline: none;
+            border-color: #64b5f6;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .role-dropdown option {
+            background: #1a1a1a;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- CSRF Token for AJAX -->
+        {% csrf_token %}
+        
+        <!-- Left Panel: Player Info -->
+        <div class="left-panel">
+            {% if user.is_staff %}
+            <div class="back-link" onclick="history.back()">
+                ← Back to Admin
+            </div>
+            {% else %}
+            <div class="back-link" onclick="history.back()">
+                ← Back
+            </div>
+            {% endif %}
+            
+            <div class="header">
+                <h1>
+                    {{ player.in_game_name }}
+                    <button class="edit-name-btn" onclick="openEditNameModal()" title="Edit player name">
+                        ✏️
+                    </button>
+                </h1>
+                <div class="subtitle">Player Loadout</div>
+            </div>
+            
+            <div class="player-info">
+                <div class="info-row">
+                    <span class="info-label">Discord:</span>
+                    <span class="info-value">{{ player.discord_name|default:"Not set" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Guild:</span>
+                    <span class="info-value">{{ player.guild.name|default:"No guild" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Level:</span>
+                    <span class="info-value">{{ player.character_level }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Faction:</span>
+                    <span class="info-value">{{ player.get_faction_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Guild Rank:</span>
+                    <span class="info-value">{{ player.get_role_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Role:</span>
+                    {% if user.is_staff %}
+                    <div class="role-selector">
+                        <select id="game-role-select" onchange="updateGameRole(this.value)" class="role-dropdown">
+                            <option value="">Select Role</option>
+                            <option value="ranged_dps" {% if player.game_role == 'ranged_dps' %}selected{% endif %}>Ranged DPS</option>
+                            <option value="melee_dps" {% if player.game_role == 'melee_dps' %}selected{% endif %}>Melee DPS</option>
+                            <option value="tank" {% if player.game_role == 'tank' %}selected{% endif %}>Tank</option>
+                            <option value="healer" {% if player.game_role == 'healer' %}selected{% endif %}>Healer</option>
+                            <option value="defensive_tank" {% if player.game_role == 'defensive_tank' %}selected{% endif %}>Defensive Tank</option>
+                            <option value="offensive_tank" {% if player.game_role == 'offensive_tank' %}selected{% endif %}>Offensive Tank</option>
+                            <option value="offensive_support" {% if player.game_role == 'offensive_support' %}selected{% endif %}>Offensive Support</option>
+                            <option value="defensive_support" {% if player.game_role == 'defensive_support' %}selected{% endif %}>Defensive Support</option>
+                        </select>
+                    </div>
+                    {% else %}
+                    <span class="info-value">{{ player.get_game_role_display|default:"Not set" }}</span>
+                    {% endif %}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Total Gear:</span>
+                    <span class="info-value">{{ total_gear }}</span>
+                </div>
+            </div>
+            
+            {% if player.notes %}
+            <div class="player-info">
+                <div class="info-label">Notes:</div>
+                <div class="info-value" style="margin-top: 8px;">{{ player.notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Middle Panel: Drifter Tabs -->
+        <div class="middle-panel">
+            <div class="section-title">Drifter Loadouts</div>
+            
+            <!-- Tabs -->
+            <div class="tabs">
+                {% for drifter_data in drifters_data %}
+                <button class="tab {% if forloop.first %}active{% endif %}" data-drifter="{{ drifter_data.number }}" onclick="showTab({{ drifter_data.number }})">
+                    {% if drifter_data.drifter %}
+                        {{ drifter_data.drifter.name }}
+                    {% else %}
+                        Drifter {{ drifter_data.number }}
+                    {% endif %}
+                </button>
+                {% endfor %}
+            </div>
+            
+            <!-- Tab Content -->
+            {% for drifter_data in drifters_data %}
+            <div class="tab-content {% if forloop.first %}active{% endif %}" id="tab-{{ drifter_data.number }}">
+                {% if drifter_data.drifter %}
+                    <!-- Drifter Stats -->
+                    <div class="drifter-stats">
+                        <h3 class="drifter-stats-title">Basic stats of the drifter</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Health</span>
+                                <span class="stat-value">{{ drifter_data.drifter.base_health }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Energy</span>
+                                <span class="stat-value">{{ drifter_data.drifter.base_energy }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Damage</span>
+                                <span class="stat-value">{{ drifter_data.drifter.base_damage }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Defense</span>
+                                <span class="stat-value">{{ drifter_data.drifter.base_defense }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Speed</span>
+                                <span class="stat-value">{{ drifter_data.drifter.base_speed }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Change Drifter Button -->
+                        {% if user.is_staff %}
+                        <div class="change-drifter-section">
+                            <button class="change-drifter-btn" onclick="showDrifterSelection({{ drifter_data.number }})">
+                                Change Drifter
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="info-row">
+                        <span class="info-label">Equipped Items:</span>
+                        <span class="info-value">{{ drifter_data.equipped_count }}/9</span>
+                    </div>
+                    
+                    <!-- Gear Slots -->
+                    <div class="gear-slots">
+                        {% for gear in drifter_data.gear_slots %}
+                            {% if gear %}
+                                <div class="gear-slot equipped" 
+                                     title="Click to unequip {{ gear.gear_item.name }}"
+                                     onclick="unequipGear({{ gear.id }})"
+                                     data-gear-id="{{ gear.id }}">
+                                    {% if gear.gear_item.icon_url %}
+                                        <img src="{{ gear.gear_item.icon_url }}" alt="{{ gear.gear_item.name }}" class="gear-icon">
+                                    {% else %}
+                                        <img src="{{ image_base_url }}{{ gear.gear_item.game_id }}.png" alt="{{ gear.gear_item.name }}" class="gear-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <span class="gear-fallback" style="display:none;">🗡️</span>
+                                    {% endif %}
+                                    <div class="gear-slot-name">{{ gear.gear_item.base_name }}</div>
+                                    {% if gear.gear_item.skill_name %}
+                                    <div class="gear-slot-skill skill-clickable" onclick="showSkillModal('{{ gear.gear_item.skill_name|escapejs }}', '{{ gear.gear_item.description|default:'No description available'|escapejs }}', '{{ gear.gear_item.game_id|escapejs }}')">{{ gear.gear_item.skill_name }}</div>
+                                    {% endif %}
+                                    {% if gear.gear_item.health_bonus > 0 %}
+                                    <div class="gear-slot-stats">HP: +{{ gear.gear_item.health_bonus }}</div>
+                                    {% endif %}
+                                    <div class="slot-label">{{ gear.gear_item.gear_type.category }}</div>
+                                </div>
+                            {% else %}
+                                 <div class="gear-slot" 
+                                      title="Empty slot"
+                                      data-slot-type="{% if forloop.counter == 1 %}weapon{% elif forloop.counter == 2 %}helmet{% elif forloop.counter == 3 %}chest{% elif forloop.counter == 4 %}boots{% elif forloop.counter == 5 %}consumable{% else %}mod{% endif %}"
+                                      data-drifter-num="{{ drifter_data.number }}">
+                                    <span class="gear-empty">⚪</span>
+                                    <div class="slot-label">
+                                        {% if forloop.counter == 1 %}Weapon
+                                        {% elif forloop.counter == 2 %}Helmet
+                                        {% elif forloop.counter == 3 %}Chest
+                                        {% elif forloop.counter == 4 %}Boots
+                                        {% elif forloop.counter == 5 %}Consumable
+                                        {% else %}Mod {{ forloop.counter|add:"-5" }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="icon">🎭</div>
+                        <div>No drifter assigned</div>
+                        {% if user.is_staff %}
+                        <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.7; margin-bottom: 20px;">
+                            Select a drifter to start building your loadout
+                        </div>
+                        {% else %}
+                        <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.7; margin-bottom: 20px;">
+                            No drifter assigned to this slot
+                        </div>
+                        {% endif %}
+                        {% if user.is_staff %}
+                        <div class="change-drifter-section">
+                            <button class="change-drifter-btn" onclick="showDrifterSelection({{ drifter_data.number }})">
+                                Select Drifter
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Right Panel: Game Items -->
+        <div class="right-panel">
+            <div class="section-title">Game Items</div>
+            
+            {% if gear_by_type %}
+                <!-- Item Type Tabs -->
+                <div class="tabs">
+                    {% for category, items in gear_by_type.items %}
+                    <button class="tab {% if forloop.first %}active{% endif %}" onclick="showItemTab('{{ category }}')" data-category="{{ category }}">
+                        {{ category|title }} (<span class="category-count">{% for attr_items in attributes.values %}{{ attr_items|length }}{% if not forloop.last %}+{% endif %}{% endfor %}</span>)
+                    </button>
+                    {% endfor %}
+                </div>
+                
+                <!-- Item Tab Content -->
+                {% for category, attributes in gear_by_type.items %}
+                <div class="item-tab-content {% if forloop.first %}active{% endif %}" id="item-tab-{{ category }}">
+                    {% if category == 'mod' %}
+                        <!-- Search filter for mods -->
+                        <div class="mod-search-container">
+                            <input type="text" class="mod-search-input" 
+                                   placeholder="Search mods..." 
+                                   onkeyup="filterMods(this.value)"
+                                   oninput="filterMods(this.value)">
+                            <span class="search-icon">🔍</span>
+                        </div>
+                        
+                        <!-- All mods content -->
+                        {% for attribute, items in attributes.items %}
+                            {% if items %}
+                            <div class="items-grid mod-items-grid" id="all-mods">
+                                {% for item_data in items %}
+                                 <div class="gear-item rarity-{{ item_data.gear_item.rarity }} {% if item_data.is_equipped %}equipped{% endif %} {% if not item_data.is_owned %}not-owned{% endif %}" 
+                                      data-gear-item-id="{{ item_data.gear_item.id }}"
+                                      data-gear-type="{{ item_data.gear_item.gear_type.category }}">
+                                    <div class="gear-icon-small">
+                                        {% if item_data.gear_item.icon_url %}
+                                            <img src="{{ item_data.gear_item.icon_url }}" alt="{{ item_data.gear_item.name }}" class="item-icon">
+                                        {% else %}
+                                            <img src="{{ image_base_url }}{{ item_data.gear_item.game_id }}.png" alt="{{ item_data.gear_item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                            <span class="item-fallback" style="display:none;">⚔️</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="item-details">
+                                        <div class="item-name">{{ item_data.gear_item.base_name }}</div>
+                                        {% if item_data.gear_item.skill_name %}
+                                        <div class="item-skill skill-clickable" onclick="showSkillModal('{{ item_data.gear_item.skill_name|escapejs }}', '{{ item_data.gear_item.description|default:'No description available'|escapejs }}', '{{ item_data.gear_item.game_id|escapejs }}')">{{ item_data.gear_item.skill_name }}</div>
+                                        {% endif %}
+                                        <div class="item-type">{{ item_data.gear_item.gear_type.name }} • {{ item_data.gear_item.rarity|title }}</div>
+                                        {% if item_data.gear_item.damage > 0 or item_data.gear_item.health_bonus > 0 or item_data.gear_item.mana_recovery > 0 or item_data.gear_item.armor > 0 or item_data.gear_item.magic_resistance > 0 %}
+                                        <div class="item-stats">
+                                            {% if item_data.gear_item.damage > 0 %}
+                                            <div>Damage & Heal bonus: {{ item_data.gear_item.damage }}%</div>
+                                            {% endif %}
+                                            {% if item_data.gear_item.health_bonus > 0 %}
+                                            <div>HP: {{ item_data.gear_item.health_bonus }}</div>
+                                            {% endif %}
+                                            {% if item_data.gear_item.mana_recovery > 0 %}
+                                            <div>Mana recovery bonus: {{ item_data.gear_item.mana_recovery }}%</div>
+                                            {% endif %}
+                                            {% if item_data.gear_item.armor > 0 %}
+                                            <div>Armor: {{ item_data.gear_item.armor }}</div>
+                                            {% endif %}
+                                            {% if item_data.gear_item.magic_resistance > 0 %}
+                                            <div>Magic resistance: {{ item_data.gear_item.magic_resistance }}</div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="action-buttons">
+                                        {% if item_data.is_equipped %}
+                                            <div class="equipped-badge">Equipped</div>
+                                            {% if user.is_staff %}
+                                            <button class="action-btn unequip-btn" onclick="unequipGear({{ item_data.player_gear.id }})">Unequip</button>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if user.is_staff %}
+                                            <button class="action-btn equip-btn" onclick="event.stopPropagation(); event.preventDefault(); console.log('Equip button clicked'); showEquipMenu({{ item_data.gear_item.id }}, '{{ item_data.gear_item.gear_type.category }}')">Equip</button>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <!-- Search and Rarity Filters for other gear types -->
+                        <div class="gear-filters">
+                            <div class="search-container">
+                                <input type="text" class="search-input" 
+                                       placeholder="Search {{ category }}..." 
+                                       onkeyup="filterGear('{{ category }}', this.value)"
+                                       oninput="filterGear('{{ category }}', this.value)">
+                                <span class="search-icon">🔍</span>
+                            </div>
+                            
+                            {% if category != 'consumable' %}
+                            <div class="rarity-filters">
+                                <button class="rarity-filter active" onclick="filterByRarity('{{ category }}', 'all')">All</button>
+                                {% if category == 'weapon' %}
+                                <button class="rarity-filter" onclick="filterByRarity('{{ category }}', 'common')">Common</button>
+                                {% endif %}
+                                <button class="rarity-filter" onclick="filterByRarity('{{ category }}', 'rare')">Rare</button>
+                                <button class="rarity-filter" onclick="filterByRarity('{{ category }}', 'epic')">Epic</button>
+                                <button class="rarity-filter" onclick="filterByRarity('{{ category }}', 'legendary')">Legendary</button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Attribute Tabs for other gear types (skip for consumables) -->
+                        {% if category != 'consumable' %}
+                        <div class="attribute-tabs">
+                            {% for attribute, items in attributes.items %}
+                                {% if items %}
+                                <button class="attribute-tab {% if forloop.first %}active{% endif %}" 
+                                        onclick="showAttributeTab('{{ category }}-{{ attribute|lower }}')">
+                                    {% if category == 'weapon' %}
+                                        {% if attribute == 'Sword' %}⚔️{% elif attribute == 'Axe' %}🪓{% elif attribute == 'Mace' %}🔨{% elif attribute == 'Gun' %}🔫{% elif attribute == 'Bow' %}🏹{% elif attribute == 'Dagger' %}🗡️{% elif attribute == 'Nature' %}🌿{% elif attribute == 'Spear' %}🔱{% elif attribute == 'Curse' %}💀{% elif attribute == 'Fire' %}🔥{% elif attribute == 'Frost' %}❄️{% elif attribute == 'Holy' %}✨{% else %}⚔️{% endif %}
+                                    {% else %}
+                                        {% if attribute == 'Strength' %}💪{% elif attribute == 'Agility' %}🏃{% elif attribute == 'Intelligence' %}🧠{% else %}📦{% endif %}
+                                    {% endif %}
+                                    {{ attribute }} ({{ items|length }})
+                                </button>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Attribute Content -->
+                        {% if category == 'consumable' %}
+                        <!-- For consumables, show all items directly without subtabs -->
+                        <div class="attribute-content active" id="{{ category }}-all">
+                            <div class="items-grid">
+                                {% for attribute, items in attributes.items %}
+                                    {% for item_data in items %}
+                                     <div class="gear-item rarity-{{ item_data.gear_item.rarity }} {% if item_data.is_equipped %}equipped{% endif %} {% if not item_data.is_owned %}not-owned{% endif %}" 
+                                          data-gear-item-id="{{ item_data.gear_item.id }}"
+                                          data-gear-type="{{ item_data.gear_item.gear_type.category }}">
+                                        <div class="gear-icon-small">
+                                            {% if item_data.gear_item.icon_url %}
+                                                <img src="{{ item_data.gear_item.icon_url }}" alt="{{ item_data.gear_item.name }}" class="item-icon">
+                                            {% else %}
+                                                <img src="{{ image_base_url }}{{ item_data.gear_item.game_id }}.png" alt="{{ item_data.gear_item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                <span class="item-fallback" style="display:none;">⚔️</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="item-details">
+                                            <div class="item-name">{{ item_data.gear_item.base_name }}</div>
+                                            {% if item_data.gear_item.skill_name %}
+                                            <div class="item-skill skill-clickable" onclick="showSkillModal('{{ item_data.gear_item.skill_name|escapejs }}', '{{ item_data.gear_item.description|default:'No description available'|escapejs }}', '{{ item_data.gear_item.game_id|escapejs }}')">{{ item_data.gear_item.skill_name }}</div>
+                                            {% endif %}
+                                            <div class="item-type">{{ item_data.gear_item.gear_type.name }} • {{ item_data.gear_item.rarity|title }}</div>
+                                            {% if item_data.gear_item.damage > 0 or item_data.gear_item.health_bonus > 0 or item_data.gear_item.mana_recovery > 0 or item_data.gear_item.armor > 0 or item_data.gear_item.magic_resistance > 0 %}
+                                            <div class="item-stats">
+                                                {% if item_data.gear_item.damage > 0 %}
+                                                <div>Damage & Heal bonus: {{ item_data.gear_item.damage }}%</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.health_bonus > 0 %}
+                                                <div>HP: {{ item_data.gear_item.health_bonus }}</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.mana_recovery > 0 %}
+                                                <div>Mana recovery bonus: {{ item_data.gear_item.mana_recovery }}%</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.armor > 0 %}
+                                                <div>Armor: {{ item_data.gear_item.armor }}</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.magic_resistance > 0 %}
+                                                <div>Magic resistance: {{ item_data.gear_item.magic_resistance }}</div>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="action-buttons">
+                                            {% if item_data.is_equipped %}
+                                                <div class="equipped-badge">Equipped</div>
+                                                {% if user.is_staff %}
+                                                <button class="action-btn unequip-btn" onclick="unequipGear({{ item_data.player_gear.id }})">Unequip</button>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if user.is_staff %}
+                                                <button class="action-btn equip-btn" onclick="event.stopPropagation(); event.preventDefault(); console.log('Equip button clicked'); showEquipMenu({{ item_data.gear_item.id }}, '{{ item_data.gear_item.gear_type.category }}')">Equip</button>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- For other gear types, show with subtabs -->
+                        {% for attribute, items in attributes.items %}
+                            {% if items %}
+                            <div class="attribute-content {% if forloop.first %}active{% endif %}" id="{{ category }}-{{ attribute|lower }}">
+                                <div class="items-grid">
+                                    {% for item_data in items %}
+                                     <div class="gear-item rarity-{{ item_data.gear_item.rarity }} {% if item_data.is_equipped %}equipped{% endif %} {% if not item_data.is_owned %}not-owned{% endif %}" 
+                                          data-gear-item-id="{{ item_data.gear_item.id }}"
+                                          data-gear-type="{{ item_data.gear_item.gear_type.category }}">
+                                        <div class="gear-icon-small">
+                                            {% if item_data.gear_item.icon_url %}
+                                                <img src="{{ item_data.gear_item.icon_url }}" alt="{{ item_data.gear_item.name }}" class="item-icon">
+                                            {% else %}
+                                                <img src="{{ image_base_url }}{{ item_data.gear_item.game_id }}.png" alt="{{ item_data.gear_item.name }}" class="item-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                <span class="item-fallback" style="display:none;">⚔️</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="item-details">
+                                            <div class="item-name">{{ item_data.gear_item.base_name }}</div>
+                                            {% if item_data.gear_item.skill_name %}
+                                            <div class="item-skill skill-clickable" onclick="showSkillModal('{{ item_data.gear_item.skill_name|escapejs }}', '{{ item_data.gear_item.description|default:'No description available'|escapejs }}', '{{ item_data.gear_item.game_id|escapejs }}')">{{ item_data.gear_item.skill_name }}</div>
+                                            {% endif %}
+                                            <div class="item-type">{{ item_data.gear_item.gear_type.name }} • {{ item_data.gear_item.rarity|title }}</div>
+                                            {% if item_data.gear_item.damage > 0 or item_data.gear_item.health_bonus > 0 or item_data.gear_item.mana_recovery > 0 or item_data.gear_item.armor > 0 or item_data.gear_item.magic_resistance > 0 %}
+                                            <div class="item-stats">
+                                                {% if item_data.gear_item.damage > 0 %}
+                                                <div>Damage & Heal bonus: {{ item_data.gear_item.damage }}%</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.health_bonus > 0 %}
+                                                <div>HP: {{ item_data.gear_item.health_bonus }}</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.mana_recovery > 0 %}
+                                                <div>Mana recovery bonus: {{ item_data.gear_item.mana_recovery }}%</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.armor > 0 %}
+                                                <div>Armor: {{ item_data.gear_item.armor }}</div>
+                                                {% endif %}
+                                                {% if item_data.gear_item.magic_resistance > 0 %}
+                                                <div>Magic resistance: {{ item_data.gear_item.magic_resistance }}</div>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="action-buttons">
+                                            {% if item_data.is_equipped %}
+                                                <div class="equipped-badge">Equipped</div>
+                                                {% if user.is_staff %}
+                                                <button class="action-btn unequip-btn" onclick="unequipGear({{ item_data.player_gear.id }})">Unequip</button>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if user.is_staff %}
+                                                <button class="action-btn equip-btn" onclick="event.stopPropagation(); event.preventDefault(); console.log('Equip button clicked'); showEquipMenu({{ item_data.gear_item.id }}, '{{ item_data.gear_item.gear_type.category }}')">Equip</button>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="icon">🎒</div>
+                    <div>No items available</div>
+                    <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.7;">
+                        Import game data to see items
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notification" class="notification"></div>
+
+     <script>
+
+        function showTab(tabNumber) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            const selectedContent = document.getElementById(`tab-${tabNumber}`);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+                
+                // Reset attribute tabs in the selected content
+                const attributeTabs = selectedContent.querySelectorAll('.attribute-tab');
+                const attributeContents = selectedContent.querySelectorAll('.attribute-content');
+                
+                attributeTabs.forEach(tab => tab.classList.remove('active'));
+                attributeContents.forEach(content => content.classList.remove('active'));
+                
+                // Activate first attribute tab
+                if (attributeTabs.length > 0) {
+                    attributeTabs[0].classList.add('active');
+                    const firstContent = selectedContent.querySelector('.attribute-content');
+                    if (firstContent) {
+                        firstContent.classList.add('active');
+                    }
+                }
+            }
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function showAttributeTab(attributeId) {
+            // Find the parent item tab content
+            const itemTabContent = event.target.closest('.item-tab-content');
+            
+            // Hide all attribute contents in this item tab
+            const attributeContents = itemTabContent.querySelectorAll('.attribute-content');
+            attributeContents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all attribute tabs in this item tab
+            const attributeTabs = itemTabContent.querySelectorAll('.attribute-tab');
+            attributeTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected attribute content
+            const selectedContent = document.getElementById(attributeId);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
+            
+            // Add active class to clicked attribute tab
+            event.target.classList.add('active');
+            
+            // Re-apply active rarity filter for this category
+            const category = itemTabContent.id.replace('item-tab-', '');
+            const activeRarityFilter = itemTabContent.querySelector('.rarity-filter.active');
+            console.log('showAttributeTab - category:', category);
+            console.log('showAttributeTab - activeRarityFilter:', activeRarityFilter);
+            if (activeRarityFilter) {
+                const onclick = activeRarityFilter.getAttribute('onclick');
+                const matches = onclick.match(/filterByRarity\('([^']+)',\s*'([^']+)'\)/);
+                if (matches && matches.length >= 3) {
+                    const rarity = matches[2]; // Get the second parameter (rarity)
+                    console.log('showAttributeTab - re-applying rarity filter:', rarity);
+                    filterByRarity(category, rarity, false); // false = don't update button states
+                } else {
+                    console.log('showAttributeTab - could not parse rarity from onclick:', onclick);
+                }
+            } else {
+                console.log('showAttributeTab - no active rarity filter found');
+            }
+            
+            // Re-apply active search filter for this category
+            const searchInput = itemTabContent.querySelector('.search-input');
+            if (searchInput && searchInput.value) {
+                filterGear(category, searchInput.value);
+            }
+        }
+
+        function filterMods(searchTerm) {
+            const modItems = document.querySelectorAll('#all-mods .gear-item');
+            const searchLower = searchTerm.toLowerCase();
+            
+            console.log('Filtering mods with term:', searchTerm);
+            console.log('Found mod items:', modItems.length);
+            
+            modItems.forEach(item => {
+                const itemNameElement = item.querySelector('.item-name');
+                const itemSkillElement = item.querySelector('.item-skill');
+                
+                const itemName = itemNameElement ? itemNameElement.textContent.toLowerCase() : '';
+                const itemSkill = itemSkillElement ? itemSkillElement.textContent.toLowerCase() : '';
+                
+                console.log('Item:', itemName, 'Skill:', itemSkill);
+                
+                // Show item if search term matches name or skill
+                if (itemName.includes(searchLower) || itemSkill.includes(searchLower)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        function filterGear(category, searchTerm) {
+            let gearItems;
+            
+            if (category === 'consumable') {
+                // For consumables, search in the specific content area
+                gearItems = document.querySelectorAll(`#${category}-all .gear-item`);
+            } else {
+                // For other categories, use the active attribute tab
+                const activeAttributeTab = document.querySelector(`#item-tab-${category} .attribute-tab.active`);
+                if (!activeAttributeTab) return;
+                
+                const attributeContentId = activeAttributeTab.getAttribute('onclick').match(/'([^']+)'/)[1];
+                gearItems = document.querySelectorAll(`#${attributeContentId} .gear-item`);
+            }
+            
+            const searchLower = searchTerm.toLowerCase();
+            
+            gearItems.forEach(item => {
+                const itemNameElement = item.querySelector('.item-name');
+                const itemSkillElement = item.querySelector('.item-skill');
+                
+                let itemName = itemNameElement ? itemNameElement.textContent.toLowerCase() : '';
+                let itemSkill = itemSkillElement ? itemSkillElement.textContent.toLowerCase() : '';
+                
+                if (searchLower === '' || itemName.includes(searchLower) || itemSkill.includes(searchLower)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        function updateGameRole(roleValue) {
+            if (!roleValue) return;
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch('{% url "update_game_role" player.id %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    'game_role': roleValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showNotification('Role updated successfully!', 'success');
+                } else {
+                    // Show error message
+                    showNotification('Error updating role: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error updating role', 'error');
+            });
+        }
+        
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                transition: all 0.3s ease;
+                ${type === 'success' ? 'background: #4CAF50;' : 'background: #f44336;'}
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        function filterByRarity(category, rarity, updateButtons = true) {
+            console.log('filterByRarity called - category:', category, 'rarity:', rarity, 'updateButtons:', updateButtons);
+            
+            // Update active rarity filter button (only if updateButtons is true)
+            if (updateButtons) {
+                const rarityFilters = document.querySelectorAll(`#item-tab-${category} .rarity-filter`);
+                rarityFilters.forEach(btn => btn.classList.remove('active'));
+                if (event && event.target) {
+                    event.target.classList.add('active');
+                }
+            }
+            
+            const activeAttributeTab = document.querySelector(`#item-tab-${category} .attribute-tab.active`);
+            console.log('filterByRarity - activeAttributeTab:', activeAttributeTab);
+            if (!activeAttributeTab) {
+                console.log('filterByRarity - no active attribute tab found');
+                return;
+            }
+            
+            const attributeContentId = activeAttributeTab.getAttribute('onclick').match(/'([^']+)'/)[1];
+            console.log('filterByRarity - attributeContentId:', attributeContentId);
+            
+            const gearItems = document.querySelectorAll(`#${attributeContentId} .gear-item`);
+            console.log('filterByRarity - found gear items:', gearItems.length);
+            
+            let visibleCount = 0;
+            gearItems.forEach(item => {
+                if (rarity === 'all' || item.classList.contains(`rarity-${rarity}`)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            console.log('filterByRarity - visible items after filtering:', visibleCount);
+        }
+        
+        // Initialize filters when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded');
+            
+            
+            // Initialize mod search
+            const modSearchInput = document.querySelector('.mod-search-input');
+            if (modSearchInput) {
+                console.log('Mod search input found and ready');
+                modSearchInput.addEventListener('input', function() {
+                    console.log('Input event triggered:', this.value);
+                    filterMods(this.value);
+                });
+            } else {
+                console.log('Mod search input not found');
+            }
+            
+            // Initialize gear filters for all categories with a small delay
+            setTimeout(() => {
+                initializeGearFilters();
+            }, 100);
+            
+            // Restore active drifter from session storage
+            const activeDrifter = sessionStorage.getItem('activeDrifter');
+            if (activeDrifter) {
+                // Wait a bit for the page to fully load
+                setTimeout(() => {
+                    const drifterTab = document.querySelector(`[data-drifter="${activeDrifter}"]`);
+                    if (drifterTab) {
+                        drifterTab.click();
+                    }
+                    // Clear the stored drifter after use
+                    sessionStorage.removeItem('activeDrifter');
+                }, 500);
+            }
+            
+            
+        });
+        
+        
+        function initializeGearFilters() {
+            
+            // Only initialize the currently active item tab content
+            const activeItemTabContent = document.querySelector('.item-tab-content.active');
+            if (!activeItemTabContent) {
+                return;
+            }
+            
+            const category = activeItemTabContent.id.replace('item-tab-', '');
+            
+            // Skip mods as they have their own initialization
+            if (category === 'mod') {
+                console.log('Skipping mods category');
+                return;
+            }
+            
+            // Skip consumables as they don't have attribute tabs
+            if (category === 'consumable') {
+                console.log('Skipping consumables category - no attribute tabs needed');
+                return;
+            }
+            
+            // For weapons, find the first weapon type tab, for others find attribute tab
+            let activeTab = activeItemTabContent.querySelector('.attribute-tab.active');
+            console.log('Active tab for', category, ':', activeTab);
+            
+            // If no active tab found, activate the first one
+            if (!activeTab) {
+                console.log('No active tab found for', category, ', activating first tab');
+                const firstTab = activeItemTabContent.querySelector('.attribute-tab');
+                if (firstTab) {
+                    // Remove active class from all tabs
+                    const allTabs = activeItemTabContent.querySelectorAll('.attribute-tab');
+                    allTabs.forEach(tab => tab.classList.remove('active'));
+                    
+                    // Add active class to first tab
+                    firstTab.classList.add('active');
+                    
+                    // Show the corresponding content
+                    const tabId = firstTab.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    const content = document.getElementById(tabId);
+                    if (content) {
+                        // Hide all content first
+                        const allContent = activeItemTabContent.querySelectorAll('.attribute-content');
+                        allContent.forEach(c => c.classList.remove('active'));
+                        
+                        // Show the selected content
+                        content.classList.add('active');
+                    }
+                    
+                    activeTab = firstTab;
+                    console.log('Activated first tab:', activeTab);
+                } else {
+                    console.log('No tabs found for', category);
+                    return;
+                }
+            }
+            
+            // Apply "All" rarity filter by default
+            const allRarityFilter = activeItemTabContent.querySelector('.rarity-filter[onclick*="all"]');
+            console.log('All rarity filter for', category, ':', allRarityFilter);
+            
+            if (allRarityFilter) {
+                // Set the "All" filter as active
+                const rarityFilters = activeItemTabContent.querySelectorAll('.rarity-filter');
+                rarityFilters.forEach(btn => btn.classList.remove('active'));
+                allRarityFilter.classList.add('active');
+                
+                console.log('Applying "All" filter for', category);
+                // Apply the filter
+                filterByRarity(category, 'all', false);
+            } else {
+                console.log('No "All" rarity filter found for', category);
+            }
+        }
+
+        // Item Tab Functions
+        function showItemTab(category) {
+            // Hide all item tab contents
+            const contents = document.querySelectorAll('.item-tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all item tabs
+            const tabs = document.querySelectorAll('.right-panel .tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(`item-tab-${category}`).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Initialize filters for the newly active category (except mods)
+            if (category !== 'mod') {
+                setTimeout(() => {
+                    initializeGearFilters();
+                }, 50);
+            }
+        }
+
+
+        // Equip/Unequip Functions
+        function equipGear(gearItemId, drifterNum, slotType) {
+            console.log('equipGear called with:', gearItemId, drifterNum, slotType);
+            
+            // Check if user is staff - this should match Django's user.is_staff
+            const isStaff = {{ user.is_staff|yesno:"true,false" }};
+            if (!isStaff) {
+                console.error('Access denied: Staff privileges required');
+                alert('Access denied: Staff privileges required');
+                return;
+            }
+            const csrfToken = getCookie('csrftoken');
+            console.log('CSRF Token:', csrfToken);
+            fetch(`/guilds/player/{{ player.id }}/loadout/update/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    action: 'equip',
+                    gear_item_id: gearItemId,
+                    drifter_num: drifterNum,
+                    slot_type: slotType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Store the active drifter before reload
+                    const activeDrifterTab = document.querySelector('.tab.active');
+                    if (activeDrifterTab) {
+                        const drifterNumber = activeDrifterTab.getAttribute('data-drifter');
+                        sessionStorage.setItem('activeDrifter', drifterNumber);
+                    }
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification(data.error || 'Failed to equip item', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to equip item', 'error');
+            });
+        }
+
+        function unequipGear(gearId) {
+            // Check if user is staff - this should match Django's user.is_staff
+            const isStaff = {{ user.is_staff|yesno:"true,false" }};
+            if (!isStaff) {
+                console.error('Access denied: Staff privileges required');
+                alert('Access denied: Staff privileges required');
+                return;
+            }
+            
+            fetch(`/guilds/player/{{ player.id }}/loadout/update/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    action: 'unequip',
+                    gear_id: gearId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Store the active drifter before reload
+                    const activeDrifterTab = document.querySelector('.tab.active');
+                    if (activeDrifterTab) {
+                        const drifterNumber = activeDrifterTab.getAttribute('data-drifter');
+                        sessionStorage.setItem('activeDrifter', drifterNumber);
+                    }
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification(data.error || 'Failed to unequip item', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to unequip item', 'error');
+            });
+        }
+
+        function showEquipMenu(gearItemId, gearType) {
+            console.log('showEquipMenu called with:', gearItemId, gearType);
+            
+            // Check if user is staff - this should match Django's user.is_staff
+            const isStaff = {{ user.is_staff|yesno:"true,false" }};
+            if (!isStaff) {
+                console.error('Access denied: Staff privileges required');
+                alert('Access denied: Staff privileges required');
+                return;
+            }
+            // Create a simple dropdown menu for drifter selection
+            const menu = document.createElement('div');
+            menu.id = 'drifter-selection-menu';
+            console.log('Menu element created:', menu);
+            menu.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.95);
+                border: 2px solid #64b5f6;
+                border-radius: 10px;
+                padding: 20px;
+                z-index: 9999;
+                color: white;
+                text-align: center;
+                backdrop-filter: blur(10px);
+                min-width: 300px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            `;
+            
+            menu.innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #64b5f6;">Select Drifter</h3>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="equipToDrifter(${gearItemId}, 1, '${gearType}'); closeMenu()" 
+                            style="padding: 10px 20px; background: #64b5f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Drifter 1
+                    </button>
+                    <button onclick="equipToDrifter(${gearItemId}, 2, '${gearType}'); closeMenu()" 
+                            style="padding: 10px 20px; background: #64b5f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Drifter 2
+                    </button>
+                    <button onclick="equipToDrifter(${gearItemId}, 3, '${gearType}'); closeMenu()" 
+                            style="padding: 10px 20px; background: #64b5f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Drifter 3
+                    </button>
+                </div>
+                <button onclick="closeMenu()" 
+                        style="margin-top: 15px; padding: 8px 16px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    Cancel
+                </button>
+            `;
+            
+            console.log('Menu created, appending to body');
+            document.body.appendChild(menu);
+            console.log('Menu appended to body');
+            
+            // Add a small delay before allowing the menu to be closed
+            setTimeout(() => {
+                console.log('Menu should now be visible and stable');
+            }, 100);
+        }
+
+        function equipToDrifter(gearItemId, drifterNum, gearType) {
+            equipGear(gearItemId, drifterNum, gearType);
+        }
+
+        function closeMenu() {
+            const menu = document.getElementById('drifter-selection-menu');
+            if (menu) {
+                console.log('Closing menu');
+                menu.remove();
+            } else {
+                console.log('Menu not found to close');
+            }
+        }
+
+        // Notification Functions
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // CSRF Token Helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            // Don't close if clicking on the menu itself or its children
+            if (event.target.closest('#drifter-selection-menu')) {
+                return;
+            }
+            
+            // Don't close if clicking on equip buttons
+            if (event.target.closest('.action-btn.equip-btn')) {
+                return;
+            }
+            
+            if (event.target === document.body || event.target.closest('.container')) {
+                closeMenu();
+            }
+        });
+
+        // Drifter Selection Modal
+        function showDrifterSelection(drifterSlot) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.id = 'drifter-selection-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(10px);
+            `;
+
+            // Create modal content
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: linear-gradient(135deg, #1a1a2e, #16213e);
+                border: 2px solid #64b5f6;
+                border-radius: 15px;
+                padding: 30px;
+                max-width: 90%;
+                max-height: 80%;
+                overflow-y: auto;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            `;
+
+            // Create header
+            const header = document.createElement('div');
+            header.style.cssText = `
+                text-align: center;
+                margin-bottom: 25px;
+                border-bottom: 2px solid #64b5f6;
+                padding-bottom: 15px;
+            `;
+            header.innerHTML = `
+                <h2 style="color: #ffffff; margin: 0; font-size: 1.8rem;">Select Drifter</h2>
+                <p style="color: #b0bec5; margin: 10px 0 0 0;">Choose a drifter for slot ${drifterSlot}</p>
+            `;
+
+            // Create drifter grid
+            const drifterGrid = document.createElement('div');
+            drifterGrid.style.cssText = `
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                max-height: 350px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                padding: 16px;
+                background: rgba(30, 41, 59, 0.8);
+                border-radius: 8px;
+                margin: 16px 0;
+                width: 100%;
+                box-sizing: border-box;
+            `;
+
+            // Add drifters to grid with their corresponding icon IDs
+            const drifters = [
+                {name: 'Sirokos', iconId: 'ParagonCard_Str_1'},
+                {name: 'Varnax', iconId: 'ParagonCard_Str_4'},
+                {name: 'Draknor', iconId: 'ParagonCard_Str_7'},
+                {name: 'Elektrix', iconId: 'ParagonCard_Dex_1'},
+                {name: 'Zero', iconId: 'ParagonCard_Dex_2'},
+                {name: 'Sanguor', iconId: 'ParagonCard_Dex_3'},
+                {name: 'Shadowseer', iconId: 'ParagonCard_Dex_4'},
+                {name: 'Veska', iconId: 'ParagonCard_Dex_5'},
+                {name: 'Moonveil', iconId: 'ParagonCard_Dex_6'},
+                {name: 'Vire', iconId: 'ParagonCard_Dex_7'},
+                {name: 'Kyra', iconId: 'ParagonCard_Str_2'},
+                {name: 'Aegis', iconId: 'ParagonCard_Str_5'},
+                {name: 'Auri', iconId: 'ParagonCard_Str_8'},
+                {name: 'Nyxa', iconId: 'ParagonCard_Int_1'},
+                {name: 'Vryssia', iconId: 'ParagonCard_Int_2'},
+                {name: 'Stormblade', iconId: 'ParagonCard_Int_3'},
+                {name: 'Solenne', iconId: 'ParagonCard_Int_4'},
+                {name: 'Helix', iconId: 'ParagonCard_Int_6'},
+                {name: 'Revelation', iconId: 'ParagonCard_Int_7'},
+                {name: 'Mole', iconId: 'ParagonCard_Gather_1'},
+                {name: 'Izzy', iconId: 'ParagonCard_Str_3'},
+                {name: 'Durion', iconId: 'ParagonCard_Str_6'},
+                {name: 'Firestorm', iconId: 'ParagonCard_Str_9'},
+                {name: 'Overdrive', iconId: 'ParagonCard_Dex_8'},
+                {name: 'Umbra', iconId: 'ParagonCard_Dex_9'},
+                {name: 'Illusarch', iconId: 'ParagonCard_Int_9'},
+                {name: 'Hive Queen', iconId: 'ParagonCard_Int_10'},
+                {name: 'Raven', iconId: 'ParagonCard_Int_11'},
+                {name: 'Astral Magus', iconId: 'ParagonCard_Int_13'}
+            ];
+
+            drifters.forEach(drifter => {
+                const drifterCard = document.createElement('div');
+                drifterCard.style.cssText = `
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(100, 181, 246, 0.3);
+                    border-radius: 8px;
+                    padding: 12px;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    min-height: 80px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                `;
+                
+                drifterCard.innerHTML = `
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #64b5f6, #42a5f5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 8px;">
+                        <img src="/static/icons/${drifter.iconId}.png" alt="${drifter.name}" style="width: 32px; height: 32px; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span style="display: none;">🎭</span>
+                    </div>
+                    <div style="color: #ffffff; font-weight: 500; font-size: 0.8rem; line-height: 1.2;">${drifter.name}</div>
+                `;
+                
+                drifterCard.addEventListener('mouseenter', () => {
+                    drifterCard.style.background = 'rgba(100, 181, 246, 0.1)';
+                    drifterCard.style.borderColor = 'rgba(100, 181, 246, 0.6)';
+                    drifterCard.style.transform = 'translateY(-2px)';
+                });
+                
+                drifterCard.addEventListener('mouseleave', () => {
+                    drifterCard.style.background = 'rgba(255, 255, 255, 0.05)';
+                    drifterCard.style.borderColor = 'rgba(100, 181, 246, 0.3)';
+                    drifterCard.style.transform = 'translateY(0)';
+                });
+                
+                drifterCard.addEventListener('click', () => {
+                    selectDrifter(drifterSlot, drifter.name);
+                    closeDrifterModal();
+                });
+
+                drifterGrid.appendChild(drifterCard);
+            });
+
+            // Create close button
+            const closeBtn = document.createElement('button');
+            closeBtn.style.cssText = `
+                background: #666;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-top: 20px;
+                width: 100%;
+                font-size: 1rem;
+                transition: background 0.3s ease;
+            `;
+            closeBtn.textContent = 'Cancel';
+            closeBtn.addEventListener('click', closeDrifterModal);
+            closeBtn.addEventListener('mouseenter', () => {
+                closeBtn.style.background = '#777';
+            });
+            closeBtn.addEventListener('mouseleave', () => {
+                closeBtn.style.background = '#666';
+            });
+
+            // Assemble modal
+            modalContent.appendChild(header);
+            modalContent.appendChild(drifterGrid);
+            modalContent.appendChild(closeBtn);
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeDrifterModal();
+                }
+            });
+        }
+
+        function closeDrifterModal() {
+            const modal = document.getElementById('drifter-selection-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function selectDrifter(drifterSlot, drifterName) {
+            console.log(`Selecting ${drifterName} for slot ${drifterSlot}`);
+            
+            // Check if user is staff - this should match Django's user.is_staff
+            const isStaff = {{ user.is_staff|yesno:"true,false" }};
+            if (!isStaff) {
+                console.error('Access denied: Staff privileges required');
+                alert('Access denied: Staff privileges required');
+                return;
+            }
+            
+            // Get the player ID from the URL
+            const urlPath = window.location.pathname;
+            const playerId = urlPath.split('/')[3]; // Extract player ID from /guilds/player/{id}/loadout/
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('drifter_slot', drifterSlot);
+            formData.append('drifter_name', drifterName);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            // Show loading state
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Selecting...';
+            button.disabled = true;
+            
+            // Make AJAX request
+            fetch(`/guilds/player/${playerId}/assign-drifter/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('Drifter assigned successfully');
+                    // Store the active drifter before reload
+                    const activeDrifterTab = document.querySelector('.tab.active');
+                    if (activeDrifterTab) {
+                        const drifterNumber = activeDrifterTab.getAttribute('data-drifter');
+                        sessionStorage.setItem('activeDrifter', drifterNumber);
+                    }
+                    // Reload the page to show the new drifter
+                    window.location.reload();
+                } else {
+                    throw new Error(data.error || 'Failed to assign drifter');
+                }
+            })
+            .catch(error => {
+                console.error('Error assigning drifter:', error);
+                alert(`Error assigning drifter: ${error.message}`);
+                // Restore button state
+                button.textContent = originalText;
+                button.disabled = false;
+            });
+        }
+        
+        // Skill Modal Functions
+        function showSkillModal(skillName, description, gameId) {
+            console.log('=== DEBUG SKILL MODAL ===');
+            console.log('Skill Name:', skillName);
+            console.log('Description:', description);
+            console.log('Game ID:', gameId);
+            console.log('Description length:', description ? description.length : 'null');
+            console.log('Description type:', typeof description);
+            
+            const modal = document.getElementById('skill-modal');
+            const title = document.getElementById('skill-modal-title');
+            const desc = document.getElementById('skill-modal-description');
+            const icon = document.getElementById('skill-modal-icon');
+            
+            if (!modal) {
+                console.error('Modal element not found!');
+                return;
+            }
+            
+            title.textContent = skillName || 'Unknown Skill';
+            desc.textContent = description || 'No description available';
+            
+            // Try to load the icon
+            const imageBaseUrl = '/static/icons/';
+            icon.innerHTML = `<img src="${imageBaseUrl}${gameId}.png" alt="${skillName}" style="width: 32px; height: 32px;" onerror="this.parentElement.innerHTML='⚔️'">`;
+            
+            modal.classList.add('show');
+            console.log('Modal should be visible now');
+        }
+        
+        function closeSkillModal() {
+            const modal = document.getElementById('skill-modal');
+            modal.classList.remove('show');
+        }
+        
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('skill-modal');
+            if (e.target === modal) {
+                closeSkillModal();
+            }
+        });
+        
+        // Fix category counts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Calculate correct counts for each category
+            const tabs = document.querySelectorAll('.tab[data-category]');
+            tabs.forEach(tab => {
+                const category = tab.getAttribute('data-category');
+                const categoryContent = document.getElementById(`item-tab-${category}`);
+                if (categoryContent) {
+                    const items = categoryContent.querySelectorAll('.gear-item');
+                    const countSpan = tab.querySelector('.category-count');
+                    if (countSpan) {
+                        countSpan.textContent = items.length;
+                    }
+                }
+            });
+        });
+    </script>
+
+    <!-- Skill Modal -->
+    <div id="skill-modal" class="skill-modal">
+        <div class="skill-modal-content">
+            <button class="skill-modal-close" onclick="closeSkillModal()">&times;</button>
+            <div class="skill-modal-header">
+                <div class="skill-modal-icon" id="skill-modal-icon">⚔️</div>
+                <h3 class="skill-modal-title" id="skill-modal-title">Skill Name</h3>
+            </div>
+            <p class="skill-modal-description" id="skill-modal-description">Skill description will appear here.</p>
+        </div>
+    </div>
+
+    <!-- Edit Name Modal -->
+    <div id="editNameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditNameModal()">&times;</span>
+            <h2>Edit Player Name</h2>
+            <form id="editNameForm">
+                <div class="form-group">
+                    <label for="newPlayerName">Player Name:</label>
+                    <input type="text" id="newPlayerName" name="name" value="{{ player.in_game_name }}" maxlength="50" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditNameModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Edit Name Modal Functions
+        function openEditNameModal() {
+            document.getElementById('editNameModal').style.display = 'block';
+            document.getElementById('newPlayerName').focus();
+            document.getElementById('newPlayerName').select();
+        }
+
+        function closeEditNameModal() {
+            document.getElementById('editNameModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('editNameModal');
+            if (event.target == modal) {
+                closeEditNameModal();
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('editNameForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newName = document.getElementById('newPlayerName').value.trim();
+            const playerId = window.location.pathname.split('/')[3]; // Extract player ID from URL
+            
+            if (!newName) {
+                alert('Please enter a valid name');
+                return;
+            }
+            
+            if (newName === '{{ player.in_game_name }}') {
+                closeEditNameModal();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/guilds/player/${playerId}/update-name/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        name: newName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update the displayed name
+                    document.querySelector('.header h1').innerHTML = `${newName} <button class="edit-name-btn" onclick="openEditNameModal()" title="Edit player name">✏️</button>`;
+                    // Update page title
+                    document.title = `${newName} - Loadout`;
+                    closeEditNameModal();
+                    alert('Player name updated successfully!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error updating name:', error);
+                alert('Error updating name. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

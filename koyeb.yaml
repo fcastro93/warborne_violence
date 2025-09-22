@@ -9,6 +9,8 @@ services:
         value: "3.13"
       - key: NODE_VERSION
         value: "18"
+      - key: DISABLE_COLLECTSTATIC
+        value: "1"
     http_port: 8000
     envs:
       - key: SECRET_KEY
