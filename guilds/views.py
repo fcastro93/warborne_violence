@@ -1221,12 +1221,12 @@ def player_loadouts_management(request):
         # Base query for players with loadouts
         players_query = Player.objects.filter(
             gear_items__isnull=False
-        ).distinct().select_related('guild').prefetch_related('gear_items', 'eventparticipant_set')
+        ).distinct().select_related('guild').prefetch_related('gear_items', 'event_participations')
         
         # Apply filters
         if item_filter:
             players_query = players_query.filter(
-                gear_items__base_name__icontains=item_filter
+                gear_items__gear_item__base_name__icontains=item_filter
             )
         
         if role_filter:
@@ -1282,13 +1282,13 @@ def player_loadouts_management(request):
             'drifters': {}
         }
         
-        for player in Player.objects.filter(gear_items__isnull=False).prefetch_related('gear_items'):
+        for player in Player.objects.filter(gear_items__isnull=False).prefetch_related('gear_items__gear_item__gear_type'):
             # Count gear items
             for gear in player.gear_items.all():
-                if hasattr(gear, 'gear_type') and gear.gear_type:
-                    gear_type = gear.gear_type.name.lower()
+                if hasattr(gear.gear_item, 'gear_type') and gear.gear_item.gear_type:
+                    gear_type = gear.gear_item.gear_type.name.lower()
                     if gear_type in equipment_stats:
-                        item_name = gear.base_name or gear.name
+                        item_name = gear.gear_item.base_name or gear.gear_item.name
                         if item_name in equipment_stats[gear_type]:
                             equipment_stats[gear_type][item_name] += 1
                         else:
@@ -1315,8 +1315,8 @@ def player_loadouts_management(request):
         thirty_days_ago = timezone.now() - timedelta(days=30)
         
         for player in Player.objects.filter(gear_items__isnull=False):
-            if player.eventparticipant_set.exists():
-                if player.eventparticipant_set.filter(event__event_datetime__gte=thirty_days_ago).exists():
+            if player.event_participations.exists():
+                if player.event_participations.filter(event__event_datetime__gte=thirty_days_ago).exists():
                     participation_stats['active'] += 1
                 else:
                     participation_stats['inactive'] += 1

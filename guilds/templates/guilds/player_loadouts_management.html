@@ -502,8 +502,8 @@
                     </div>
                     
                     <div class="participation-status">
-                        {% if player.eventparticipant_set.exists %}
-                            {% with last_participation=player.eventparticipant_set.first.event.event_datetime %}
+                        {% if player.event_participations.exists %}
+                            {% with last_participation=player.event_participations.first.event.event_datetime %}
                                 {% if last_participation|timesince|slice:":1" == "0" or "day" in last_participation|timesince %}
                                     <span class="status-active">Active</span>
                                 {% else %}
@@ -517,7 +517,7 @@
                     
                     <div class="equipment-preview">
                         {% for gear in player.gear_items.all|slice:":3" %}
-                            <span class="equipment-item">{{ gear.base_name|default:gear.name|truncatechars:10 }}</span>
+                            <span class="equipment-item">{{ gear.gear_item.base_name|default:gear.gear_item.name|truncatechars:10 }}</span>
                         {% endfor %}
                         {% if player.gear_items.count > 3 %}
                             <span class="equipment-item">+{{ player.gear_items.count|add:"-3" }}</span>
