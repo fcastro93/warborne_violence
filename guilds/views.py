@@ -1566,7 +1566,12 @@ def react_frontend(request):
         if os.path.exists(material_ui_path):
             with open(material_ui_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            return HttpResponse(content, content_type='text/html')
+            # Add cache-busting header
+            response = HttpResponse(content, content_type='text/html')
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+            return response
         
         # Second priority: React build files
         react_build_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build', 'index.html')
@@ -1582,27 +1587,44 @@ def react_frontend(request):
                 content = f.read()
             return HttpResponse(content, content_type='text/html')
         
-        # Final fallback
-        return HttpResponse("""
+        # Debug: Show what files exist
+        debug_info = f"""
+        <h1>Debug Info</h1>
+        <p>Material-UI path: {material_ui_path}</p>
+        <p>Exists: {os.path.exists(material_ui_path)}</p>
+        <p>React build path: {react_build_path}</p>
+        <p>Exists: {os.path.exists(react_build_path)}</p>
+        <p>React public path: {react_public_path}</p>
+        <p>Exists: {os.path.exists(react_public_path)}</p>
+        <p>Current directory: {os.getcwd()}</p>
+        <p>File directory: {os.path.dirname(__file__)}</p>
+        """
+        
+        # Final fallback with debug info
+        return HttpResponse(f"""
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Warborne Guild Tools</title>
+                <title>Warborne Guild Tools - Debug</title>
                 <style>
-                    body { font-family: Arial, sans-serif; margin: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-                    .container { max-width: 800px; margin: 0 auto; text-align: center; }
-                    .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0; }
-                    a { color: white; text-decoration: none; margin: 10px; padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 8px; display: inline-block; }
-                    a:hover { background: rgba(255,255,255,0.3); }
+                    body {{ font-family: Arial, sans-serif; margin: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }}
+                    .container {{ max-width: 800px; margin: 0 auto; text-align: center; }}
+                    .card {{ background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0; }}
+                    .debug {{ background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; text-align: left; }}
+                    a {{ color: white; text-decoration: none; margin: 10px; padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 8px; display: inline-block; }}
+                    a:hover {{ background: rgba(255,255,255,0.3); }}
                 </style>
             </head>
             <body>
                 <div class="container">
-                    <h1>⚔️ Warborne Guild Tools</h1>
+                    <h1>⚔️ Warborne Guild Tools - Debug</h1>
                     <div class="card">
                         <h2>Welcome to Warborne Guild Management System</h2>
                         <p>Your Django backend is running successfully!</p>
                         <p>React frontend will be available once built.</p>
+                        <div class="debug">
+                            {debug_info}
+                        </div>
                         <a href="/admin/">Django Admin</a>
                         <a href="/dashboard/">Staff Dashboard</a>
                         <a href="/players/">Player Management</a>
