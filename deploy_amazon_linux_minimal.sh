@@ -46,6 +46,13 @@ if [ ! -d "/app/.git" ]; then
     echo "⚠️  Please clone your repository to /app directory"
 fi
 
+# Copy current directory to /app if not already there
+if [ ! -f "/app/requirements.txt" ]; then
+    echo "📁 Copying application files to /app..."
+    sudo cp -r . /app/
+    sudo chown -R ec2-user:ec2-user /app
+fi
+
 # Create virtual environment
 echo "🐍 Setting up Python virtual environment..."
 python3.11 -m venv /app/venv
