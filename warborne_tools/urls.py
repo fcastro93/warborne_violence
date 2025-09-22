@@ -32,7 +32,7 @@ urlpatterns = [
     path('dashboard/', guilds_views.staff_dashboard, name='dashboard'),
     path('players/', guilds_views.players_management, name='players'),
     path('events/', guilds_views.events_management, name='events'),
-    path('guilds/', guilds_views.guild_analytics, name='guilds'),
+            path('guilds/', guilds_views.guilds_management, name='guilds'),
     path('analytics/', guilds_views.event_analytics, name='analytics'),
     path('bot/', guilds_views.bot_analytics, name='bot'),
     

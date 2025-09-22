@@ -1073,6 +1073,142 @@ def players_management(request):
 
 
 @staff_member_required
+def guilds_management(request):
+    """Guilds management page with detailed insights for guild managers"""
+    try:
+        # Get all guilds with detailed information
+        guilds = Guild.objects.all()
+        
+        # Get guild statistics
+        total_guilds = guilds.count()
+        active_guilds = guilds.filter(is_active=True).count()
+        
+        # Get players by guild with detailed loadout information
+        guild_data = []
+        for guild in guilds:
+            players = Player.objects.filter(guild=guild, is_active=True).prefetch_related('gear_items')
+            
+            # Calculate loadout statistics for this guild
+            players_with_full_rare = 0
+            players_with_loadouts = 0
+            total_players = players.count()
+            
+            # Equipment statistics
+            equipment_stats = {
+                'weapons': {},
+                'helmets': {},
+                'chest': {},
+                'boots': {},
+                'drifters': {}
+            }
+            
+            for player in players:
+                # Check if player has loadout
+                if player.gear_items.exists():
+                    players_with_loadouts += 1
+                    
+                    # Check for rare items (assuming rarity field exists)
+                    has_rare_items = False
+                    for gear in player.gear_items.all():
+                        # Count equipment by type
+                        if hasattr(gear, 'gear_type') and gear.gear_type:
+                            gear_type = gear.gear_type.name.lower()
+                            if gear_type in equipment_stats:
+                                item_name = gear.base_name or gear.name
+                                if item_name in equipment_stats[gear_type]:
+                                    equipment_stats[gear_type][item_name] += 1
+                                else:
+                                    equipment_stats[gear_type][item_name] = 1
+                        
+                        # Check for rare items (assuming there's a rarity field)
+                        if hasattr(gear, 'rarity') and gear.rarity and 'rare' in str(gear.rarity).lower():
+                            has_rare_items = True
+                    
+                    if has_rare_items:
+                        players_with_full_rare += 1
+                
+                # Count drifters
+                for i in range(1, 4):
+                    drifter_field = getattr(player, f'drifter_{i}', None)
+                    if drifter_field:
+                        drifter_name = drifter_field.name
+                        if drifter_name in equipment_stats['drifters']:
+                            equipment_stats['drifters'][drifter_name] += 1
+                        else:
+                            equipment_stats['drifters'][drifter_name] = 1
+            
+            # Role distribution for this guild
+            role_distribution = players.values('game_role').annotate(
+                count=Count('game_role')
+            ).order_by('-count')
+            
+            guild_info = {
+                'guild': guild,
+                'total_players': total_players,
+                'players_with_loadouts': players_with_loadouts,
+                'players_with_full_rare': players_with_full_rare,
+                'loadout_completion_rate': round((players_with_loadouts / total_players * 100) if total_players > 0 else 0, 1),
+                'rare_completion_rate': round((players_with_full_rare / total_players * 100) if total_players > 0 else 0, 1),
+                'role_distribution': role_distribution,
+                'equipment_stats': equipment_stats,
+                'players': players
+            }
+            guild_data.append(guild_info)
+        
+        # Get overall equipment popularity across all guilds
+        all_players = Player.objects.filter(is_active=True).prefetch_related('gear_items')
+        overall_equipment_stats = {
+            'weapons': {},
+            'helmets': {},
+            'chest': {},
+            'boots': {},
+            'drifters': {}
+        }
+        
+        for player in all_players:
+            # Count gear items
+            for gear in player.gear_items.all():
+                if hasattr(gear, 'gear_type') and gear.gear_type:
+                    gear_type = gear.gear_type.name.lower()
+                    if gear_type in overall_equipment_stats:
+                        item_name = gear.base_name or gear.name
+                        if item_name in overall_equipment_stats[gear_type]:
+                            overall_equipment_stats[gear_type][item_name] += 1
+                        else:
+                            overall_equipment_stats[gear_type][item_name] = 1
+            
+            # Count drifters
+            for i in range(1, 4):
+                drifter_field = getattr(player, f'drifter_{i}', None)
+                if drifter_field:
+                    drifter_name = drifter_field.name
+                    if drifter_name in overall_equipment_stats['drifters']:
+                        overall_equipment_stats['drifters'][drifter_name] += 1
+                    else:
+                        overall_equipment_stats['drifters'][drifter_name] = 1
+        
+        context = {
+            'guilds': guilds,
+            'guild_data': guild_data,
+            'total_guilds': total_guilds,
+            'active_guilds': active_guilds,
+            'overall_equipment_stats': overall_equipment_stats,
+        }
+        
+        return render(request, 'guilds/guilds_management.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading guilds management: {str(e)}')
+        return render(request, 'guilds/guilds_management.html', {
+            'guilds': [],
+            'guild_data': [],
+            'total_guilds': 0,
+            'active_guilds': 0,
+            'error': str(e)
+        })
+
+
+@staff_member_required
 def events_management(request):
     """Events management page with detailed insights"""
     try:
