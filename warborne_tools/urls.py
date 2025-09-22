@@ -21,11 +21,11 @@ from django.conf.urls.static import static
 from django.http import HttpResponseRedirect
 from guilds import views as guilds_views
 
-def redirect_to_react(request):
-    return guilds_views.react_frontend(request)
+def redirect_to_dashboard(request):
+    return HttpResponseRedirect('/dashboard/')
 
 urlpatterns = [
-    path('', redirect_to_react, name='home'),
+    path('', redirect_to_dashboard, name='home'),
     path('admin/', admin.site.urls),
     
     # Direct dashboard URLs

@@ -1,0 +1,31 @@
+[Unit]
+Description=Warborne Guild Tools Django Application
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=exec
+User=www-data
+Group=www-data
+WorkingDirectory=/app
+Environment=DJANGO_SETTINGS_MODULE=warborne_tools.settings_ec2
+Environment=PYTHONPATH=/app
+ExecStart=/app/venv/bin/gunicorn --bind 127.0.0.1:8000 --workers 3 --timeout 120 warborne_tools.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/app
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=warborne-tools
+
+[Install]
+WantedBy=multi-user.target

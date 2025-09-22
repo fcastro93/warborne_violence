@@ -1,0 +1,38 @@
+{
+  "name": "Warborne Guild Tools",
+  "description": "A Django web application for managing guild members, player loadouts, and gear tracking for the Warborne: Above Ashes game",
+  "repository": "https://github.com/fcastro93/warborne_violence",
+  "logo": "https://raw.githubusercontent.com/fcastro93/warborne_violence/main/static/icons/ParagonCard_Str_1.png",
+  "keywords": ["django", "python", "warborne", "gaming", "guild"],
+  "env": {
+    "SECRET_KEY": {
+      "description": "Django secret key",
+      "generator": "secret"
+    },
+    "DEBUG": {
+      "description": "Debug mode",
+      "value": "False"
+    },
+    "ALLOWED_HOSTS": {
+      "description": "Allowed hosts",
+      "value": "*"
+    },
+    "DJANGO_SETTINGS_MODULE": {
+      "description": "Django settings module",
+      "value": "warborne_tools.settings_production"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "scripts": {
+    "postdeploy": "bin/post_compile"
+  }
+}
