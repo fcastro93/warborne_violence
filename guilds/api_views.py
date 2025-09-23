@@ -2009,36 +2009,60 @@ def test_discord_bot_connection(request):
 
 @api_view(['POST'])
 def start_discord_bot(request):
-    """Start the Discord bot"""
+    """Start the Discord bot (like Django admin action)"""
     try:
         from .models import DiscordBotConfig
+        import subprocess
+        import os
         
         config = DiscordBotConfig.objects.first()
         if not config:
             return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
         
+        # Check if bot is already running
+        if config.is_online:
+            return Response({'error': 'Bot is already online'}, status=status.HTTP_400_BAD_REQUEST)
+        
         # Set bot as active
         config.is_active = True
+        config.is_online = False  # Will be set to True when bot actually starts
+        config.error_message = ""
         config.save()
         
-        # In a real implementation, you would:
-        # 1. Start the bot process
-        # 2. Update the bot status
-        # 3. Send notifications
-        
-        return Response({
-            'message': 'Bot start command sent successfully',
-            'status': 'success'
-        })
+        # Start the bot process (similar to Django admin action)
+        try:
+            # Get the current directory
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_dir = os.path.dirname(current_dir)
+            
+            # Start the bot process
+            bot_script = os.path.join(project_dir, 'start_bot.py')
+            if os.path.exists(bot_script):
+                subprocess.Popen(['python', bot_script], cwd=project_dir)
+            else:
+                # Fallback: start the bot directly
+                subprocess.Popen(['python', 'manage.py', 'runbot'], cwd=project_dir)
+            
+            return Response({
+                'message': 'Bot start command sent successfully',
+                'status': 'success'
+            })
+            
+        except Exception as e:
+            config.error_message = f"Failed to start bot: {str(e)}"
+            config.save()
+            return Response({'error': f'Failed to start bot: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def stop_discord_bot(request):
-    """Stop the Discord bot"""
+    """Stop the Discord bot (like Django admin action)"""
     try:
         from .models import DiscordBotConfig
+        import psutil
+        import os
         
         config = DiscordBotConfig.objects.first()
         if not config:
@@ -2047,43 +2071,37 @@ def stop_discord_bot(request):
         # Set bot as inactive and offline
         config.is_active = False
         config.is_online = False
+        config.error_message = ""
         config.save()
         
-        # In a real implementation, you would:
-        # 1. Stop the bot process
-        # 2. Update the bot status
-        # 3. Send notifications
-        
-        return Response({
-            'message': 'Bot stop command sent successfully',
-            'status': 'success'
-        })
+        # Try to find and stop the bot process
+        try:
+            # Look for Python processes running the bot
+            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+                try:
+                    if proc.info['name'] == 'python' and proc.info['cmdline']:
+                        cmdline = ' '.join(proc.info['cmdline'])
+                        if 'discord_bot.py' in cmdline or 'runbot' in cmdline:
+                            proc.terminate()
+                            print(f"Stopped bot process {proc.info['pid']}")
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+                    
+            return Response({
+                'message': 'Bot stop command sent successfully',
+                'status': 'success'
+            })
+            
+        except Exception as e:
+            # Even if we can't find the process, we've marked it as inactive
+            return Response({
+                'message': 'Bot marked as inactive (process may still be running)',
+                'status': 'success'
+            })
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['POST'])
-def restart_discord_bot(request):
-    """Restart the Discord bot"""
-    try:
-        from .models import DiscordBotConfig
-        
-        config = DiscordBotConfig.objects.first()
-        if not config:
-            return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        # In a real implementation, you would:
-        # 1. Stop the bot process
-        # 2. Start the bot process again
-        # 3. Update the bot status
-        
-        return Response({
-            'message': 'Bot restart command sent successfully',
-            'status': 'success'
-        })
-        
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_party_configuration(request, event_id):

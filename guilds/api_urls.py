@@ -44,5 +44,4 @@ urlpatterns = [
     path('discord-bot-config/test/', api_views.test_discord_bot_connection, name='test_discord_bot_connection'),
     path('discord-bot-config/start/', api_views.start_discord_bot, name='start_discord_bot'),
     path('discord-bot-config/stop/', api_views.stop_discord_bot, name='stop_discord_bot'),
-    path('discord-bot-config/restart/', api_views.restart_discord_bot, name='restart_discord_bot'),
 ]
