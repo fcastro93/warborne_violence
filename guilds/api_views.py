@@ -892,6 +892,7 @@ def event_detail(request, event_id):
             parties_data.append({
                 'id': party.id,
                 'party_number': party.party_number,
+                'party_name': party.party_name,
                 'max_members': party.max_members,
                 'member_count': party.member_count,
                 'members': members_data,
@@ -1732,6 +1733,7 @@ def event_parties(request, event_id):
             parties_data.append({
                 'id': party.id,
                 'party_number': party.party_number,
+                'party_name': party.party_name,
                 'max_members': party.max_members,
                 'member_count': len(members_data),
                 'members': members_data,
@@ -2207,6 +2209,7 @@ def create_party(request, event_id):
             'party': {
                 'id': party.id,
                 'party_number': party.party_number,
+                'party_name': party.party_name,
                 'max_members': party.max_members,
                 'member_count': 0
             }
