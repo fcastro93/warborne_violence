@@ -37,4 +37,6 @@ urlpatterns = [
     path('events/<int:event_id>/parties/', api_views.event_parties, name='event_parties'),
     path('events/<int:event_id>/remove-participant/', api_views.remove_participant, name='remove_participant'),
     path('events/<int:event_id>/fill-parties/', api_views.fill_parties, name='fill_parties'),
+    path('events/<int:event_id>/party-configuration/', api_views.get_party_configuration, name='get_party_configuration'),
+    path('events/<int:event_id>/save-party-configuration/', api_views.save_party_configuration, name='save_party_configuration'),
 ]

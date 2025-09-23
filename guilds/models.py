@@ -620,6 +620,60 @@ class PartyMember(models.Model):
         ordering = ['assigned_at']
         verbose_name = "Party Member"
         verbose_name_plural = "Party Members"
+
+class EventPartyConfiguration(models.Model):
+    """Model for storing party configuration settings per event"""
+    event = models.OneToOneField(Event, on_delete=models.CASCADE, related_name='party_configuration')
+    
+    # Role composition settings
+    tank_count = models.IntegerField(default=0, help_text="Number of tanks per party (0 = filler)")
+    healer_count = models.IntegerField(default=2, help_text="Number of healers per party (0 = filler)")
+    ranged_dps_count = models.IntegerField(default=0, help_text="Number of ranged DPS per party (0 = filler)")
+    melee_dps_count = models.IntegerField(default=0, help_text="Number of melee DPS per party (0 = filler)")
+    defensive_tank_count = models.IntegerField(default=2, help_text="Number of defensive tanks per party (0 = filler)")
+    offensive_tank_count = models.IntegerField(default=2, help_text="Number of offensive tanks per party (0 = filler)")
+    offensive_support_count = models.IntegerField(default=0, help_text="Number of offensive support per party (0 = filler)")
+    defensive_support_count = models.IntegerField(default=0, help_text="Number of defensive support per party (0 = filler)")
+    
+    # Guild split setting
+    guild_split = models.BooleanField(default=False, help_text="Whether to create separate parties for each guild")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Event Party Configuration"
+        verbose_name_plural = "Event Party Configurations"
+    
+    def to_dict(self):
+        """Convert configuration to dictionary format"""
+        return {
+            'roleComposition': {
+                'tank': self.tank_count,
+                'healer': self.healer_count,
+                'ranged_dps': self.ranged_dps_count,
+                'melee_dps': self.melee_dps_count,
+                'defensive_tank': self.defensive_tank_count,
+                'offensive_tank': self.offensive_tank_count,
+                'offensive_support': self.offensive_support_count,
+                'defensive_support': self.defensive_support_count,
+            },
+            'guildSplit': self.guild_split
+        }
+    
+    @classmethod
+    def get_or_create_default(cls, event):
+        """Get existing configuration or create with default values"""
+        config, created = cls.objects.get_or_create(
+            event=event,
+            defaults={
+                'healer_count': 2,
+                'defensive_tank_count': 2,
+                'offensive_tank_count': 2,
+                'guild_split': False
+            }
+        )
+        return config
     
     def __str__(self):
         return f"{self.player.in_game_name} - {self.party}"

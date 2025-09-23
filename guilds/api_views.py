@@ -1258,20 +1258,39 @@ def create_parties(request, event_id):
         # Clear existing parties for this event
         Party.objects.filter(event=event).delete()
         
-        # Get party configuration from request
-        party_config = request.data.get('partyConfig', {})
-        role_composition = party_config.get('roleComposition', {})
-        guild_split = party_config.get('guildSplit', False)
+        # Get party configuration from database or request
+        from .models import EventPartyConfiguration
+        config = EventPartyConfiguration.get_or_create_default(event)
         
-        # Use custom role requirements or default ones
+        # Use saved configuration or fallback to request data
+        party_config = request.data.get('partyConfig', {})
+        if party_config:
+            # Update configuration if provided in request
+            role_composition = party_config.get('roleComposition', {})
+            guild_split = party_config.get('guildSplit', False)
+        else:
+            # Use saved configuration from database
+            role_composition = {
+                'tank': config.tank_count,
+                'healer': config.healer_count,
+                'ranged_dps': config.ranged_dps_count,
+                'melee_dps': config.melee_dps_count,
+                'defensive_tank': config.defensive_tank_count,
+                'offensive_tank': config.offensive_tank_count,
+                'offensive_support': config.offensive_support_count,
+                'defensive_support': config.defensive_support_count,
+            }
+            guild_split = config.guild_split
+        
+        # Use role requirements from configuration
         ROLE_REQUIREMENTS = {
-            'tank': role_composition.get('tank', 4),
+            'tank': role_composition.get('tank', 0),
             'healer': role_composition.get('healer', 2),
-            'ranged_dps': role_composition.get('ranged_dps', 3),
-            'melee_dps': role_composition.get('melee_dps', 3),
-            'defensive_tank': role_composition.get('defensive_tank', 1),
-            'offensive_tank': role_composition.get('offensive_tank', 1),
-            'offensive_support': role_composition.get('offensive_support', 1),
+            'ranged_dps': role_composition.get('ranged_dps', 0),
+            'melee_dps': role_composition.get('melee_dps', 0),
+            'defensive_tank': role_composition.get('defensive_tank', 2),
+            'offensive_tank': role_composition.get('offensive_tank', 2),
+            'offensive_support': role_composition.get('offensive_support', 0),
             'defensive_support': role_composition.get('defensive_support', 0),
         }
         
@@ -1870,3 +1889,66 @@ def fill_parties_for_guild(parties, participants, role_composition):
                 members_assigned += 1
     
     return members_assigned
+
+@api_view(['GET'])
+def get_party_configuration(request, event_id):
+    """Get party configuration for an event"""
+    try:
+        from .models import Event, EventPartyConfiguration
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get or create configuration
+        config = EventPartyConfiguration.get_or_create_default(event)
+        
+        return Response({
+            'configuration': config.to_dict()
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def save_party_configuration(request, event_id):
+    """Save party configuration for an event"""
+    try:
+        from .models import Event, EventPartyConfiguration
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get configuration data
+        data = request.data
+        role_composition = data.get('roleComposition', {})
+        guild_split = data.get('guildSplit', False)
+        
+        # Get or create configuration
+        config = EventPartyConfiguration.get_or_create_default(event)
+        
+        # Update configuration
+        config.tank_count = role_composition.get('tank', 0)
+        config.healer_count = role_composition.get('healer', 2)
+        config.ranged_dps_count = role_composition.get('ranged_dps', 0)
+        config.melee_dps_count = role_composition.get('melee_dps', 0)
+        config.defensive_tank_count = role_composition.get('defensive_tank', 2)
+        config.offensive_tank_count = role_composition.get('offensive_tank', 2)
+        config.offensive_support_count = role_composition.get('offensive_support', 0)
+        config.defensive_support_count = role_composition.get('defensive_support', 0)
+        config.guild_split = guild_split
+        
+        config.save()
+        
+        return Response({
+            'message': 'Party configuration saved successfully',
+            'configuration': config.to_dict()
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
