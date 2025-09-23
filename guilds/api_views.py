@@ -2217,6 +2217,16 @@ def add_member_to_party(request, event_id, party_id):
         if existing_member:
             return Response({'error': 'Participant is already in this party'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Remove participant from any other parties first
+        other_party_members = PartyMember.objects.filter(
+            event_participant=participant,
+            is_active=True
+        ).exclude(party=party)
+        
+        for other_member in other_party_members:
+            other_member.is_active = False
+            other_member.save()
+        
         # Add member to party
         party_member = PartyMember.objects.create(
             party=party,
