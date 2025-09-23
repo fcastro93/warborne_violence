@@ -92,17 +92,43 @@ def gear_overview(request):
         for item in GearItem.objects.all()[:5]:  # Limit to 5
             gear_items.append({
                 'id': item.id,
-                'name': item.name,
+                'name': item.base_name,
                 'skill': item.skill_name or 'Unknown Skill',
-                'type': item.gear_type.name if item.gear_type else 'Unknown',
+                'type': item.gear_type.category if item.gear_type else 'Unknown',
                 'rarity': item.rarity or 'common',
                 'stats': {
                     'damage': getattr(item, 'damage', 0),
                     'defense': getattr(item, 'defense', 0),
-                    'health': getattr(item, 'health', 0)
+                    'health': getattr(item, 'health_bonus', 0)
                 },
                 'equipped': getattr(item, 'is_equipped', False),
-                'owner': item.owner.name if item.owner else 'Unknown'
+                'owner': 'Guild'  # Gear items belong to the guild
+            })
+        
+        return Response({'gear_items': gear_items})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def gear_items(request):
+    """Get all gear items for loadout page"""
+    try:
+        gear_items = []
+        for item in GearItem.objects.select_related('gear_type').all():
+            gear_items.append({
+                'id': item.id,
+                'base_name': item.base_name,
+                'skill_name': item.skill_name,
+                'rarity': item.rarity,
+                'damage': item.damage,
+                'defense': item.defense,
+                'health_bonus': item.health_bonus,
+                'energy_bonus': item.energy_bonus,
+                'description': item.description,
+                'gear_type': {
+                    'id': item.gear_type.id if item.gear_type else None,
+                    'category': item.gear_type.category if item.gear_type else 'unknown'
+                }
             })
         
         return Response({'gear_items': gear_items})
