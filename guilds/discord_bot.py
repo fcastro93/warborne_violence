@@ -563,14 +563,8 @@ class CommandMenuView(discord.ui.View):
             
             embed.add_field(
                 name="📅 Date & Time",
-                value=f"{event.discord_timestamp}\n{event.discord_timestamp_relative}\n**Timezone:** {event.timezone}",
+                value=f"{event.discord_timestamp}",
                 inline=False
-            )
-            
-            embed.add_field(
-                name="👤 Created by",
-                value=f"<@{event.created_by_discord_id}>",
-                inline=True
             )
             
             if event.max_participants:
@@ -853,12 +847,6 @@ class WarborneBot(commands.Bot):
                 inline=True
             )
             
-            embed.add_field(
-                name="👤 Created by",
-                value=event_data['created_by_discord_name'],
-                inline=True
-            )
-            
             if event_data['description']:
                 embed.add_field(
                     name="📝 Description",
@@ -874,18 +862,6 @@ class WarborneBot(commands.Bot):
             embed.add_field(
                 name="👥 Participants",
                 value=participants_text,
-                inline=True
-            )
-            
-            embed.add_field(
-                name="⏰ Relative Time",
-                value=event_data['discord_timestamp_relative'],
-                inline=True
-            )
-            
-            embed.add_field(
-                name="🌍 Timezone",
-                value=event_data['timezone'],
                 inline=True
             )
             
