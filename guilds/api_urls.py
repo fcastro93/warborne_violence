@@ -13,6 +13,7 @@ urlpatterns = [
     # Player Loadout API endpoints
     path('player/<int:player_id>/', api_views.player_detail, name='player_detail'),
     path('player/<int:player_id>/drifters/', api_views.player_drifters, name='player_drifters'),
+    path('player/<int:player_id>/update-drifter/', api_views.update_player_drifter, name='update_player_drifter'),
     path('player/<int:player_id>/equipped-gear/', api_views.player_equipped_gear, name='player_equipped_gear'),
     path('player/<int:player_id>/equip-gear/', api_views.equip_gear, name='equip_gear'),
     path('player/<int:player_id>/unequip-gear/', api_views.unequip_gear, name='unequip_gear'),
