@@ -135,7 +135,7 @@ def guild_members(request):
     """Get guild members list"""
     try:
         members = []
-        for player in Player.objects.all()[:10]:  # Limit to 10 for now
+        for player in Player.objects.select_related('guild').all():
             # Get drifters from the three drifter fields
             drifters = []
             if player.drifter_1:
@@ -148,13 +148,18 @@ def guild_members(request):
             members.append({
                 'id': player.id,
                 'name': player.in_game_name,
+                'discord_name': player.discord_name,
                 'role': player.role,
                 'game_role': player.game_role,
                 'faction': player.faction,
                 'level': player.character_level,
                 'status': 'Online' if player.is_active else 'Offline',
                 'avatar': player.in_game_name[:2].upper() if player.in_game_name else 'XX',
-                'drifters': drifters
+                'drifters': drifters,
+                'guild': {
+                    'id': player.guild.id if player.guild else None,
+                    'name': player.guild.name if player.guild else None
+                }
             })
         
         return Response({'members': members})
@@ -2227,13 +2232,27 @@ def add_member_to_party(request, event_id, party_id):
             other_member.is_active = False
             other_member.save()
         
-        # Add member to party
-        party_member = PartyMember.objects.create(
+        # Check if there's an inactive PartyMember for this party/participant combination
+        inactive_member = PartyMember.objects.filter(
             party=party,
             event_participant=participant,
-            player=participant.player,
-            assigned_role=assigned_role or participant.player.game_role if participant.player else None
-        )
+            is_active=False
+        ).first()
+        
+        if inactive_member:
+            # Reactivate the existing record
+            inactive_member.is_active = True
+            inactive_member.assigned_role = assigned_role or participant.player.game_role if participant.player else inactive_member.assigned_role
+            inactive_member.save()
+            party_member = inactive_member
+        else:
+            # Create new PartyMember record
+            party_member = PartyMember.objects.create(
+                party=party,
+                event_participant=participant,
+                player=participant.player,
+                assigned_role=assigned_role or participant.player.game_role if participant.player else None
+            )
         
         return Response({
             'message': 'Member added to party successfully',
@@ -2283,6 +2302,74 @@ def remove_member_from_party(request, event_id, party_id):
             })
         except PartyMember.DoesNotExist:
             return Response({'error': 'Party member not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['DELETE'])
+def delete_party(request, event_id, party_id):
+    """Delete a party (soft delete)"""
+    try:
+        from .models import Event, Party
+        
+        # Get the event and party
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+            party = Party.objects.get(id=party_id, event=event, is_active=True)
+        except (Event.DoesNotExist, Party.DoesNotExist):
+            return Response({'error': 'Event or party not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Soft delete the party
+        party.is_active = False
+        party.save()
+        
+        # Also deactivate all party members
+        party.members.filter(is_active=True).update(is_active=False)
+        
+        return Response({
+            'message': 'Party deleted successfully',
+            'party_id': party.id
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PUT'])
+def update_party_name(request, event_id, party_id):
+    """Update party name and settings"""
+    try:
+        from .models import Event, Party
+        
+        # Get the event and party
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+            party = Party.objects.get(id=party_id, event=event, is_active=True)
+        except (Event.DoesNotExist, Party.DoesNotExist):
+            return Response({'error': 'Event or party not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        data = request.data
+        
+        # Update party fields
+        if 'party_name' in data:
+            party.party_name = data['party_name']
+        if 'max_members' in data:
+            max_members = int(data['max_members'])
+            if max_members < party.member_count:
+                return Response({'error': 'Cannot set max members below current member count'}, status=status.HTTP_400_BAD_REQUEST)
+            party.max_members = max_members
+        
+        party.save()
+        
+        return Response({
+            'message': 'Party updated successfully',
+            'party': {
+                'id': party.id,
+                'party_number': party.party_number,
+                'party_name': party.party_name,
+                'max_members': party.max_members,
+                'member_count': party.member_count
+            }
+        })
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
