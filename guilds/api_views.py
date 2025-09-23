@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import datetime
+import pytz
 from .models import Guild, Player, Drifter, Event, EventParticipant, Party, PartyMember, GearItem, GearType, RecommendedBuild, PlayerGear
 import json
 
@@ -818,12 +819,13 @@ def events_list(request):
                 'description': event.description or '',
                 'event_type': event.event_type,
                 'event_type_display': event.get_event_type_display(),
-                'event_datetime': event.event_datetime.isoformat(),
+                'event_datetime': event.event_datetime.isoformat() + 'Z',
                 'timezone': event.timezone,
                 'max_participants': event.max_participants,
                 'participant_count': participant_count,
                 'created_by_discord_name': event.created_by_discord_name,
-                'created_at': event.created_at.isoformat(),
+                'created_at': event.created_at.isoformat() + 'Z',
+                'discord_epoch': event.discord_epoch,
                 'discord_timestamp': event.discord_timestamp,
                 'discord_timestamp_relative': event.discord_timestamp_relative,
                 'is_active': event.is_active,
@@ -920,7 +922,7 @@ def event_detail(request, event_id):
 
 @api_view(['POST'])
 def create_event(request):
-    """Create a new event"""
+    """Create a new event with proper timezone handling"""
     try:
         data = request.data
         
@@ -929,12 +931,32 @@ def create_event(request):
             return Response({'error': 'Title is required'}, status=status.HTTP_400_BAD_REQUEST)
         if not data.get('event_datetime'):
             return Response({'error': 'Event datetime is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('timezone'):
+            return Response({'error': 'Timezone is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Parse datetime
+        # Validate timezone
+        timezone_str = data['timezone']
         try:
-            event_datetime = datetime.fromisoformat(data['event_datetime'].replace('Z', '+00:00'))
+            user_tz = pytz.timezone(timezone_str)
+        except pytz.exceptions.UnknownTimeZoneError:
+            return Response({'error': f'Invalid timezone: {timezone_str}'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Parse local datetime
+        try:
+            local_datetime_str = data['event_datetime']
+            # Parse as naive datetime first
+            local_dt = datetime.fromisoformat(local_datetime_str.replace('Z', ''))
         except ValueError:
-            return Response({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Invalid datetime format. Use YYYY-MM-DDTHH:MM format'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Convert local datetime to UTC
+        try:
+            # Localize to user's timezone
+            local_dt_aware = user_tz.localize(local_dt)
+            # Convert to UTC
+            utc_dt = local_dt_aware.astimezone(pytz.UTC)
+        except (pytz.exceptions.AmbiguousTimeError, pytz.exceptions.NonExistentTimeError) as e:
+            return Response({'error': f'Invalid local time due to DST transition: {str(e)}. Please choose a different time.'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Validate max participants
         max_participants = None
@@ -951,8 +973,8 @@ def create_event(request):
             title=data['title'],
             description=data.get('description', ''),
             event_type=data.get('event_type', 'other'),
-            event_datetime=event_datetime,
-            timezone=data.get('timezone', 'UTC'),
+            event_datetime=utc_dt,
+            timezone=timezone_str,
             max_participants=max_participants,
             created_by_discord_id=data.get('created_by_discord_id', 0),
             created_by_discord_name=data.get('created_by_discord_name', 'Web User')
@@ -966,11 +988,14 @@ def create_event(request):
                 'title': event.title,
                 'description': event.description,
                 'event_type': event.event_type,
-                'event_datetime': event.event_datetime.isoformat(),
+                'event_datetime': event.event_datetime.isoformat() + 'Z',
                 'timezone': event.timezone,
                 'max_participants': event.max_participants,
                 'created_by_discord_name': event.created_by_discord_name,
-                'created_at': event.created_at.isoformat()
+                'created_at': event.created_at.isoformat() + 'Z',
+                'discord_epoch': event.discord_epoch,
+                'discord_timestamp': event.discord_timestamp,
+                'discord_timestamp_relative': event.discord_timestamp_relative
             }
         }, status=status.HTTP_201_CREATED)
         

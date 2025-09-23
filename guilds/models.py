@@ -493,8 +493,8 @@ class Event(models.Model):
     created_by_discord_name = models.CharField(max_length=100, help_text="Discord username of event creator")
     
     # Event scheduling
-    event_datetime = models.DateTimeField(help_text="When the event will take place")
-    timezone = models.CharField(max_length=50, default='UTC', help_text="Timezone for the event")
+    event_datetime = models.DateTimeField(help_text="When the event will take place (UTC)")
+    timezone = models.CharField(max_length=50, default='UTC', help_text="IANA timezone name (e.g., 'America/New_York')")
     
     # Event management
     max_participants = models.IntegerField(null=True, blank=True, help_text="Maximum number of participants (null = unlimited)")
@@ -523,18 +523,27 @@ class Event(models.Model):
         return self.participants.filter(is_active=True).count()
     
     @property
+    def discord_epoch(self):
+        """Get Unix epoch timestamp for Discord timestamps"""
+        import calendar
+        # Ensure we have a timezone-aware datetime
+        if self.event_datetime.tzinfo is None:
+            # If naive, assume UTC
+            from django.utils import timezone
+            dt = timezone.make_aware(self.event_datetime, timezone.utc)
+        else:
+            dt = self.event_datetime
+        return int(dt.timestamp())
+    
+    @property
     def discord_timestamp(self):
         """Generate Discord timestamp for the event datetime"""
-        import calendar
-        timestamp = calendar.timegm(self.event_datetime.timetuple())
-        return f"<t:{timestamp}:F>"  # Full date and time format
+        return f"<t:{self.discord_epoch}:F>"  # Full date and time format
     
     @property
     def discord_timestamp_relative(self):
         """Generate Discord relative timestamp for the event datetime"""
-        import calendar
-        timestamp = calendar.timegm(self.event_datetime.timetuple())
-        return f"<t:{timestamp}:R>"  # Relative time format
+        return f"<t:{self.discord_epoch}:R>"  # Relative time format
 
 
 class EventParticipant(models.Model):

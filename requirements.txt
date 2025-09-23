@@ -31,3 +31,6 @@ django-cors-headers==4.3.1
 
 # REST Framework
 djangorestframework==3.14.0
+
+# Timezone handling
+pytz==2023.3
