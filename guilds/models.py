@@ -674,7 +674,7 @@ class EventPartyConfiguration(models.Model):
         return config
     
     def __str__(self):
-        return f"{self.player.in_game_name} - {self.party}"
+        return f"Party Configuration for {self.event.title}"
 
 
 class RecommendedBuild(models.Model):
