@@ -1091,9 +1091,10 @@ def join_event(request, event_id):
         data = request.data
         discord_user_id = data.get('discord_user_id')
         discord_name = data.get('discord_name')
+        assigned_role = data.get('assigned_role')
         
-        if not discord_user_id or not discord_name:
-            return Response({'error': 'Discord user ID and name are required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not discord_name:
+            return Response({'error': 'Discord name is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         event = Event.objects.get(id=event_id)
         
@@ -1107,11 +1108,17 @@ def join_event(request, event_id):
             if current_participants >= event.max_participants:
                 return Response({'error': 'Event is full'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Check if already participating
-        existing_participant = EventParticipant.objects.filter(
-            event=event,
-            discord_user_id=discord_user_id
-        ).first()
+        # Check if already participating (by discord_name if no discord_user_id)
+        if discord_user_id:
+            existing_participant = EventParticipant.objects.filter(
+                event=event,
+                discord_user_id=discord_user_id
+            ).first()
+        else:
+            existing_participant = EventParticipant.objects.filter(
+                event=event,
+                discord_name=discord_name
+            ).first()
         
         if existing_participant:
             if existing_participant.is_active:
@@ -1120,11 +1127,15 @@ def join_event(request, event_id):
                 # Reactivate participation
                 existing_participant.is_active = True
                 existing_participant.discord_name = discord_name
+                existing_participant.discord_user_id = discord_user_id
                 existing_participant.save()
                 participant = existing_participant
         else:
             # Get player if exists
-            player = Player.objects.filter(discord_user_id=discord_user_id).first()
+            if discord_user_id:
+                player = Player.objects.filter(discord_user_id=discord_user_id).first()
+            else:
+                player = Player.objects.filter(discord_name=discord_name).first()
             
             # Create new participant
             participant = EventParticipant.objects.create(
