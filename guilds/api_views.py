@@ -2201,6 +2201,7 @@ def create_party(request, event_id):
         party = Party.objects.create(
             event=event,
             party_number=next_party_number,
+            party_name=party_name,
             max_members=max_members
         )
         
