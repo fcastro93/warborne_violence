@@ -168,12 +168,12 @@ def recent_events(request):
         for event in Event.objects.all()[:5]:  # Limit to 5
             events.append({
                 'id': event.id,
-                'title': event.name,
+                'title': event.title,
                 'type': event.event_type,
-                'participants': event.participants.count(),
-                'status': event.status,
-                'time': event.start_time.strftime('%Y-%m-%d %H:%M') if event.start_time else 'TBD',
-                'organizer': event.organizer.name if event.organizer else 'Unknown'
+                'participants': event.participant_count,
+                'status': 'active' if event.is_active and not event.is_cancelled else 'cancelled',
+                'time': event.event_datetime.strftime('%Y-%m-%d %H:%M') if event.event_datetime else 'TBD',
+                'organizer': event.created_by_discord_name
             })
         
         return Response({'events': events})
