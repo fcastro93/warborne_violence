@@ -21,4 +21,13 @@ urlpatterns = [
     path('player/<int:player_id>/equipped-gear/', api_views.player_equipped_gear, name='player_equipped_gear'),
     path('player/<int:player_id>/equip-gear/', api_views.equip_gear, name='equip_gear'),
     path('player/<int:player_id>/unequip-gear/', api_views.unequip_gear, name='unequip_gear'),
+    
+    # Event Management API endpoints
+    path('events/', api_views.events_list, name='events_list'),
+    path('events/<int:event_id>/', api_views.event_detail, name='event_detail'),
+    path('events/create/', api_views.create_event, name='create_event'),
+    path('events/<int:event_id>/update/', api_views.update_event, name='update_event'),
+    path('events/<int:event_id>/delete/', api_views.delete_event, name='delete_event'),
+    path('events/<int:event_id>/join/', api_views.join_event, name='join_event'),
+    path('events/<int:event_id>/leave/', api_views.leave_event, name='leave_event'),
 ]

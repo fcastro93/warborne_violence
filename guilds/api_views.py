@@ -2,7 +2,9 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.http import JsonResponse
-from .models import Guild, Player, Drifter, Event, GearItem, GearType, RecommendedBuild, PlayerGear
+from django.utils import timezone
+from datetime import datetime
+from .models import Guild, Player, Drifter, Event, EventParticipant, Party, PartyMember, GearItem, GearType, RecommendedBuild, PlayerGear
 import json
 
 @api_view(['POST'])
@@ -792,5 +794,362 @@ def unequip_gear(request, player_id):
         return Response({'error': 'Player not found'}, status=status.HTTP_404_NOT_FOUND)
     except PlayerGear.DoesNotExist:
         return Response({'error': 'Equipped gear not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Event Management API endpoints
+@api_view(['GET'])
+def events_list(request):
+    """Get all events with participant counts"""
+    try:
+        events = Event.objects.filter(is_active=True, is_cancelled=False).order_by('-event_datetime')
+        
+        events_data = []
+        for event in events:
+            participant_count = EventParticipant.objects.filter(
+                event=event, 
+                is_active=True
+            ).count()
+            
+            events_data.append({
+                'id': event.id,
+                'title': event.title,
+                'description': event.description or '',
+                'event_type': event.event_type,
+                'event_type_display': event.get_event_type_display(),
+                'event_datetime': event.event_datetime.isoformat(),
+                'timezone': event.timezone,
+                'max_participants': event.max_participants,
+                'participant_count': participant_count,
+                'created_by_discord_name': event.created_by_discord_name,
+                'created_at': event.created_at.isoformat(),
+                'discord_timestamp': event.discord_timestamp,
+                'discord_timestamp_relative': event.discord_timestamp_relative,
+                'is_active': event.is_active,
+                'is_cancelled': event.is_cancelled
+            })
+        
+        return Response({'events': events_data})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def event_detail(request, event_id):
+    """Get detailed information about a specific event"""
+    try:
+        event = Event.objects.get(id=event_id)
+        
+        # Get participants
+        participants = EventParticipant.objects.filter(
+            event=event, 
+            is_active=True
+        ).select_related('player')
+        
+        participants_data = []
+        for participant in participants:
+            participants_data.append({
+                'id': participant.id,
+                'discord_name': participant.discord_name,
+                'discord_user_id': participant.discord_user_id,
+                'player': {
+                    'id': participant.player.id,
+                    'in_game_name': participant.player.in_game_name,
+                    'game_role': participant.player.game_role,
+                    'faction': participant.player.faction
+                } if participant.player else None,
+                'joined_at': participant.joined_at.isoformat(),
+                'notes': participant.notes or ''
+            })
+        
+        # Get parties
+        parties = Party.objects.filter(event=event, is_active=True).order_by('party_number')
+        parties_data = []
+        for party in parties:
+            party_members = PartyMember.objects.filter(
+                party=party,
+                is_active=True
+            ).select_related('player', 'event_participant')
+            
+            members_data = []
+            for member in party_members:
+                members_data.append({
+                    'id': member.id,
+                    'player_name': member.player.in_game_name,
+                    'discord_name': member.event_participant.discord_name,
+                    'assigned_role': member.assigned_role,
+                    'assigned_at': member.assigned_at.isoformat()
+                })
+            
+            parties_data.append({
+                'id': party.id,
+                'party_number': party.party_number,
+                'max_members': party.max_members,
+                'member_count': party.member_count,
+                'members': members_data,
+                'created_at': party.created_at.isoformat()
+            })
+        
+        event_data = {
+            'id': event.id,
+            'title': event.title,
+            'description': event.description or '',
+            'event_type': event.event_type,
+            'event_type_display': event.get_event_type_display(),
+            'event_datetime': event.event_datetime.isoformat(),
+            'timezone': event.timezone,
+            'max_participants': event.max_participants,
+            'participant_count': len(participants_data),
+            'participants': participants_data,
+            'parties': parties_data,
+            'created_by_discord_name': event.created_by_discord_name,
+            'created_at': event.created_at.isoformat(),
+            'discord_timestamp': event.discord_timestamp,
+            'discord_timestamp_relative': event.discord_timestamp_relative,
+            'is_active': event.is_active,
+            'is_cancelled': event.is_cancelled
+        }
+        
+        return Response(event_data)
+    except Event.DoesNotExist:
+        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def create_event(request):
+    """Create a new event"""
+    try:
+        data = request.data
+        
+        # Validate required fields
+        if not data.get('title'):
+            return Response({'error': 'Title is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('event_datetime'):
+            return Response({'error': 'Event datetime is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Parse datetime
+        try:
+            event_datetime = datetime.fromisoformat(data['event_datetime'].replace('Z', '+00:00'))
+        except ValueError:
+            return Response({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate max participants
+        max_participants = None
+        if data.get('max_participants'):
+            try:
+                max_participants = int(data['max_participants'])
+                if max_participants <= 0:
+                    raise ValueError()
+            except ValueError:
+                return Response({'error': 'Max participants must be a positive number'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create event
+        event = Event.objects.create(
+            title=data['title'],
+            description=data.get('description', ''),
+            event_type=data.get('event_type', 'other'),
+            event_datetime=event_datetime,
+            timezone=data.get('timezone', 'UTC'),
+            max_participants=max_participants,
+            created_by_discord_id=data.get('created_by_discord_id', 0),
+            created_by_discord_name=data.get('created_by_discord_name', 'Web User')
+        )
+        
+        return Response({
+            'id': event.id,
+            'message': 'Event created successfully',
+            'event': {
+                'id': event.id,
+                'title': event.title,
+                'description': event.description,
+                'event_type': event.event_type,
+                'event_datetime': event.event_datetime.isoformat(),
+                'timezone': event.timezone,
+                'max_participants': event.max_participants,
+                'created_by_discord_name': event.created_by_discord_name,
+                'created_at': event.created_at.isoformat()
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['PUT'])
+def update_event(request, event_id):
+    """Update an existing event"""
+    try:
+        event = Event.objects.get(id=event_id)
+        data = request.data
+        
+        # Update fields if provided
+        if 'title' in data:
+            event.title = data['title']
+        if 'description' in data:
+            event.description = data['description']
+        if 'event_type' in data:
+            event.event_type = data['event_type']
+        if 'event_datetime' in data:
+            try:
+                event.event_datetime = datetime.fromisoformat(data['event_datetime'].replace('Z', '+00:00'))
+            except ValueError:
+                return Response({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
+        if 'timezone' in data:
+            event.timezone = data['timezone']
+        if 'max_participants' in data:
+            if data['max_participants'] is None:
+                event.max_participants = None
+            else:
+                try:
+                    event.max_participants = int(data['max_participants'])
+                    if event.max_participants <= 0:
+                        raise ValueError()
+                except ValueError:
+                    return Response({'error': 'Max participants must be a positive number'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        event.save()
+        
+        return Response({
+            'message': 'Event updated successfully',
+            'event': {
+                'id': event.id,
+                'title': event.title,
+                'description': event.description,
+                'event_type': event.event_type,
+                'event_datetime': event.event_datetime.isoformat(),
+                'timezone': event.timezone,
+                'max_participants': event.max_participants,
+                'updated_at': event.updated_at.isoformat()
+            }
+        })
+        
+    except Event.DoesNotExist:
+        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+def delete_event(request, event_id):
+    """Delete/cancel an event"""
+    try:
+        event = Event.objects.get(id=event_id)
+        
+        # Instead of deleting, mark as cancelled
+        event.is_cancelled = True
+        event.is_active = False
+        event.save()
+        
+        return Response({
+            'message': 'Event cancelled successfully',
+            'event_id': event.id
+        })
+        
+    except Event.DoesNotExist:
+        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def join_event(request, event_id):
+    """Join an event as a participant"""
+    try:
+        data = request.data
+        discord_user_id = data.get('discord_user_id')
+        discord_name = data.get('discord_name')
+        
+        if not discord_user_id or not discord_name:
+            return Response({'error': 'Discord user ID and name are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        event = Event.objects.get(id=event_id)
+        
+        # Check if event is still active
+        if not event.is_active or event.is_cancelled:
+            return Response({'error': 'Event is not active'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if event is full
+        if event.max_participants:
+            current_participants = EventParticipant.objects.filter(event=event, is_active=True).count()
+            if current_participants >= event.max_participants:
+                return Response({'error': 'Event is full'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if already participating
+        existing_participant = EventParticipant.objects.filter(
+            event=event,
+            discord_user_id=discord_user_id
+        ).first()
+        
+        if existing_participant:
+            if existing_participant.is_active:
+                return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # Reactivate participation
+                existing_participant.is_active = True
+                existing_participant.discord_name = discord_name
+                existing_participant.save()
+                participant = existing_participant
+        else:
+            # Get player if exists
+            player = Player.objects.filter(discord_user_id=discord_user_id).first()
+            
+            # Create new participant
+            participant = EventParticipant.objects.create(
+                event=event,
+                discord_user_id=discord_user_id,
+                discord_name=discord_name,
+                player=player
+            )
+        
+        return Response({
+            'message': 'Successfully joined event',
+            'participant': {
+                'id': participant.id,
+                'discord_name': participant.discord_name,
+                'joined_at': participant.joined_at.isoformat()
+            }
+        })
+        
+    except Event.DoesNotExist:
+        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def leave_event(request, event_id):
+    """Leave an event"""
+    try:
+        data = request.data
+        discord_user_id = data.get('discord_user_id')
+        
+        if not discord_user_id:
+            return Response({'error': 'Discord user ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        event = Event.objects.get(id=event_id)
+        
+        participant = EventParticipant.objects.filter(
+            event=event,
+            discord_user_id=discord_user_id,
+            is_active=True
+        ).first()
+        
+        if not participant:
+            return Response({'error': 'Not participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Deactivate participation
+        participant.is_active = False
+        participant.save()
+        
+        return Response({
+            'message': 'Successfully left event',
+            'participant_id': participant.id
+        })
+        
+    except Event.DoesNotExist:
+        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
