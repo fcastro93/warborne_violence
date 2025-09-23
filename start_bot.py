@@ -8,6 +8,10 @@ import os
 import sys
 import django
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add the project directory to Python path
 project_dir = Path(__file__).parent
