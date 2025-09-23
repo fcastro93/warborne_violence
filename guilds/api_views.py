@@ -745,12 +745,12 @@ def equip_gear(request, player_id):
                 return Response({'error': 'All mod slots are full'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             # For other gear types, unequip any gear in the same slot
-            PlayerGear.objects.filter(
-                player=player,
-                is_equipped=True,
-                equipped_on_drifter=drifter_num,
-                gear_item__gear_type__category=slot_type
-            ).update(is_equipped=False, equipped_on_drifter=None)
+        PlayerGear.objects.filter(
+            player=player,
+            is_equipped=True,
+            equipped_on_drifter=drifter_num,
+            gear_item__gear_type__category=slot_type
+        ).update(is_equipped=False, equipped_on_drifter=None)
         
         # Equip the new gear
         player_gear.is_equipped = True

@@ -32,9 +32,10 @@ def send_bot_command(command_type: str, data: Dict[str, Any]) -> bool:
         with open(BOT_COMMUNICATION_FILE, 'w') as f:
             json.dump(command, f, indent=2)
         
+        print(f"✅ Bot command sent: {command_type} to {BOT_COMMUNICATION_FILE}")
         return True
     except Exception as e:
-        print(f"Error sending bot command: {e}")
+        print(f"❌ Error sending bot command: {e}")
         return False
 
 def get_bot_command() -> Optional[Dict[str, Any]]:

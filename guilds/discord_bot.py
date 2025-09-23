@@ -894,7 +894,10 @@ class WarborneBot(commands.Bot):
     
     async def monitor_commands(self):
         """Monitor for commands from the API"""
+        import time
         from .bot_communication import get_bot_command, mark_command_processed, cleanup_old_commands
+        
+        print("🔍 Starting command monitoring...")
         
         while True:
             try:
@@ -905,6 +908,7 @@ class WarborneBot(commands.Bot):
                     
                     # Process the command
                     if command['command'] == 'publish_event':
+                        print(f"📢 Processing publish_event command...")
                         success, message = await self.publish_event_announcement(command['data'])
                         if success:
                             print(f"✅ Event published: {message}")
@@ -913,6 +917,11 @@ class WarborneBot(commands.Bot):
                     
                     # Mark command as processed
                     mark_command_processed()
+                    print(f"✅ Command processed and marked as complete")
+                else:
+                    # Only print every 30 seconds to avoid spam
+                    if int(time.time()) % 30 == 0:
+                        print("🔍 Monitoring for commands...")
                 
                 # Clean up old commands
                 cleanup_old_commands()
@@ -921,7 +930,7 @@ class WarborneBot(commands.Bot):
                 await asyncio.sleep(2)  # Check every 2 seconds
                 
             except Exception as e:
-                print(f"Error in command monitoring: {e}")
+                print(f"❌ Error in command monitoring: {e}")
                 await asyncio.sleep(5)  # Wait longer on error
     
     async def on_reaction_add(self, reaction, user):
