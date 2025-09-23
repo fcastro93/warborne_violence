@@ -814,8 +814,7 @@ def events_list(request):
         events_data = []
         for event in events:
             participant_count = EventParticipant.objects.filter(
-                event=event, 
-                is_active=True
+                event=event
             ).count()
             
             events_data.append({
@@ -850,8 +849,7 @@ def event_detail(request, event_id):
         
         # Get participants
         participants = EventParticipant.objects.filter(
-            event=event, 
-            is_active=True
+            event=event
         ).select_related('player')
         
         participants_data = []
@@ -1105,7 +1103,7 @@ def join_event(request, event_id):
         
         # Check if event is full
         if event.max_participants:
-            current_participants = EventParticipant.objects.filter(event=event, is_active=True).count()
+            current_participants = EventParticipant.objects.filter(event=event).count()
             if current_participants >= event.max_participants:
                 return Response({'error': 'Event is full'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1175,8 +1173,7 @@ def leave_event(request, event_id):
         
         participant = EventParticipant.objects.filter(
             event=event,
-            discord_user_id=discord_user_id,
-            is_active=True
+            discord_user_id=discord_user_id
         ).first()
         
         if not participant:
@@ -1227,8 +1224,7 @@ def publish_event(request, event_id):
         # Get participant count
         from .models import EventParticipant
         participant_count = EventParticipant.objects.filter(
-            event=event,
-            is_active=True
+            event=event
         ).count()
         logger.info(f"👥 Participant count: {participant_count}")
         
@@ -1282,10 +1278,9 @@ def create_parties(request, event_id):
         except Event.DoesNotExist:
             return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Get all active participants with their players
+        # Get all participants with their players
         participants = list(EventParticipant.objects.filter(
             event=event,
-            is_active=True,
             player__isnull=False
         ).select_related('player', 'player__guild'))
         
@@ -1524,10 +1519,9 @@ def create_guild_parties(request, event_id):
         except Event.DoesNotExist:
             return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Get all active participants with their players and guilds
+        # Get all participants with their players and guilds
         participants = list(EventParticipant.objects.filter(
             event=event,
-            is_active=True,
             player__isnull=False
         ).select_related('player', 'player__guild'))
         
@@ -1666,10 +1660,9 @@ def event_participants(request, event_id):
         except Event.DoesNotExist:
             return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Get all active participants with their players and guilds
+        # Get all participants with their players and guilds
         participants = EventParticipant.objects.filter(
             event=event,
-            is_active=True,
             player__isnull=False
         ).select_related('player', 'player__guild')
         
@@ -1820,7 +1813,6 @@ def fill_parties(request, event_id):
         
         unassigned_participants = list(EventParticipant.objects.filter(
             event=event,
-            is_active=True,
             player__isnull=False
         ).exclude(id__in=assigned_participant_ids).select_related('player', 'player__guild'))
         
