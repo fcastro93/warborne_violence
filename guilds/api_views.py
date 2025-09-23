@@ -1829,6 +1829,32 @@ def fill_parties(request, event_id):
         members_assigned = 0
         
         if guild_split:
+            # Check for mixed-guild parties before proceeding
+            mixed_guild_parties = []
+            for party in existing_parties:
+                party_guilds = set()
+                for member in party.members.filter(is_active=True):
+                    if member.player and member.player.guild:
+                        party_guilds.add(member.player.guild.name)
+                    else:
+                        party_guilds.add("No Guild")
+                
+                if len(party_guilds) > 1:
+                    mixed_guild_parties.append({
+                        'party_number': party.party_number,
+                        'party_name': party.party_name or '',
+                        'guilds': list(party_guilds)
+                    })
+            
+            # If there are mixed-guild parties, return a warning
+            if mixed_guild_parties:
+                return Response({
+                    'error': 'guild_split_conflict',
+                    'message': 'Guild splitting cannot be applied because some parties contain members from multiple guilds.',
+                    'mixed_parties': mixed_guild_parties,
+                    'suggestion': 'Either remove mixed-guild members from parties or disable guild splitting.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
             # Group unassigned participants by guild
             participants_by_guild = {}
             for participant in unassigned_participants:
