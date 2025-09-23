@@ -200,6 +200,7 @@ def player_detail(request, player_id):
             'level': player.character_level,
             'is_active': player.is_active,
             'created_at': player.created_at,
+            'guild': player.guild.name if player.guild else None,
         })
     except Player.DoesNotExist:
         return Response({'error': 'Player not found'}, status=status.HTTP_404_NOT_FOUND)
