@@ -2012,47 +2012,21 @@ def start_discord_bot(request):
     """Start the Discord bot (like Django admin action)"""
     try:
         from .models import DiscordBotConfig
-        import subprocess
-        import os
         
         config = DiscordBotConfig.objects.first()
         if not config:
             return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Check if bot is already running
-        if config.is_online:
-            return Response({'error': 'Bot is already online'}, status=status.HTTP_400_BAD_REQUEST)
+        # Use the same method as Django admin
+        success, message = config.start_bot_manually()
         
-        # Set bot as active
-        config.is_active = True
-        config.is_online = False  # Will be set to True when bot actually starts
-        config.error_message = ""
-        config.save()
-        
-        # Start the bot process (similar to Django admin action)
-        try:
-            # Get the current directory
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_dir = os.path.dirname(current_dir)
-            
-            # Start the bot process
-            bot_script = os.path.join(project_dir, 'start_bot.py')
-            if os.path.exists(bot_script):
-                subprocess.Popen(['python', bot_script], cwd=project_dir)
-            else:
-                # Fallback: start the bot directly
-                subprocess.Popen(['python', 'manage.py', 'runbot'], cwd=project_dir)
-            
+        if success:
             return Response({
-                'message': 'Bot start command sent successfully',
+                'message': message,
                 'status': 'success'
             })
-            
-        except Exception as e:
-            config.error_message = f"Failed to start bot: {str(e)}"
-            config.save()
-            return Response({'error': f'Failed to start bot: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+        else:
+            return Response({'error': message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -2061,44 +2035,21 @@ def stop_discord_bot(request):
     """Stop the Discord bot (like Django admin action)"""
     try:
         from .models import DiscordBotConfig
-        import psutil
-        import os
         
         config = DiscordBotConfig.objects.first()
         if not config:
             return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Set bot as inactive and offline
-        config.is_active = False
-        config.is_online = False
-        config.error_message = ""
-        config.save()
+        # Use the same method as Django admin
+        success, message = config.stop_bot_manually()
         
-        # Try to find and stop the bot process
-        try:
-            # Look for Python processes running the bot
-            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-                try:
-                    if proc.info['name'] == 'python' and proc.info['cmdline']:
-                        cmdline = ' '.join(proc.info['cmdline'])
-                        if 'discord_bot.py' in cmdline or 'runbot' in cmdline:
-                            proc.terminate()
-                            print(f"Stopped bot process {proc.info['pid']}")
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    continue
-                    
+        if success:
             return Response({
-                'message': 'Bot stop command sent successfully',
+                'message': message,
                 'status': 'success'
             })
-            
-        except Exception as e:
-            # Even if we can't find the process, we've marked it as inactive
-            return Response({
-                'message': 'Bot marked as inactive (process may still be running)',
-                'status': 'success'
-            })
-        
+        else:
+            return Response({'error': message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

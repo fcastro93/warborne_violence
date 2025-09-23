@@ -396,8 +396,9 @@ class DiscordBotConfig(models.Model):
                             django.setup()
                         
                         # Create and run bot
+                        import asyncio
                         bot = WarborneBot()
-                        bot.run(self.bot_token or os.getenv('DISCORD_BOT_TOKEN'))
+                        asyncio.run(bot.start(self.bot_token or os.getenv('DISCORD_BOT_TOKEN')))
                     except Exception as e:
                         print(f"Bot thread error: {e}")
                         # Update status in database

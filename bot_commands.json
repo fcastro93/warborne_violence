@@ -1,0 +1,21 @@
+{
+  "command": "publish_event",
+  "data": {
+    "event_id": 1,
+    "title": "Test Event",
+    "description": "Test Description",
+    "event_type": "other",
+    "event_type_display": "Other",
+    "event_datetime": "2025-09-23T14:29:48.203223+00:00",
+    "timezone": "UTC",
+    "participant_count": 0,
+    "max_participants": null,
+    "created_by_discord_name": "test_user",
+    "discord_epoch": 1758637788,
+    "discord_timestamp": "<t:1758637788:F>",
+    "discord_timestamp_relative": "<t:1758637788:R>",
+    "announcement_channel_id": 123456789
+  },
+  "timestamp": 1758634197.7445767,
+  "processed": false
+}
