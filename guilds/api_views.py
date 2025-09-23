@@ -1284,7 +1284,6 @@ def create_parties(request, event_id):
         
         # Use role requirements from configuration
         ROLE_REQUIREMENTS = {
-            'tank': role_composition.get('tank', 0),
             'healer': role_composition.get('healer', 2),
             'ranged_dps': role_composition.get('ranged_dps', 0),
             'melee_dps': role_composition.get('melee_dps', 0),
@@ -1933,7 +1932,6 @@ def save_party_configuration(request, event_id):
         config = EventPartyConfiguration.get_or_create_default(event)
         
         # Update configuration
-        config.tank_count = role_composition.get('tank', 0)
         config.healer_count = role_composition.get('healer', 2)
         config.ranged_dps_count = role_composition.get('ranged_dps', 0)
         config.melee_dps_count = role_composition.get('melee_dps', 0)

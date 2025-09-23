@@ -107,7 +107,6 @@ class Player(models.Model):
     GAME_ROLE_CHOICES = [
         ('ranged_dps', 'Ranged DPS'),
         ('melee_dps', 'Melee DPS'),
-        ('tank', 'Tank'),
         ('healer', 'Healer'),
         ('defensive_tank', 'Defensive Tank'),
         ('offensive_tank', 'Offensive Tank'),
@@ -626,7 +625,6 @@ class EventPartyConfiguration(models.Model):
     event = models.OneToOneField(Event, on_delete=models.CASCADE, related_name='party_configuration')
     
     # Role composition settings
-    tank_count = models.IntegerField(default=0, help_text="Number of tanks per party (0 = filler)")
     healer_count = models.IntegerField(default=2, help_text="Number of healers per party (0 = filler)")
     ranged_dps_count = models.IntegerField(default=0, help_text="Number of ranged DPS per party (0 = filler)")
     melee_dps_count = models.IntegerField(default=0, help_text="Number of melee DPS per party (0 = filler)")
@@ -649,7 +647,6 @@ class EventPartyConfiguration(models.Model):
         """Convert configuration to dictionary format"""
         return {
             'roleComposition': {
-                'tank': self.tank_count,
                 'healer': self.healer_count,
                 'ranged_dps': self.ranged_dps_count,
                 'melee_dps': self.melee_dps_count,
