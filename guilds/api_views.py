@@ -334,13 +334,27 @@ def equip_gear(request, player_id):
         if not created and player_gear.is_equipped:
             return Response({'error': 'Gear is already equipped'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Unequip any gear in the same slot for this drifter
-        PlayerGear.objects.filter(
-            player=player,
-            is_equipped=True,
-            equipped_on_drifter=drifter_num,
-            gear_item__gear_type__category=slot_type
-        ).update(is_equipped=False, equipped_on_drifter=None)
+        # For mods, find the next available mod slot
+        if slot_type == 'mod':
+            # Get all equipped mods for this drifter
+            equipped_mods = PlayerGear.objects.filter(
+                player=player,
+                is_equipped=True,
+                equipped_on_drifter=drifter_num,
+                gear_item__gear_type__category='mod'
+            ).count()
+            
+            # Check if we have space for another mod (max 4 mods)
+            if equipped_mods >= 4:
+                return Response({'error': 'All mod slots are full'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # For other gear types, unequip any gear in the same slot
+            PlayerGear.objects.filter(
+                player=player,
+                is_equipped=True,
+                equipped_on_drifter=drifter_num,
+                gear_item__gear_type__category=slot_type
+            ).update(is_equipped=False, equipped_on_drifter=None)
         
         # Equip the new gear
         player_gear.is_equipped = True
