@@ -900,6 +900,20 @@ class WarborneBot(commands.Bot):
             # Add reaction for joining
             await message.add_reaction("✅")
             
+            # Update the event record with Discord message info
+            from asgiref.sync import sync_to_async
+            
+            @sync_to_async
+            def update_event_discord_info():
+                from .models import Event
+                event = Event.objects.get(id=event_data['event_id'])
+                event.discord_message_id = message.id
+                event.discord_channel_id = announcement_channel.id
+                event.save()
+                return event
+            
+            await update_event_discord_info()
+            
             return True, f"Event announcement posted successfully in {announcement_channel.mention}"
             
         except Exception as e:
@@ -951,133 +965,6 @@ class WarborneBot(commands.Bot):
             import traceback
             traceback.print_exc()
     
-    async def on_reaction_add(self, reaction, user):
-        """Handle when a user adds a reaction to an event announcement"""
-        if user.bot:
-            return  # Ignore bot reactions
-        
-        if reaction.emoji == "✅":
-            await self.handle_event_join(reaction, user)
-    
-    async def on_reaction_remove(self, reaction, user):
-        """Handle when a user removes a reaction from an event announcement"""
-        if user.bot:
-            return  # Ignore bot reactions
-        
-        if reaction.emoji == "✅":
-            await self.handle_event_leave(reaction, user)
-    
-    async def handle_event_join(self, reaction, user):
-        """Handle when a user joins an event"""
-        try:
-            # Get the message content to find event info
-            message = reaction.message
-            
-            # Check if this is an event announcement
-            if not message.embeds or not message.embeds[0].title.startswith("📢 NEW EVENT ANNOUNCEMENT"):
-                return
-            
-            # Extract event title from embed
-            event_title = message.embeds[0].description.replace("**", "")
-            
-            # Find the event in database
-            from .models import Event, EventParticipant, Player
-            
-            event = Event.objects.filter(
-                title=event_title,
-                is_active=True,
-                is_cancelled=False
-            ).first()
-            
-            if not event:
-                print(f"Event not found: {event_title}")
-                return
-            
-            # Find or create player
-            player = Player.objects.filter(discord_user_id=user.id).first()
-            if not player:
-                # Create a basic player entry
-                player = Player.objects.create(
-                    in_game_name=user.display_name,
-                    discord_user_id=user.id,
-                    discord_name=user.name,
-                    character_level=1,
-                    faction='none'
-                )
-            
-            # Check if already participating
-            existing_participant = EventParticipant.objects.filter(
-                event=event,
-                player=player,
-                is_active=True
-            ).first()
-            
-            if existing_participant:
-                print(f"User {user.display_name} is already participating in {event.title}")
-                return
-            
-            # Add participant
-            EventParticipant.objects.create(
-                event=event,
-                player=player,
-                is_active=True
-            )
-            
-            print(f"✅ {user.display_name} joined event: {event.title}")
-            
-            # Send confirmation DM
-            try:
-                await user.send(f"✅ You've successfully joined the event **{event.title}**!")
-            except:
-                pass  # User might have DMs disabled
-            
-        except Exception as e:
-            print(f"Error handling event join: {e}")
-    
-    async def handle_event_leave(self, reaction, user):
-        """Handle when a user leaves an event"""
-        try:
-            # Get the message content to find event info
-            message = reaction.message
-            
-            # Check if this is an event announcement
-            if not message.embeds or not message.embeds[0].title.startswith("📢 NEW EVENT ANNOUNCEMENT"):
-                return
-            
-            # Extract event title from embed
-            event_title = message.embeds[0].description.replace("**", "")
-            
-            # Find the event in database
-            from .models import Event, EventParticipant, Player
-            
-            event = Event.objects.filter(
-                title=event_title,
-                is_active=True,
-                is_cancelled=False
-            ).first()
-            
-            if not event:
-                return
-            
-            # Find player
-            player = Player.objects.filter(discord_user_id=user.id).first()
-            if not player:
-                return
-            
-            # Remove participant
-            participant = EventParticipant.objects.filter(
-                event=event,
-                player=player,
-                is_active=True
-            ).first()
-            
-            if participant:
-                participant.is_active = False
-                participant.save()
-                print(f"❌ {user.display_name} left event: {event.title}")
-            
-        except Exception as e:
-            print(f"Error handling event leave: {e}")
     
     async def monitor_bot_status(self):
         """Monitor bot status and stop if is_online becomes False"""
