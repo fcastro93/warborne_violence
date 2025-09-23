@@ -549,7 +549,7 @@ class Event(models.Model):
 class EventParticipant(models.Model):
     """Model to track event participants"""
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='participants')
-    discord_user_id = models.BigIntegerField(help_text="Discord User ID of participant")
+    discord_user_id = models.BigIntegerField(null=True, blank=True, help_text="Discord User ID of participant")
     discord_name = models.CharField(max_length=100, help_text="Discord username of participant")
     
     # Player information (if they have a player created)
@@ -560,7 +560,7 @@ class EventParticipant(models.Model):
     notes = models.TextField(blank=True, null=True, help_text="Notes about the participant")
     
     class Meta:
-        unique_together = ['event', 'discord_user_id']
+        unique_together = ['event', 'discord_name']
         ordering = ['joined_at']
         verbose_name = "Event Participant"
         verbose_name_plural = "Event Participants"
