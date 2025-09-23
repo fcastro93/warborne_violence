@@ -384,6 +384,50 @@ def create_recommended_build(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(['POST'])
+def assign_drifter_to_build(request, build_id):
+    """Assign a drifter to a recommended build"""
+    try:
+        data = request.data
+        drifter_id = data.get('drifter_id')
+        
+        if not drifter_id:
+            return Response({'error': 'Drifter ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the build
+        try:
+            build = RecommendedBuild.objects.get(id=build_id)
+        except RecommendedBuild.DoesNotExist:
+            return Response({'error': 'Build not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get the drifter
+        try:
+            drifter = Drifter.objects.get(id=drifter_id)
+        except Drifter.DoesNotExist:
+            return Response({'error': 'Drifter not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Assign the drifter to the build
+        build.drifter = drifter
+        build.save()
+        
+        return Response({
+            'message': 'Drifter assigned successfully',
+            'drifter': {
+                'id': drifter.id,
+                'name': drifter.name,
+                'base_health': drifter.base_health,
+                'base_energy': drifter.base_energy,
+                'base_damage': drifter.base_damage,
+                'base_defense': drifter.base_defense,
+                'base_speed': drifter.base_speed,
+                'special_abilities': drifter.special_abilities
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 # Player Loadout API endpoints
 @api_view(['GET'])
 def player_detail(request, player_id):
