@@ -772,7 +772,7 @@ class WarborneBot(commands.Bot):
         
         # Start the status monitoring task
         try:
-            self.status_monitor_task = asyncio.create_task(self.monitor_bot_status())
+        self.status_monitor_task = asyncio.create_task(self.monitor_bot_status())
             print("✅ Status monitoring task started")
         except Exception as e:
             print(f"❌ Error starting status monitoring: {e}")
