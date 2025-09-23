@@ -22,8 +22,8 @@ def all_drifters(request):
                 'base_damage': drifter.base_damage,
                 'base_defense': drifter.base_defense,
                 'base_speed': drifter.base_speed,
-                'game_id': drifter.game_id,
-                'icon_url': drifter.icon_url
+                'special_abilities': drifter.special_abilities,
+                'is_active': drifter.is_active
             })
         
         return Response({
