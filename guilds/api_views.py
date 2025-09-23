@@ -13,8 +13,8 @@ def update_player_drifter(request, player_id):
         drifter_id = request.data.get('drifter_id')
         drifter_slot = request.data.get('drifter_slot')  # 1, 2, or 3
         
-        if not drifter_id or not drifter_slot:
-            return Response({'error': 'drifter_id and drifter_slot are required'}, status=status.HTTP_400_BAD_REQUEST)
+        if drifter_slot is None:
+            return Response({'error': 'drifter_slot is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         if drifter_slot not in [1, 2, 3]:
             return Response({'error': 'drifter_slot must be 1, 2, or 3'}, status=status.HTTP_400_BAD_REQUEST)
