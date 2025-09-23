@@ -556,7 +556,6 @@ class EventParticipant(models.Model):
     player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='event_participations')
     
     # Participation status
-    is_active = models.BooleanField(default=True, help_text="Whether the participant is still active")
     joined_at = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True, help_text="Notes about the participant")
     
