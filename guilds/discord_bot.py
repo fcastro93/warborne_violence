@@ -790,15 +790,9 @@ class WarborneBot(commands.Bot):
             
             if general_channel:
                 try:
-                    await general_channel.send("🤖 Hello! Warborne Bot is ready for action!\n"
-                                              "**Available commands:**\n"
-                                              "`!menu` - 🎮 Interactive menu with all commands\n"
-                                              "`!createevent` - Create guild event\n"
-                                              "`!createplayer [name]` - Create your player (uses your Discord name by default)\n"
-                                              "`!myplayer` - View your player\n"
-                                              "`!buildplayer <name>` - View player loadout\n"
-                                              "`!guildinfo` - Guild information\n"
-                                              "`!ping` - Test bot")
+                    await general_channel.send("🤖 **Warborne Bot is online!**\n\n"
+                                              "This bot helps players manage their characters and participate in guild events.\n"
+                                              "Use `!menu` to see all available commands and get started!")
                 except Exception as e:
                     print(f"Could not send message to {guild.name}: {e}")
             

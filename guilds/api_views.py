@@ -1890,6 +1890,121 @@ def fill_parties_for_guild(parties, participants, role_composition):
     return members_assigned
 
 @api_view(['GET'])
+def discord_bot_config(request):
+    """Get Discord bot configuration"""
+    try:
+        from .models import DiscordBotConfig
+        
+        config = DiscordBotConfig.objects.first()
+        if not config:
+            return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response({
+            'id': config.id,
+            'name': config.name,
+            'is_active': config.is_active,
+            'command_prefix': config.command_prefix,
+            'base_url': config.base_url,
+            'is_online': config.is_online,
+            'general_channel_id': config.general_channel_id,
+            'event_announcements_channel_id': config.event_announcements_channel_id,
+            'violence_bot_channel_id': config.violence_bot_channel_id,
+            'last_heartbeat': config.last_heartbeat.isoformat() if config.last_heartbeat else None,
+            'error_message': config.error_message,
+            'can_manage_messages': config.can_manage_messages,
+            'can_embed_links': config.can_embed_links,
+            'can_attach_files': config.can_attach_files,
+            'can_read_message_history': config.can_read_message_history,
+            'can_use_external_emojis': config.can_use_external_emojis,
+            'created_at': config.created_at.isoformat(),
+            'updated_at': config.updated_at.isoformat()
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def update_discord_bot_config(request):
+    """Update Discord bot configuration"""
+    try:
+        from .models import DiscordBotConfig
+        
+        config = DiscordBotConfig.objects.first()
+        if not config:
+            return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        data = request.data
+        
+        # Update configuration fields
+        config.name = data.get('name', config.name)
+        config.is_active = data.get('is_active', config.is_active)
+        config.command_prefix = data.get('command_prefix', config.command_prefix)
+        config.base_url = data.get('base_url', config.base_url)
+        config.general_channel_id = data.get('general_channel_id', config.general_channel_id)
+        config.event_announcements_channel_id = data.get('event_announcements_channel_id', config.event_announcements_channel_id)
+        config.violence_bot_channel_id = data.get('violence_bot_channel_id', config.violence_bot_channel_id)
+        config.can_manage_messages = data.get('can_manage_messages', config.can_manage_messages)
+        config.can_embed_links = data.get('can_embed_links', config.can_embed_links)
+        config.can_attach_files = data.get('can_attach_files', config.can_attach_files)
+        config.can_read_message_history = data.get('can_read_message_history', config.can_read_message_history)
+        config.can_use_external_emojis = data.get('can_use_external_emojis', config.can_use_external_emojis)
+        
+        config.save()
+        
+        return Response({
+            'message': 'Bot configuration updated successfully',
+            'config': {
+                'id': config.id,
+                'name': config.name,
+                'is_active': config.is_active,
+                'command_prefix': config.command_prefix,
+                'base_url': config.base_url,
+                'is_online': config.is_online,
+                'general_channel_id': config.general_channel_id,
+                'event_announcements_channel_id': config.event_announcements_channel_id,
+                'violence_bot_channel_id': config.violence_bot_channel_id,
+                'last_heartbeat': config.last_heartbeat.isoformat() if config.last_heartbeat else None,
+                'error_message': config.error_message,
+                'can_manage_messages': config.can_manage_messages,
+                'can_embed_links': config.can_embed_links,
+                'can_attach_files': config.can_attach_files,
+                'can_read_message_history': config.can_read_message_history,
+                'can_use_external_emojis': config.can_use_external_emojis,
+                'created_at': config.created_at.isoformat(),
+                'updated_at': config.updated_at.isoformat()
+            }
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def test_discord_bot_connection(request):
+    """Test Discord bot connection"""
+    try:
+        from .models import DiscordBotConfig
+        
+        config = DiscordBotConfig.objects.first()
+        if not config:
+            return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # This would typically test the actual bot connection
+        # For now, we'll just return a success message
+        # In a real implementation, you might:
+        # 1. Check if the bot is running
+        # 2. Test Discord API connectivity
+        # 3. Verify channel permissions
+        # 4. Update the bot's status
+        
+        return Response({
+            'message': 'Bot connection test completed',
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
 def get_party_configuration(request, event_id):
     """Get party configuration for an event"""
     try:

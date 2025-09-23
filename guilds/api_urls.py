@@ -39,4 +39,7 @@ urlpatterns = [
     path('events/<int:event_id>/fill-parties/', api_views.fill_parties, name='fill_parties'),
     path('events/<int:event_id>/party-configuration/', api_views.get_party_configuration, name='get_party_configuration'),
     path('events/<int:event_id>/save-party-configuration/', api_views.save_party_configuration, name='save_party_configuration'),
+    path('discord-bot-config/', api_views.discord_bot_config, name='discord_bot_config'),
+    path('discord-bot-config/update/', api_views.update_discord_bot_config, name='update_discord_bot_config'),
+    path('discord-bot-config/test/', api_views.test_discord_bot_connection, name='test_discord_bot_connection'),
 ]
