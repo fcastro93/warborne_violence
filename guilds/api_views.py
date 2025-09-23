@@ -352,6 +352,38 @@ def recommended_builds(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(['POST'])
+def create_recommended_build(request):
+    """Create a new recommended build"""
+    try:
+        data = request.data
+        
+        # Validate required fields
+        if not data.get('title'):
+            return Response({'error': 'Title is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('description'):
+            return Response({'error': 'Description is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('role'):
+            return Response({'error': 'Role is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create the build
+        build = RecommendedBuild.objects.create(
+            title=data['title'],
+            description=data['description'],
+            role=data['role'],
+            is_active=True,
+            created_by=request.user.username if request.user.is_authenticated else 'Anonymous'
+        )
+        
+        return Response({
+            'build_id': build.id,
+            'message': 'Build created successfully'
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 # Player Loadout API endpoints
 @api_view(['GET'])
 def player_detail(request, player_id):
