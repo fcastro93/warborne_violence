@@ -574,6 +574,7 @@ class Party(models.Model):
     """Model for event parties/groups"""
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='parties')
     party_number = models.IntegerField(help_text="Party number within the event (1, 2, 3, etc.)")
+    party_name = models.CharField(max_length=100, blank=True, null=True, help_text="Custom name for the party (e.g., Tommy's Party)")
     max_members = models.IntegerField(default=15, help_text="Maximum members per party")
     is_active = models.BooleanField(default=True, help_text="Whether the party is still active")
     created_at = models.DateTimeField(auto_now_add=True)

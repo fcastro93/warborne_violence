@@ -405,11 +405,16 @@ class PartyMemberInline(admin.TabularInline):
     fields = ['player', 'assigned_role', 'is_active', 'assigned_at']
     readonly_fields = ['assigned_at']
     fk_name = 'party'
+    
+    def get_queryset(self, request):
+        """Only show active party members in the inline"""
+        qs = super().get_queryset(request)
+        return qs.filter(is_active=True)
 
 
 @admin.register(Party)
 class PartyAdmin(admin.ModelAdmin):
-    list_display = ['event_title', 'party_number', 'member_count_display', 'max_members', 'is_active', 'created_at']
+    list_display = ['event_title', 'party_number', 'party_name', 'member_count_display', 'max_members', 'is_active', 'created_at']
     list_filter = ['is_active', 'created_at', 'event__event_type']
     search_fields = ['event__title', 'party_number']
     ordering = ['event', 'party_number']
@@ -418,7 +423,7 @@ class PartyAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Party Information', {
-            'fields': ('event', 'party_number', 'max_members', 'is_active')
+            'fields': ('event', 'party_number', 'party_name', 'max_members', 'is_active')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
