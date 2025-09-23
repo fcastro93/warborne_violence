@@ -516,11 +516,11 @@ class Event(models.Model):
     @property
     def participant_count(self):
         """Get the number of participants"""
-        return self.participants.filter(is_active=True).count()
+        return self.participants.count()
     
     def get_participant_count_sync(self):
         """Sync version of participant count for use with sync_to_async"""
-        return self.participants.filter(is_active=True).count()
+        return self.participants.count()
     
     @property
     def discord_epoch(self):

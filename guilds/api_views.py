@@ -1765,13 +1765,12 @@ def remove_participant(request, event_id):
         except EventParticipant.DoesNotExist:
             return Response({'error': 'Participant not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Deactivate the participant
-        participant.is_active = False
-        participant.save()
+        # Remove the participant completely (hard deletion)
+        participant.delete()
         
         return Response({
             'message': 'Participant removed successfully',
-            'participant_id': participant.id
+            'participant_id': participant_id
         })
         
     except Exception as e:
