@@ -21,6 +21,7 @@ django.setup()
 from guilds.discord_bot import WarborneBot
 
 if __name__ == "__main__":
+    import asyncio
     print("🤖 Starting Discord Bot...")
     bot = WarborneBot()
-    bot.run()
+    asyncio.run(bot.start(os.getenv('DISCORD_BOT_TOKEN')))
