@@ -2132,3 +2132,147 @@ def save_party_configuration(request, event_id):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def create_party(request, event_id):
+    """Create a single party for an event"""
+    try:
+        from .models import Event, Party, EventParticipant
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        data = request.data
+        party_name = data.get('party_name', '')
+        max_members = data.get('max_members', 15)
+        
+        # Get the next party number
+        existing_parties = Party.objects.filter(event=event, is_active=True).order_by('-party_number')
+        next_party_number = existing_parties[0].party_number + 1 if existing_parties else 1
+        
+        # Create the party
+        party = Party.objects.create(
+            event=event,
+            party_number=next_party_number,
+            max_members=max_members
+        )
+        
+        return Response({
+            'message': 'Party created successfully',
+            'party': {
+                'id': party.id,
+                'party_number': party.party_number,
+                'max_members': party.max_members,
+                'member_count': 0
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def add_member_to_party(request, event_id, party_id):
+    """Add a participant to a specific party"""
+    try:
+        from .models import Event, Party, EventParticipant, Player
+        
+        # Get the event and party
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+            party = Party.objects.get(id=party_id, event=event, is_active=True)
+        except (Event.DoesNotExist, Party.DoesNotExist):
+            return Response({'error': 'Event or party not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        data = request.data
+        participant_id = data.get('participant_id')
+        assigned_role = data.get('assigned_role')
+        
+        if not participant_id:
+            return Response({'error': 'Participant ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the participant
+        try:
+            participant = EventParticipant.objects.get(
+                id=participant_id,
+                event=event,
+                is_active=True
+            )
+        except EventParticipant.DoesNotExist:
+            return Response({'error': 'Participant not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check if party is full
+        if party.member_count >= party.max_members:
+            return Response({'error': 'Party is full'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if participant is already in this party
+        existing_member = PartyMember.objects.filter(
+            party=party,
+            event_participant=participant,
+            is_active=True
+        ).first()
+        
+        if existing_member:
+            return Response({'error': 'Participant is already in this party'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Add member to party
+        party_member = PartyMember.objects.create(
+            party=party,
+            event_participant=participant,
+            player=participant.player,
+            assigned_role=assigned_role or participant.player.game_role if participant.player else None
+        )
+        
+        return Response({
+            'message': 'Member added to party successfully',
+            'party_member': {
+                'id': party_member.id,
+                'discord_name': participant.discord_name,
+                'assigned_role': party_member.assigned_role,
+                'assigned_at': party_member.assigned_at.isoformat()
+            }
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def remove_member_from_party(request, event_id, party_id):
+    """Remove a member from a party"""
+    try:
+        from .models import Event, Party, PartyMember
+        
+        # Get the event and party
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+            party = Party.objects.get(id=party_id, event=event, is_active=True)
+        except (Event.DoesNotExist, Party.DoesNotExist):
+            return Response({'error': 'Event or party not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        data = request.data
+        member_id = data.get('member_id')
+        
+        if not member_id:
+            return Response({'error': 'Member ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get and remove the party member
+        try:
+            party_member = PartyMember.objects.get(
+                id=member_id,
+                party=party,
+                is_active=True
+            )
+            party_member.is_active = False
+            party_member.save()
+            
+            return Response({
+                'message': 'Member removed from party successfully',
+                'member_id': party_member.id
+            })
+        except PartyMember.DoesNotExist:
+            return Response({'error': 'Party member not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
