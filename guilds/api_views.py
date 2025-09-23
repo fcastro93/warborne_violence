@@ -236,15 +236,116 @@ def recommended_builds(request):
     """Get recommended builds"""
     try:
         builds = []
-        for build in RecommendedBuild.objects.all()[:4]:  # Limit to 4
+        for build in RecommendedBuild.objects.filter(is_active=True).select_related(
+            'drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable',
+            'mod1', 'mod2', 'mod3', 'mod4'
+        ):
             builds.append({
                 'id': build.id,
-                'title': build.name,
-                'role': build.role,
+                'title': build.title,
                 'description': build.description,
-                'gear': [item.name for item in build.recommended_gear.all()[:2]],
-                'mods': [mod.name for mod in build.recommended_mods.all()[:2]],
-                'rating': getattr(build, 'rating', 4.5)
+                'role': build.role,
+                'is_active': build.is_active,
+                'created_at': build.created_at,
+                'updated_at': build.updated_at,
+                'created_by': build.created_by,
+                'drifter': {
+                    'id': build.drifter.id if build.drifter else None,
+                    'name': build.drifter.name if build.drifter else None,
+                    'base_health': build.drifter.base_health if build.drifter else None,
+                    'base_energy': build.drifter.base_energy if build.drifter else None,
+                    'base_damage': build.drifter.base_damage if build.drifter else None,
+                    'base_defense': build.drifter.base_defense if build.drifter else None,
+                    'base_speed': build.drifter.base_speed if build.drifter else None,
+                    'special_abilities': build.drifter.special_abilities if build.drifter else None
+                } if build.drifter else None,
+                'weapon': {
+                    'id': build.weapon.id if build.weapon else None,
+                    'name': build.weapon.base_name if build.weapon else None,
+                    'skill_name': build.weapon.skill_name if build.weapon else None,
+                    'rarity': build.weapon.rarity if build.weapon else None,
+                    'damage': build.weapon.damage if build.weapon else None,
+                    'health_bonus': build.weapon.health_bonus if build.weapon else None,
+                    'energy_bonus': build.weapon.energy_bonus if build.weapon else None,
+                    'game_id': build.weapon.game_id if build.weapon else None,
+                    'icon_url': build.weapon.icon_url if build.weapon else None
+                } if build.weapon else None,
+                'helmet': {
+                    'id': build.helmet.id if build.helmet else None,
+                    'name': build.helmet.base_name if build.helmet else None,
+                    'skill_name': build.helmet.skill_name if build.helmet else None,
+                    'rarity': build.helmet.rarity if build.helmet else None,
+                    'damage': build.helmet.damage if build.helmet else None,
+                    'health_bonus': build.helmet.health_bonus if build.helmet else None,
+                    'energy_bonus': build.helmet.energy_bonus if build.helmet else None,
+                    'game_id': build.helmet.game_id if build.helmet else None,
+                    'icon_url': build.helmet.icon_url if build.helmet else None
+                } if build.helmet else None,
+                'chest': {
+                    'id': build.chest.id if build.chest else None,
+                    'name': build.chest.base_name if build.chest else None,
+                    'skill_name': build.chest.skill_name if build.chest else None,
+                    'rarity': build.chest.rarity if build.chest else None,
+                    'damage': build.chest.damage if build.chest else None,
+                    'health_bonus': build.chest.health_bonus if build.chest else None,
+                    'energy_bonus': build.chest.energy_bonus if build.chest else None,
+                    'game_id': build.chest.game_id if build.chest else None,
+                    'icon_url': build.chest.icon_url if build.chest else None
+                } if build.chest else None,
+                'boots': {
+                    'id': build.boots.id if build.boots else None,
+                    'name': build.boots.base_name if build.boots else None,
+                    'skill_name': build.boots.skill_name if build.boots else None,
+                    'rarity': build.boots.rarity if build.boots else None,
+                    'damage': build.boots.damage if build.boots else None,
+                    'health_bonus': build.boots.health_bonus if build.boots else None,
+                    'energy_bonus': build.boots.energy_bonus if build.boots else None,
+                    'game_id': build.boots.game_id if build.boots else None,
+                    'icon_url': build.boots.icon_url if build.boots else None
+                } if build.boots else None,
+                'consumable': {
+                    'id': build.consumable.id if build.consumable else None,
+                    'name': build.consumable.base_name if build.consumable else None,
+                    'skill_name': build.consumable.skill_name if build.consumable else None,
+                    'rarity': build.consumable.rarity if build.consumable else None,
+                    'damage': build.consumable.damage if build.consumable else None,
+                    'health_bonus': build.consumable.health_bonus if build.consumable else None,
+                    'energy_bonus': build.consumable.energy_bonus if build.consumable else None,
+                    'game_id': build.consumable.game_id if build.consumable else None,
+                    'icon_url': build.consumable.icon_url if build.consumable else None
+                } if build.consumable else None,
+                'mod1': {
+                    'id': build.mod1.id if build.mod1 else None,
+                    'name': build.mod1.name if build.mod1 else None,
+                    'description': build.mod1.description if build.mod1 else None,
+                    'rarity': build.mod1.rarity if build.mod1 else None,
+                    'game_id': build.mod1.game_id if build.mod1 else None,
+                    'icon_url': build.mod1.icon_url if build.mod1 else None
+                } if build.mod1 else None,
+                'mod2': {
+                    'id': build.mod2.id if build.mod2 else None,
+                    'name': build.mod2.name if build.mod2 else None,
+                    'description': build.mod2.description if build.mod2 else None,
+                    'rarity': build.mod2.rarity if build.mod2 else None,
+                    'game_id': build.mod2.game_id if build.mod2 else None,
+                    'icon_url': build.mod2.icon_url if build.mod2 else None
+                } if build.mod2 else None,
+                'mod3': {
+                    'id': build.mod3.id if build.mod3 else None,
+                    'name': build.mod3.name if build.mod3 else None,
+                    'description': build.mod3.description if build.mod3 else None,
+                    'rarity': build.mod3.rarity if build.mod3 else None,
+                    'game_id': build.mod3.game_id if build.mod3 else None,
+                    'icon_url': build.mod3.icon_url if build.mod3 else None
+                } if build.mod3 else None,
+                'mod4': {
+                    'id': build.mod4.id if build.mod4 else None,
+                    'name': build.mod4.name if build.mod4 else None,
+                    'description': build.mod4.description if build.mod4 else None,
+                    'rarity': build.mod4.rarity if build.mod4 else None,
+                    'game_id': build.mod4.game_id if build.mod4 else None,
+                    'icon_url': build.mod4.icon_url if build.mod4 else None
+                } if build.mod4 else None
             })
         
         return Response({'builds': builds})
