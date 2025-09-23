@@ -10,6 +10,8 @@ urlpatterns = [
     path('builds/', api_views.recommended_builds, name='recommended_builds'),
     path('builds/create/', api_views.create_recommended_build, name='create_recommended_build'),
     path('builds/<int:build_id>/assign-drifter/', api_views.assign_drifter_to_build, name='assign_drifter_to_build'),
+    path('builds/<int:build_id>/equip-item/', api_views.equip_item_to_build, name='equip_item_to_build'),
+    path('builds/<int:build_id>/unequip-item/', api_views.unequip_item_from_build, name='unequip_item_from_build'),
     path('drifters/', api_views.all_drifters, name='all_drifters'),
     
     # Player Loadout API endpoints

@@ -387,13 +387,10 @@ def create_recommended_build(request):
 
 @api_view(['POST'])
 def assign_drifter_to_build(request, build_id):
-    """Assign a drifter to a recommended build"""
+    """Assign a drifter to a recommended build or clear the assignment"""
     try:
         data = request.data
         drifter_id = data.get('drifter_id')
-        
-        if not drifter_id:
-            return Response({'error': 'Drifter ID is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Get the build
         try:
@@ -401,28 +398,152 @@ def assign_drifter_to_build(request, build_id):
         except RecommendedBuild.DoesNotExist:
             return Response({'error': 'Build not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Get the drifter
-        try:
-            drifter = Drifter.objects.get(id=drifter_id)
-        except Drifter.DoesNotExist:
-            return Response({'error': 'Drifter not found'}, status=status.HTTP_404_NOT_FOUND)
+        if drifter_id is None:
+            # Clear the drifter assignment
+            build.drifter = None
+            build.save()
+            
+            return Response({
+                'message': 'Drifter assignment cleared successfully',
+                'drifter': None
+            }, status=status.HTTP_200_OK)
+        else:
+            # Assign a specific drifter
+            try:
+                drifter = Drifter.objects.get(id=drifter_id)
+            except Drifter.DoesNotExist:
+                return Response({'error': 'Drifter not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Assign the drifter to the build
+            build.drifter = drifter
+            build.save()
+            
+            return Response({
+                'message': 'Drifter assigned successfully',
+                'drifter': {
+                    'id': drifter.id,
+                    'name': drifter.name,
+                    'base_health': drifter.base_health,
+                    'base_energy': drifter.base_energy,
+                    'base_damage': drifter.base_damage,
+                    'base_defense': drifter.base_defense,
+                    'base_speed': drifter.base_speed,
+                    'special_abilities': drifter.special_abilities
+                }
+            }, status=status.HTTP_200_OK)
         
-        # Assign the drifter to the build
-        build.drifter = drifter
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def equip_item_to_build(request, build_id):
+    """Equip an item to a recommended build"""
+    try:
+        data = request.data
+        item_id = data.get('item_id')
+        slot_type = data.get('slot_type')
+        
+        if not item_id:
+            return Response({'error': 'Item ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not slot_type:
+            return Response({'error': 'Slot type is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the build
+        try:
+            build = RecommendedBuild.objects.get(id=build_id)
+        except RecommendedBuild.DoesNotExist:
+            return Response({'error': 'Build not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get the item
+        try:
+            item = GearItem.objects.get(id=item_id)
+        except GearItem.DoesNotExist:
+            return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Assign the item to the appropriate slot
+        if slot_type == 'weapon':
+            build.weapon = item
+        elif slot_type == 'helmet':
+            build.helmet = item
+        elif slot_type == 'chest':
+            build.chest = item
+        elif slot_type == 'boots':
+            build.boots = item
+        elif slot_type == 'consumable':
+            build.consumable = item
+        elif slot_type == 'mod':
+            # For mods, find the first empty slot
+            if not build.mod1:
+                build.mod1 = item
+            elif not build.mod2:
+                build.mod2 = item
+            elif not build.mod3:
+                build.mod3 = item
+            elif not build.mod4:
+                build.mod4 = item
+            else:
+                return Response({'error': 'No empty mod slots available'}, status=status.HTTP_400_BAD_REQUEST)
+        
         build.save()
         
         return Response({
-            'message': 'Drifter assigned successfully',
-            'drifter': {
-                'id': drifter.id,
-                'name': drifter.name,
-                'base_health': drifter.base_health,
-                'base_energy': drifter.base_energy,
-                'base_damage': drifter.base_damage,
-                'base_defense': drifter.base_defense,
-                'base_speed': drifter.base_speed,
-                'special_abilities': drifter.special_abilities
+            'message': 'Item equipped successfully',
+            'item': {
+                'id': item.id,
+                'name': item.base_name,
+                'rarity': item.rarity,
+                'slot_type': slot_type
             }
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def unequip_item_from_build(request, build_id):
+    """Unequip an item from a recommended build"""
+    try:
+        data = request.data
+        slot_type = data.get('slot_type')
+        
+        if not slot_type:
+            return Response({'error': 'Slot type is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the build
+        try:
+            build = RecommendedBuild.objects.get(id=build_id)
+        except RecommendedBuild.DoesNotExist:
+            return Response({'error': 'Build not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Clear the appropriate slot
+        if slot_type == 'weapon':
+            build.weapon = None
+        elif slot_type == 'helmet':
+            build.helmet = None
+        elif slot_type == 'chest':
+            build.chest = None
+        elif slot_type == 'boots':
+            build.boots = None
+        elif slot_type == 'consumable':
+            build.consumable = None
+        elif slot_type == 'mod':
+            # For mods, clear the last filled slot
+            if build.mod4:
+                build.mod4 = None
+            elif build.mod3:
+                build.mod3 = None
+            elif build.mod2:
+                build.mod2 = None
+            elif build.mod1:
+                build.mod1 = None
+        
+        build.save()
+        
+        return Response({
+            'message': 'Item unequipped successfully',
+            'slot_type': slot_type
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
