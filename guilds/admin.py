@@ -386,8 +386,8 @@ class EventAdmin(admin.ModelAdmin):
 
 @admin.register(EventParticipant)
 class EventParticipantAdmin(admin.ModelAdmin):
-    list_display = ['discord_name', 'event_title', 'player', 'is_active', 'joined_at']
-    list_filter = ['is_active', 'event__event_type', 'joined_at']
+    list_display = ['discord_name', 'event_title', 'player', 'joined_at']
+    list_filter = ['event__event_type', 'joined_at']
     search_fields = ['discord_name', 'event__title']
     ordering = ['-joined_at']
     readonly_fields = ['joined_at']

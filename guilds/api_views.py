@@ -874,7 +874,6 @@ def event_detail(request, event_id):
         for party in parties:
             party_members = PartyMember.objects.filter(
                 party=party,
-                is_active=True
             ).select_related('player', 'event_participant')
             
             members_data = []
@@ -1762,7 +1761,6 @@ def remove_participant(request, event_id):
             participant = EventParticipant.objects.get(
                 id=participant_id,
                 event=event,
-                is_active=True
             )
         except EventParticipant.DoesNotExist:
             return Response({'error': 'Participant not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -2236,7 +2234,6 @@ def add_member_to_party(request, event_id, party_id):
             participant = EventParticipant.objects.get(
                 id=participant_id,
                 event=event,
-                is_active=True
             )
         except EventParticipant.DoesNotExist:
             return Response({'error': 'Participant not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -2324,7 +2321,6 @@ def remove_member_from_party(request, event_id, party_id):
             party_member = PartyMember.objects.get(
                 id=member_id,
                 party=party,
-                is_active=True
             )
             party_member.is_active = False
             party_member.save()
