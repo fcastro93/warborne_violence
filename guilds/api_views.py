@@ -882,6 +882,10 @@ def event_detail(request, event_id):
                     'id': member.id,
                     'player_name': member.player.in_game_name,
                     'discord_name': member.event_participant.discord_name,
+                    'event_participant': {
+                        'id': member.event_participant.id,
+                        'discord_name': member.event_participant.discord_name
+                    },
                     'assigned_role': member.assigned_role,
                     'assigned_at': member.assigned_at.isoformat()
                 })
@@ -1717,6 +1721,10 @@ def event_parties(request, event_id):
                         'id': member.player.id,
                         'discord_name': member.player.discord_name,
                         'game_role': member.player.game_role
+                    },
+                    'event_participant': {
+                        'id': member.event_participant.id,
+                        'discord_name': member.event_participant.discord_name
                     },
                     'assigned_role': member.assigned_role,
                     'assigned_at': member.assigned_at.isoformat()
