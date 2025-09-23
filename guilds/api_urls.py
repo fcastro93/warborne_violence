@@ -30,4 +30,7 @@ urlpatterns = [
     path('events/<int:event_id>/delete/', api_views.delete_event, name='delete_event'),
     path('events/<int:event_id>/join/', api_views.join_event, name='join_event'),
     path('events/<int:event_id>/leave/', api_views.leave_event, name='leave_event'),
+    path('events/<int:event_id>/publish/', api_views.publish_event, name='publish_event'),
+    path('events/<int:event_id>/create-parties/', api_views.create_parties, name='create_parties'),
+    path('events/<int:event_id>/create-guild-parties/', api_views.create_guild_parties, name='create_guild_parties'),
 ]

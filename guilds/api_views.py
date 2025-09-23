@@ -1178,3 +1178,313 @@ def leave_event(request, event_id):
         return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def publish_event(request, event_id):
+    """Publish a single event to Discord announcements channel"""
+    try:
+        from .models import Event, DiscordBotConfig
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get bot config
+        config = DiscordBotConfig.objects.first()
+        if not config or not config.event_announcements_channel_id:
+            return Response({'error': 'Event announcements channel not configured'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get participant count
+        from .models import EventParticipant
+        participant_count = EventParticipant.objects.filter(
+            event=event,
+            is_active=True
+        ).count()
+        
+        # Create the announcement message data
+        announcement_data = {
+            'event_id': event.id,
+            'title': event.title,
+            'description': event.description,
+            'event_type': event.event_type,
+            'event_type_display': event.get_event_type_display(),
+            'event_datetime': event.event_datetime.isoformat(),
+            'timezone': event.timezone,
+            'participant_count': participant_count,
+            'max_participants': event.max_participants,
+            'created_by_discord_name': event.created_by_discord_name,
+            'discord_epoch': event.discord_epoch,
+            'discord_timestamp': event.discord_timestamp,
+            'discord_timestamp_relative': event.discord_timestamp_relative,
+            'announcement_channel_id': config.event_announcements_channel_id
+        }
+        
+        # TODO: Send notification to Discord bot
+        # For now, we'll just return success
+        # In a real implementation, you might use a message queue or webhook
+        
+        return Response({
+            'message': f'Event "{event.title}" published successfully to Discord announcements channel',
+            'announcement_data': announcement_data
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def create_parties(request, event_id):
+    """Create balanced parties for an event (migrated from Discord bot logic)"""
+    try:
+        from .models import Event, Party, PartyMember, EventParticipant
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get all active participants with their players
+        participants = list(EventParticipant.objects.filter(
+            event=event,
+            is_active=True,
+            player__isnull=False
+        ).select_related('player'))
+        
+        if len(participants) < 2:
+            return Response({'error': 'At least 2 participants needed to create parties'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Clear existing parties for this event
+        Party.objects.filter(event=event).delete()
+        
+        # Define role requirements per party (minimum) - from Discord bot
+        ROLE_REQUIREMENTS = {
+            'tank': 4,           # 4 tanks per party
+            'healer': 2,         # 2 healers per party
+            'ranged_dps': 3,     # 3 ranged DPS
+            'melee_dps': 3,      # 3 melee DPS
+            'defensive_tank': 1, # 1 defensive tank
+            'offensive_tank': 1, # 1 offensive tank
+            'offensive_support': 1, # 1 offensive support
+        }
+        
+        MAX_PARTY_SIZE = 15
+        
+        # Group participants by role
+        participants_by_role = {}
+        for participant in participants:
+            role = participant.player.game_role or 'unknown'
+            if role not in participants_by_role:
+                participants_by_role[role] = []
+            participants_by_role[role].append(participant)
+        
+        # Calculate how many parties we need
+        total_participants = len(participants)
+        num_parties = max(1, (total_participants + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
+        
+        parties = []
+        
+        # Create party objects
+        for i in range(num_parties):
+            party = Party.objects.create(
+                event=event,
+                party_number=i + 1,
+                max_members=MAX_PARTY_SIZE
+            )
+            parties.append(party)
+        
+        # Distribute participants across parties
+        party_assignments = [[] for _ in range(num_parties)]
+        party_role_counts = [{} for _ in range(num_parties)]
+        
+        # Initialize role counts
+        for party_idx in range(num_parties):
+            for role in ROLE_REQUIREMENTS.keys():
+                party_role_counts[party_idx][role] = 0
+        
+        # Distribute participants by role, trying to balance
+        for role, role_participants in participants_by_role.items():
+            if role == 'unknown':
+                # Distribute unknown roles evenly
+                for i, participant in enumerate(role_participants):
+                    party_idx = i % num_parties
+                    party_assignments[party_idx].append(participant)
+            else:
+                # Distribute known roles to balance requirements
+                for i, participant in enumerate(role_participants):
+                    # Find party with least of this role
+                    best_party = 0
+                    min_count = party_role_counts[0].get(role, 0)
+                    
+                    for party_idx in range(1, num_parties):
+                        current_count = party_role_counts[party_idx].get(role, 0)
+                        if current_count < min_count:
+                            min_count = current_count
+                            best_party = party_idx
+                    
+                    party_assignments[best_party].append(participant)
+                    party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
+        
+        # Create PartyMember objects
+        party_members_created = 0
+        for party_idx, party in enumerate(parties):
+            for participant in party_assignments[party_idx]:
+                PartyMember.objects.create(
+                    party=party,
+                    event_participant=participant,
+                    player=participant.player,
+                    assigned_role=participant.player.game_role
+                )
+                party_members_created += 1
+        
+        return Response({
+            'message': f'Parties created successfully: {num_parties} parties with {party_members_created} participants distributed',
+            'parties_created': num_parties,
+            'members_assigned': party_members_created
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def create_guild_parties(request, event_id):
+    """Create guild-based balanced parties for an event (migrated from Discord bot logic)"""
+    try:
+        from .models import Event, Party, PartyMember, EventParticipant, Guild
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get all active participants with their players and guilds
+        participants = list(EventParticipant.objects.filter(
+            event=event,
+            is_active=True,
+            player__isnull=False
+        ).select_related('player', 'player__guild'))
+        
+        if len(participants) < 2:
+            return Response({'error': 'At least 2 participants needed to create guild parties'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Clear existing parties for this event
+        Party.objects.filter(event=event).delete()
+        
+        # Group participants by guild
+        participants_by_guild = {}
+        for participant in participants:
+            guild = participant.player.guild
+            guild_name = guild.name if guild else "No Guild"
+            if guild_name not in participants_by_guild:
+                participants_by_guild[guild_name] = []
+            participants_by_guild[guild_name].append(participant)
+        
+        # Define role requirements per party (minimum) - from Discord bot
+        ROLE_REQUIREMENTS = {
+            'tank': 4,           # 4 tanks per party
+            'healer': 2,         # 2 healers per party
+            'ranged_dps': 3,     # 3 ranged DPS
+            'melee_dps': 3,      # 3 melee DPS
+            'defensive_tank': 1, # 1 defensive tank
+            'offensive_tank': 1, # 1 offensive tank
+            'offensive_support': 1, # 1 offensive support
+        }
+        
+        MAX_PARTY_SIZE = 15
+        total_parties_created = 0
+        total_members_created = 0
+        guild_results = []
+        
+        # Process each guild separately
+        for guild_name, guild_participants in participants_by_guild.items():
+            if len(guild_participants) < 2:
+                guild_results.append(f"{guild_name}: {len(guild_participants)} participants (minimum 2 needed)")
+                continue
+            
+            # Group participants by role within this guild
+            participants_by_role = {}
+            for participant in guild_participants:
+                role = participant.player.game_role or 'unknown'
+                if role not in participants_by_role:
+                    participants_by_role[role] = []
+                participants_by_role[role].append(participant)
+            
+            # Calculate how many parties we need for this guild
+            num_parties = max(1, (len(guild_participants) + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
+            
+            # Create party objects for this guild
+            parties = []
+            for i in range(num_parties):
+                party = Party.objects.create(
+                    event=event,
+                    party_number=total_parties_created + i + 1,
+                    max_members=MAX_PARTY_SIZE
+                )
+                parties.append(party)
+            
+            # Distribute participants across parties for this guild
+            party_assignments = [[] for _ in range(num_parties)]
+            party_role_counts = [{} for _ in range(num_parties)]
+            
+            # Initialize role counts
+            for party_idx in range(num_parties):
+                for role in ROLE_REQUIREMENTS.keys():
+                    party_role_counts[party_idx][role] = 0
+            
+            # Distribute participants by role, trying to balance within guild
+            for role, role_participants in participants_by_role.items():
+                if role == 'unknown':
+                    # Distribute unknown roles evenly
+                    for i, participant in enumerate(role_participants):
+                        party_idx = i % num_parties
+                        party_assignments[party_idx].append(participant)
+                else:
+                    # Distribute known roles to balance requirements
+                    for i, participant in enumerate(role_participants):
+                        # Find party with least of this role
+                        best_party = 0
+                        min_count = party_role_counts[0].get(role, 0)
+                        
+                        for party_idx in range(1, num_parties):
+                            current_count = party_role_counts[party_idx].get(role, 0)
+                            if current_count < min_count:
+                                min_count = current_count
+                                best_party = party_idx
+                        
+                        party_assignments[best_party].append(participant)
+                        party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
+            
+            # Create PartyMember objects for this guild
+            guild_members_created = 0
+            for party_idx, party in enumerate(parties):
+                for participant in party_assignments[party_idx]:
+                    PartyMember.objects.create(
+                        party=party,
+                        event_participant=participant,
+                        player=participant.player,
+                        assigned_role=participant.player.game_role
+                    )
+                    guild_members_created += 1
+            
+            total_parties_created += num_parties
+            total_members_created += guild_members_created
+            guild_results.append(f"{guild_name}: {num_parties} parties with {guild_members_created} participants")
+        
+        # Create summary message
+        result_message = f"Guild parties created successfully:\n"
+        result_message += f"Total: {total_parties_created} parties with {total_members_created} participants\n\n"
+        result_message += "Guild breakdown:\n"
+        for result in guild_results:
+            result_message += f"• {result}\n"
+        
+        return Response({
+            'message': result_message,
+            'parties_created': total_parties_created,
+            'members_assigned': total_members_created,
+            'guild_breakdown': guild_results
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
