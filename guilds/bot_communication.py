@@ -20,7 +20,12 @@ def send_bot_command(command_type: str, data: Dict[str, Any]) -> bool:
     Returns:
         bool: True if command was sent successfully
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
+        logger.info(f"📤 Creating bot command: {command_type}")
+        
         command = {
             'command': command_type,
             'data': data,
@@ -28,13 +33,16 @@ def send_bot_command(command_type: str, data: Dict[str, Any]) -> bool:
             'processed': False
         }
         
+        logger.info(f"📝 Writing command to file: {BOT_COMMUNICATION_FILE}")
         # Write command to file
         with open(BOT_COMMUNICATION_FILE, 'w') as f:
             json.dump(command, f, indent=2)
         
+        logger.info(f"✅ Bot command sent successfully: {command_type}")
         print(f"✅ Bot command sent: {command_type} to {BOT_COMMUNICATION_FILE}")
         return True
     except Exception as e:
+        logger.error(f"❌ Error sending bot command: {e}")
         print(f"❌ Error sending bot command: {e}")
         return False
 

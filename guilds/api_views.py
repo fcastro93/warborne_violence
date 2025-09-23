@@ -1182,18 +1182,29 @@ def leave_event(request, event_id):
 @api_view(['POST'])
 def publish_event(request, event_id):
     """Publish a single event to Discord announcements channel"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
+        logger.info(f"🚀 Starting publish_event for event_id: {event_id}")
+        
         from .models import Event, DiscordBotConfig
         
         # Get the event
         try:
             event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+            logger.info(f"✅ Event found: {event.title} (ID: {event.id})")
         except Event.DoesNotExist:
+            logger.error(f"❌ Event not found or not active: {event_id}")
             return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
         
         # Get bot config
         config = DiscordBotConfig.objects.first()
+        logger.info(f"📋 Bot config found: {config.name if config else 'None'}")
+        logger.info(f"📢 Event announcements channel ID: {config.event_announcements_channel_id if config else 'None'}")
+        
         if not config or not config.event_announcements_channel_id:
+            logger.error("❌ Event announcements channel not configured")
             return Response({'error': 'Event announcements channel not configured'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Get participant count
@@ -1202,6 +1213,7 @@ def publish_event(request, event_id):
             event=event,
             is_active=True
         ).count()
+        logger.info(f"👥 Participant count: {participant_count}")
         
         # Create the announcement message data
         announcement_data = {
@@ -1220,13 +1232,18 @@ def publish_event(request, event_id):
             'discord_timestamp_relative': event.discord_timestamp_relative,
             'announcement_channel_id': config.event_announcements_channel_id
         }
+        logger.info(f"📝 Announcement data prepared: {announcement_data['title']}")
         
         # Send command to the running Discord bot via file communication
         from .bot_communication import send_bot_command
         
+        logger.info("📤 Sending command to Discord bot...")
         success = send_bot_command('publish_event', announcement_data)
         if not success:
+            logger.error("❌ Failed to send command to Discord bot")
             return Response({'error': 'Failed to send command to Discord bot'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        logger.info("✅ Command sent successfully to Discord bot")
         
         return Response({
             'message': f'Event "{event.title}" published successfully to Discord announcements channel',
