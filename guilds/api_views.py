@@ -125,6 +125,8 @@ def gear_items(request):
                 'health_bonus': item.health_bonus,
                 'energy_bonus': item.energy_bonus,
                 'description': item.description,
+                'game_id': item.game_id,
+                'icon_url': item.icon_url,
                 'gear_type': {
                     'id': item.gear_type.id if item.gear_type else None,
                     'category': item.gear_type.category if item.gear_type else 'unknown'
@@ -179,14 +181,63 @@ def player_detail(request, player_id):
 
 @api_view(['GET'])
 def player_drifters(request, player_id):
-    """Get player's drifters"""
+    """Get player's drifters with gear slots"""
     try:
         player = Player.objects.get(id=player_id)
         drifters = []
         
+        # Get all player gear for equipped status checking
+        player_gear = PlayerGear.objects.filter(
+            player=player
+        ).select_related('gear_item__gear_type')
+        
         for i in range(1, 4):  # 3 drifters
             drifter = getattr(player, f'drifter_{i}', None)
             if drifter:
+                # Get equipped gear for this specific drifter
+                equipped_gear = PlayerGear.objects.filter(
+                    player=player, 
+                    is_equipped=True,
+                    equipped_on_drifter=i
+                ).select_related('gear_item__gear_type')
+                
+                # Prepare gear slots for this drifter (9 slots: weapon, helmet, chest, boots, consumable, 4 mods)
+                gear_slots = []
+                equipped_list = list(equipped_gear)
+                
+                # Define slot order: weapon, helmet, chest, boots, consumable, 4 mods
+                slot_order = ['weapon', 'helmet', 'chest', 'boots', 'consumable'] + ['mod'] * 4
+                
+                for slot_index in range(9):
+                    # Find gear for this slot
+                    slot_gear = None
+                    for gear in equipped_list:
+                        if gear.gear_item.gear_type.category == slot_order[slot_index]:
+                            slot_gear = gear
+                            break
+                    
+                    if slot_gear:
+                        gear_slots.append({
+                            'id': slot_gear.id,
+                            'gear_item': {
+                                'id': slot_gear.gear_item.id,
+                                'base_name': slot_gear.gear_item.base_name,
+                                'skill_name': slot_gear.gear_item.skill_name,
+                                'rarity': slot_gear.gear_item.rarity,
+                                'damage': slot_gear.gear_item.damage,
+                                'defense': slot_gear.gear_item.defense,
+                                'health_bonus': slot_gear.gear_item.health_bonus,
+                                'energy_bonus': slot_gear.gear_item.energy_bonus,
+                                'game_id': slot_gear.gear_item.game_id,
+                                'icon_url': slot_gear.gear_item.icon_url,
+                            },
+                            'gear_type': {
+                                'category': slot_gear.gear_item.gear_type.category
+                            }
+                        })
+                    else:
+                        gear_slots.append(None)
+                
                 drifters.append({
                     'number': i,
                     'name': drifter.name,
@@ -194,6 +245,9 @@ def player_drifters(request, player_id):
                     'base_energy': getattr(drifter, 'base_energy', 100),
                     'base_damage': getattr(drifter, 'base_damage', 50),
                     'base_defense': getattr(drifter, 'base_defense', 25),
+                    'base_speed': getattr(drifter, 'base_speed', 75),
+                    'gear_slots': gear_slots,
+                    'equipped_count': equipped_gear.count(),
                 })
             else:
                 drifters.append({
@@ -203,6 +257,9 @@ def player_drifters(request, player_id):
                     'base_energy': 100,
                     'base_damage': 50,
                     'base_defense': 25,
+                    'base_speed': 75,
+                    'gear_slots': [None] * 9,
+                    'equipped_count': 0,
                 })
         
         return Response({'drifters': drifters})
@@ -240,6 +297,8 @@ def player_equipped_gear(request, player_id):
                 'defense': gear.gear_item.defense,
                 'health_bonus': gear.gear_item.health_bonus,
                 'slot_type': gear.gear_item.gear_type.category,
+                'game_id': gear.gear_item.game_id,
+                'icon_url': gear.gear_item.icon_url,
             })
         
         return Response({'equipped_gear': gear_data})
