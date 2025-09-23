@@ -50,4 +50,9 @@ urlpatterns = [
     path('discord-bot-config/start/', api_views.start_discord_bot, name='start_discord_bot'),
     path('discord-bot-config/stop/', api_views.stop_discord_bot, name='stop_discord_bot'),
     path('discord/presence/', api_views.discord_presence, name='discord_presence'),
+    
+    # Authentication endpoints
+    path('auth/login/', api_views.auth_login, name='auth_login'),
+    path('auth/logout/', api_views.auth_logout, name='auth_logout'),
+    path('auth/verify/', api_views.auth_verify, name='auth_verify'),
 ]
