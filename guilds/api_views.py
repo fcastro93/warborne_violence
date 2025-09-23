@@ -6,6 +6,33 @@ from .models import Guild, Player, Drifter, Event, GearItem, GearType, Recommend
 import json
 
 @api_view(['GET'])
+def all_drifters(request):
+    """Get all available drifters"""
+    try:
+        drifters = Drifter.objects.all()
+        drifter_data = []
+        
+        for drifter in drifters:
+            drifter_data.append({
+                'id': drifter.id,
+                'name': drifter.name,
+                'description': drifter.description,
+                'base_health': drifter.base_health,
+                'base_energy': drifter.base_energy,
+                'base_damage': drifter.base_damage,
+                'base_defense': drifter.base_defense,
+                'base_speed': drifter.base_speed,
+                'game_id': drifter.game_id,
+                'icon_url': drifter.icon_url
+            })
+        
+        return Response({
+            'drifters': drifter_data
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
 def guild_stats(request):
     """Get guild statistics"""
     try:

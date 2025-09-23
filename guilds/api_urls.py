@@ -8,6 +8,7 @@ urlpatterns = [
     path('gear/', api_views.gear_overview, name='gear_overview'),
     path('gear-items/', api_views.gear_items, name='gear_items'),
     path('builds/', api_views.recommended_builds, name='recommended_builds'),
+    path('drifters/', api_views.all_drifters, name='all_drifters'),
     
     # Player Loadout API endpoints
     path('player/<int:player_id>/', api_views.player_detail, name='player_detail'),
