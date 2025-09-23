@@ -761,17 +761,30 @@ class WarborneBot(commands.Bot):
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
         print('🤖 ¡Hola! Warborne Bot está listo para la acción!')
+        print("🔍 Bot on_ready method called - starting initialization...")
         
         # Commands are automatically loaded
         print(f'✅ Bot ready with {len(self.commands)} commands')
         for cmd in self.commands:
             print(f'   - !{cmd.name}: {cmd.description}')
         
+        print("🔍 Starting task initialization...")
+        
         # Start the status monitoring task
-        self.status_monitor_task = asyncio.create_task(self.monitor_bot_status())
+        try:
+            self.status_monitor_task = asyncio.create_task(self.monitor_bot_status())
+            print("✅ Status monitoring task started")
+        except Exception as e:
+            print(f"❌ Error starting status monitoring: {e}")
         
         # Start the command monitoring task
-        self.command_monitor_task = asyncio.create_task(self.monitor_commands())
+        try:
+            self.command_monitor_task = asyncio.create_task(self.monitor_commands())
+            print("✅ Command monitoring task started")
+        except Exception as e:
+            print(f"❌ Error starting command monitoring: {e}")
+            import traceback
+            traceback.print_exc()
         
         # Add reaction event handler
         self.add_listener(self.on_reaction_add, 'on_reaction_add')

@@ -1221,12 +1221,19 @@ def publish_event(request, event_id):
             'announcement_channel_id': config.event_announcements_channel_id
         }
         
-        # Send command to Discord bot
-        from .bot_communication import send_bot_command
-        
-        success = send_bot_command('publish_event', announcement_data)
-        if not success:
-            return Response({'error': 'Failed to send command to Discord bot'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Call Discord bot directly (like Django admin does)
+        try:
+            from .discord_bot import WarborneBot
+            import asyncio
+            
+            # Create bot instance and call the method directly
+            bot = WarborneBot()
+            success, message = asyncio.run(bot.publish_event_announcement(announcement_data))
+            
+            if not success:
+                return Response({'error': f'Failed to publish event: {message}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': f'Failed to publish event: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response({
             'message': f'Event "{event.title}" published successfully to Discord announcements channel',
