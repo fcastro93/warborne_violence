@@ -324,6 +324,11 @@ class CreatePlayerView(discord.ui.View):
                       f"{role_info}",
                 inline=False
             )
+            embed.add_field(
+                name="🔗 Loadout Link",
+                value=f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout",
+                inline=False
+            )
             
             await interaction.response.send_message(embed=embed, ephemeral=True)
     
@@ -331,6 +336,146 @@ class CreatePlayerView(discord.ui.View):
         # Disable all components when view times out
         for item in self.children:
             item.disabled = True
+
+
+class PlayerInfoView(discord.ui.View):
+    """View for displaying player info with edit button"""
+    
+    def __init__(self, player):
+        super().__init__(timeout=300)
+        self.player = player
+    
+    @discord.ui.button(label="✏️ Edit Player", style=discord.ButtonStyle.primary, emoji="✏️")
+    async def edit_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to edit player information"""
+        # Create and show the edit player modal
+        modal = EditPlayerModal(self.player)
+        await interaction.response.send_modal(modal)
+
+
+class EditPlayerModal(discord.ui.Modal, title="Edit Player Information"):
+    """Modal for editing player information"""
+    
+    def __init__(self, player):
+        super().__init__()
+        self.player = player
+        
+        # Add text inputs for editable fields
+        self.name_input = discord.ui.TextInput(
+            label="Player Name",
+            placeholder="Enter your in-game name",
+            default=player.in_game_name,
+            max_length=50,
+            required=True
+        )
+        
+        self.level_input = discord.ui.TextInput(
+            label="Level",
+            placeholder="Enter your character level",
+            default=str(player.character_level),
+            max_length=3,
+            required=True
+        )
+        
+        self.faction_input = discord.ui.TextInput(
+            label="Faction",
+            placeholder="Sirius, Empire, Federation",
+            default=player.get_faction_display(),
+            max_length=20,
+            required=True
+        )
+        
+        self.role_input = discord.ui.TextInput(
+            label="Role",
+            placeholder="Healer, Tank, DPS, Support",
+            default=player.get_game_role_display() if player.game_role else "",
+            max_length=20,
+            required=False
+        )
+        
+        # Add inputs to modal
+        self.add_item(self.name_input)
+        self.add_item(self.level_input)
+        self.add_item(self.faction_input)
+        self.add_item(self.role_input)
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        """Handle form submission"""
+        from asgiref.sync import sync_to_async
+        from .models import Player
+        
+        # Validate inputs
+        try:
+            level = int(self.level_input.value)
+            if level < 1 or level > 100:
+                raise ValueError("Level must be between 1 and 100")
+        except ValueError:
+            await interaction.response.send_message(
+                "❌ Invalid level. Please enter a number between 1 and 100.",
+                ephemeral=True
+            )
+            return
+        
+        # Map faction names to choices
+        faction_mapping = {
+            'sirius': 'sirius',
+            'empire': 'empire', 
+            'federation': 'federation'
+        }
+        faction = faction_mapping.get(self.faction_input.value.lower(), 'sirius')
+        
+        # Map role names to choices
+        role_mapping = {
+            'healer': 'healer',
+            'tank': 'tank',
+            'dps': 'dps',
+            'support': 'support'
+        }
+        role = role_mapping.get(self.role_input.value.lower(), None)
+        
+        @sync_to_async
+        def update_player():
+            try:
+                player = Player.objects.get(id=self.player.id)
+                player.in_game_name = self.name_input.value
+                player.character_level = level
+                player.faction = faction
+                player.game_role = role
+                player.save()
+                return player, None
+            except Exception as e:
+                return None, str(e)
+        
+        updated_player, error = await update_player()
+        
+        if error:
+            await interaction.response.send_message(
+                f"❌ Error updating player: {error}",
+                ephemeral=True
+            )
+        else:
+            # Show updated player info
+            guild_info = f"**Guild:** {updated_player.guild.name}" if updated_player.guild else "**Guild:** Sin guild"
+            role_info = f"**Rol:** {updated_player.get_game_role_display()}" if updated_player.game_role else "**Rol:** No asignado"
+            
+            loadout_url = f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{updated_player.id}/loadout"
+            
+            embed = discord.Embed(
+                title="✅ Player Updated Successfully",
+                color=0x4caf50
+            )
+            embed.add_field(
+                name="📊 Updated Player Information",
+                value=f"**Name:** {updated_player.in_game_name}\n"
+                      f"**Level:** {updated_player.character_level}\n"
+                      f"**Faction:** {updated_player.get_faction_display()}\n"
+                      f"{guild_info}\n"
+                      f"{role_info}\n"
+                      f"**Loadouts:** [View Loadouts]({loadout_url})",
+                inline=False
+            )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class CommandMenuView(discord.ui.View):
@@ -374,23 +519,29 @@ class CommandMenuView(discord.ui.View):
         player = await _get_player_by_discord_user(interaction.user.id)
         
         if player:
-            guild_info = ""
-            if player.guild:
-                guild_info = f"\n**Guild:** {player.guild.name}"
+            guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
+            role_info = f"**Rol:** {player.get_game_role_display()}" if player.game_role else "**Rol:** No asignado"
+            
+            loadout_url = f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout"
             
             embed = discord.Embed(
-                title=f"👨‍💼 {player.in_game_name}",
+                title="📊 Player Information",
                 color=0x4a9eff
             )
             embed.add_field(
-                name="📊 Player Info",
-                value=f"**Nivel:** {player.character_level}\n"
-                      f"**Facción:** {player.get_faction_display()}\n"
-                      f"{guild_info}",
+                name="👤 Player Details",
+                value=f"**Name:** {player.in_game_name}\n"
+                      f"**Level:** {player.character_level}\n"
+                      f"**Faction:** {player.get_faction_display()}\n"
+                      f"{guild_info}\n"
+                      f"{role_info}\n"
+                      f"**Loadouts:** [View Loadouts]({loadout_url})",
                 inline=False
             )
             
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            # Create view with edit button
+            view = PlayerInfoView(player)
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
         else:
             await interaction.response.send_message(
                 "❌ No tienes un jugador registrado. Usa el botón 'Create Player' para crear uno.",
@@ -696,13 +847,30 @@ class WarborneBot(commands.Bot):
             try:
                 player = await _get_player_by_discord_user(ctx.author.id)
                 if player:
-                    guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
+                    base_url = self.config.get('base_url', 'http://127.0.0.1:8000')
+                    loadout_url = f"{base_url}/guilds/player/{player.id}/loadout/"
                     
-                    await ctx.send(f"🎮 **Tu Jugador:**\n"
-                                 f"**Nombre:** {player.in_game_name}\n"
-                                 f"**Nivel:** {player.character_level}\n"
-                                 f"**Facción:** {player.get_faction_display()}\n"
-                                 f"{guild_info}")
+                    guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
+                    role_info = f"**Rol:** {player.get_game_role_display()}" if player.game_role else "**Rol:** No asignado"
+                    
+                    embed = discord.Embed(
+                        title="📊 Player Information",
+                        color=0x4a9eff
+                    )
+                    embed.add_field(
+                        name="👤 Player Details",
+                        value=f"**Name:** {player.in_game_name}\n"
+                              f"**Level:** {player.character_level}\n"
+                              f"**Faction:** {player.get_faction_display()}\n"
+                              f"{guild_info}\n"
+                              f"{role_info}\n"
+                              f"**Loadouts:** [View Loadouts]({loadout_url})",
+                        inline=False
+                    )
+                    
+                    # Create view with edit button
+                    view = PlayerInfoView(player)
+                    await ctx.send(embed=embed, view=view)
                 else:
                     await ctx.send("❌ No tienes un jugador registrado. Usa `!createplayer <nombre>` para crear uno.")
             except Exception as e:
@@ -957,6 +1125,7 @@ class WarborneBot(commands.Bot):
                        "`!createevent` - Create guild event\n"
                        "`!createplayer [name]` - Create your player\n"
                        "`!myplayer` - View your player\n"
+                       "`!buildplayer <name>` - View player loadout\n"
                        "`!guildinfo` - Guild information\n"
                        "`!ping` - Test bot")
         else:
