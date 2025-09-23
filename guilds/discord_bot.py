@@ -324,11 +324,6 @@ class CreatePlayerView(discord.ui.View):
                       f"{role_info}",
                 inline=False
             )
-            embed.add_field(
-                name="🔗 Loadout Link",
-                value=f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout",
-                inline=False
-            )
             
             await interaction.response.send_message(embed=embed, ephemeral=True)
     
@@ -383,8 +378,6 @@ class CommandMenuView(discord.ui.View):
             if player.guild:
                 guild_info = f"\n**Guild:** {player.guild.name}"
             
-            loadout_url = f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout"
-            
             embed = discord.Embed(
                 title=f"👨‍💼 {player.in_game_name}",
                 color=0x4a9eff
@@ -393,8 +386,7 @@ class CommandMenuView(discord.ui.View):
                 name="📊 Player Info",
                 value=f"**Nivel:** {player.character_level}\n"
                       f"**Facción:** {player.get_faction_display()}\n"
-                      f"{guild_info}\n"
-                      f"**Link del Loadout:** {loadout_url}",
+                      f"{guild_info}",
                 inline=False
             )
             
@@ -704,17 +696,13 @@ class WarborneBot(commands.Bot):
             try:
                 player = await _get_player_by_discord_user(ctx.author.id)
                 if player:
-                    base_url = self.config.get('base_url', 'http://127.0.0.1:8000')
-                    loadout_url = f"{base_url}/guilds/player/{player.id}/loadout/"
-                    
                     guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
                     
                     await ctx.send(f"🎮 **Tu Jugador:**\n"
                                  f"**Nombre:** {player.in_game_name}\n"
                                  f"**Nivel:** {player.character_level}\n"
                                  f"**Facción:** {player.get_faction_display()}\n"
-                                 f"{guild_info}\n"
-                                 f"**Link del Loadout:** {loadout_url}")
+                                 f"{guild_info}")
                 else:
                     await ctx.send("❌ No tienes un jugador registrado. Usa `!createplayer <nombre>` para crear uno.")
             except Exception as e:
@@ -969,7 +957,6 @@ class WarborneBot(commands.Bot):
                        "`!createevent` - Create guild event\n"
                        "`!createplayer [name]` - Create your player\n"
                        "`!myplayer` - View your player\n"
-                       "`!buildplayer <name>` - View player loadout\n"
                        "`!guildinfo` - Guild information\n"
                        "`!ping` - Test bot")
         else:
