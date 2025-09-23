@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.http import JsonResponse
-from .models import Guild, Player, Drifter, Event, GearItem, GearType, RecommendedBuild
+from .models import Guild, Player, Drifter, Event, GearItem, GearType, RecommendedBuild, PlayerGear
 import json
 
 @api_view(['GET'])
