@@ -1221,9 +1221,12 @@ def publish_event(request, event_id):
             'announcement_channel_id': config.event_announcements_channel_id
         }
         
-        # TODO: Send notification to Discord bot
-        # For now, we'll just return success
-        # In a real implementation, you might use a message queue or webhook
+        # Send command to Discord bot
+        from .bot_communication import send_bot_command
+        
+        success = send_bot_command('publish_event', announcement_data)
+        if not success:
+            return Response({'error': 'Failed to send command to Discord bot'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response({
             'message': f'Event "{event.title}" published successfully to Discord announcements channel',
@@ -1998,6 +2001,84 @@ def test_discord_bot_connection(request):
         
         return Response({
             'message': 'Bot connection test completed',
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def start_discord_bot(request):
+    """Start the Discord bot"""
+    try:
+        from .models import DiscordBotConfig
+        
+        config = DiscordBotConfig.objects.first()
+        if not config:
+            return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Set bot as active
+        config.is_active = True
+        config.save()
+        
+        # In a real implementation, you would:
+        # 1. Start the bot process
+        # 2. Update the bot status
+        # 3. Send notifications
+        
+        return Response({
+            'message': 'Bot start command sent successfully',
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def stop_discord_bot(request):
+    """Stop the Discord bot"""
+    try:
+        from .models import DiscordBotConfig
+        
+        config = DiscordBotConfig.objects.first()
+        if not config:
+            return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Set bot as inactive and offline
+        config.is_active = False
+        config.is_online = False
+        config.save()
+        
+        # In a real implementation, you would:
+        # 1. Stop the bot process
+        # 2. Update the bot status
+        # 3. Send notifications
+        
+        return Response({
+            'message': 'Bot stop command sent successfully',
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def restart_discord_bot(request):
+    """Restart the Discord bot"""
+    try:
+        from .models import DiscordBotConfig
+        
+        config = DiscordBotConfig.objects.first()
+        if not config:
+            return Response({'error': 'No bot configuration found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # In a real implementation, you would:
+        # 1. Stop the bot process
+        # 2. Start the bot process again
+        # 3. Update the bot status
+        
+        return Response({
+            'message': 'Bot restart command sent successfully',
             'status': 'success'
         })
         

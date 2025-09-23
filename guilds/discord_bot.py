@@ -770,6 +770,13 @@ class WarborneBot(commands.Bot):
         # Start the status monitoring task
         self.status_monitor_task = asyncio.create_task(self.monitor_bot_status())
         
+        # Start the command monitoring task
+        self.command_monitor_task = asyncio.create_task(self.monitor_commands())
+        
+        # Add reaction event handler
+        self.add_listener(self.on_reaction_add, 'on_reaction_add')
+        self.add_listener(self.on_reaction_remove, 'on_reaction_remove')
+        
         # Send hello message to all guilds
         config = await _get_bot_config()
         for guild in self.guilds:
@@ -797,6 +804,253 @@ class WarborneBot(commands.Bot):
                     print(f"Could not send message to {guild.name}: {e}")
             
         await self.update_bot_status(True)
+    
+    async def publish_event_announcement(self, event_data):
+        """Publish an event announcement to Discord"""
+        try:
+            from .models import DiscordBotConfig
+            
+            # Get bot config
+            config = await _get_bot_config()
+            if not config or not config.event_announcements_channel_id:
+                return False, "Event announcements channel not configured"
+            
+            # Get the announcement channel
+            announcement_channel = self.get_channel(config.event_announcements_channel_id)
+            if not announcement_channel:
+                return False, "Could not find event announcements channel"
+            
+            # Create the announcement embed
+            embed = discord.Embed(
+                title="📢 NEW EVENT ANNOUNCEMENT",
+                description=f"**{event_data['title']}**",
+                color=0xff6b35  # Orange color for announcements
+            )
+            
+            # Add event details
+            embed.add_field(
+                name="📅 Event Date",
+                value=event_data['discord_timestamp'],
+                inline=True
+            )
+            
+            embed.add_field(
+                name="🏷️ Event Type",
+                value=event_data['event_type_display'],
+                inline=True
+            )
+            
+            embed.add_field(
+                name="👤 Created by",
+                value=event_data['created_by_discord_name'],
+                inline=True
+            )
+            
+            if event_data['description']:
+                embed.add_field(
+                    name="📝 Description",
+                    value=event_data['description'][:1000],  # Limit description length
+                    inline=False
+                )
+            
+            # Add participant info
+            participants_text = f"{event_data['participant_count']} participants"
+            if event_data['max_participants']:
+                participants_text += f" / {event_data['max_participants']} max"
+            
+            embed.add_field(
+                name="👥 Participants",
+                value=participants_text,
+                inline=True
+            )
+            
+            embed.add_field(
+                name="⏰ Relative Time",
+                value=event_data['discord_timestamp_relative'],
+                inline=True
+            )
+            
+            embed.add_field(
+                name="🌍 Timezone",
+                value=event_data['timezone'],
+                inline=True
+            )
+            
+            # Add footer with instructions
+            embed.set_footer(
+                text="React with ✅ to join this event! Use !menu to see all available commands."
+            )
+            
+            # Send the announcement
+            message = await announcement_channel.send(embed=embed)
+            
+            # Add reaction for joining
+            await message.add_reaction("✅")
+            
+            return True, f"Event announcement posted successfully in {announcement_channel.mention}"
+            
+        except Exception as e:
+            return False, f"Error posting event announcement: {str(e)}"
+    
+    async def monitor_commands(self):
+        """Monitor for commands from the API"""
+        from .bot_communication import get_bot_command, mark_command_processed, cleanup_old_commands
+        
+        while True:
+            try:
+                # Check for new commands
+                command = get_bot_command()
+                if command and not command.get('processed', False):
+                    print(f"🤖 Received command: {command['command']}")
+                    
+                    # Process the command
+                    if command['command'] == 'publish_event':
+                        success, message = await self.publish_event_announcement(command['data'])
+                        if success:
+                            print(f"✅ Event published: {message}")
+                        else:
+                            print(f"❌ Failed to publish event: {message}")
+                    
+                    # Mark command as processed
+                    mark_command_processed()
+                
+                # Clean up old commands
+                cleanup_old_commands()
+                
+                # Wait before checking again
+                await asyncio.sleep(2)  # Check every 2 seconds
+                
+            except Exception as e:
+                print(f"Error in command monitoring: {e}")
+                await asyncio.sleep(5)  # Wait longer on error
+    
+    async def on_reaction_add(self, reaction, user):
+        """Handle when a user adds a reaction to an event announcement"""
+        if user.bot:
+            return  # Ignore bot reactions
+        
+        if reaction.emoji == "✅":
+            await self.handle_event_join(reaction, user)
+    
+    async def on_reaction_remove(self, reaction, user):
+        """Handle when a user removes a reaction from an event announcement"""
+        if user.bot:
+            return  # Ignore bot reactions
+        
+        if reaction.emoji == "✅":
+            await self.handle_event_leave(reaction, user)
+    
+    async def handle_event_join(self, reaction, user):
+        """Handle when a user joins an event"""
+        try:
+            # Get the message content to find event info
+            message = reaction.message
+            
+            # Check if this is an event announcement
+            if not message.embeds or not message.embeds[0].title.startswith("📢 NEW EVENT ANNOUNCEMENT"):
+                return
+            
+            # Extract event title from embed
+            event_title = message.embeds[0].description.replace("**", "")
+            
+            # Find the event in database
+            from .models import Event, EventParticipant, Player
+            
+            event = Event.objects.filter(
+                title=event_title,
+                is_active=True,
+                is_cancelled=False
+            ).first()
+            
+            if not event:
+                print(f"Event not found: {event_title}")
+                return
+            
+            # Find or create player
+            player = Player.objects.filter(discord_user_id=user.id).first()
+            if not player:
+                # Create a basic player entry
+                player = Player.objects.create(
+                    in_game_name=user.display_name,
+                    discord_user_id=user.id,
+                    discord_name=user.name,
+                    character_level=1,
+                    faction='none'
+                )
+            
+            # Check if already participating
+            existing_participant = EventParticipant.objects.filter(
+                event=event,
+                player=player,
+                is_active=True
+            ).first()
+            
+            if existing_participant:
+                print(f"User {user.display_name} is already participating in {event.title}")
+                return
+            
+            # Add participant
+            EventParticipant.objects.create(
+                event=event,
+                player=player,
+                is_active=True
+            )
+            
+            print(f"✅ {user.display_name} joined event: {event.title}")
+            
+            # Send confirmation DM
+            try:
+                await user.send(f"✅ You've successfully joined the event **{event.title}**!")
+            except:
+                pass  # User might have DMs disabled
+            
+        except Exception as e:
+            print(f"Error handling event join: {e}")
+    
+    async def handle_event_leave(self, reaction, user):
+        """Handle when a user leaves an event"""
+        try:
+            # Get the message content to find event info
+            message = reaction.message
+            
+            # Check if this is an event announcement
+            if not message.embeds or not message.embeds[0].title.startswith("📢 NEW EVENT ANNOUNCEMENT"):
+                return
+            
+            # Extract event title from embed
+            event_title = message.embeds[0].description.replace("**", "")
+            
+            # Find the event in database
+            from .models import Event, EventParticipant, Player
+            
+            event = Event.objects.filter(
+                title=event_title,
+                is_active=True,
+                is_cancelled=False
+            ).first()
+            
+            if not event:
+                return
+            
+            # Find player
+            player = Player.objects.filter(discord_user_id=user.id).first()
+            if not player:
+                return
+            
+            # Remove participant
+            participant = EventParticipant.objects.filter(
+                event=event,
+                player=player,
+                is_active=True
+            ).first()
+            
+            if participant:
+                participant.is_active = False
+                participant.save()
+                print(f"❌ {user.display_name} left event: {event.title}")
+            
+        except Exception as e:
+            print(f"Error handling event leave: {e}")
     
     async def monitor_bot_status(self):
         """Monitor bot status and stop if is_online becomes False"""
