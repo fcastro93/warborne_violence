@@ -1250,7 +1250,7 @@ def create_parties(request, event_id):
             event=event,
             is_active=True,
             player__isnull=False
-        ).select_related('player'))
+        ).select_related('player', 'player__guild'))
         
         if len(participants) < 2:
             return Response({'error': 'At least 2 participants needed to create parties'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1258,91 +1258,201 @@ def create_parties(request, event_id):
         # Clear existing parties for this event
         Party.objects.filter(event=event).delete()
         
-        # Define role requirements per party (minimum) - from Discord bot
+        # Get party configuration from request
+        party_config = request.data.get('partyConfig', {})
+        role_composition = party_config.get('roleComposition', {})
+        guild_split = party_config.get('guildSplit', False)
+        
+        # Use custom role requirements or default ones
         ROLE_REQUIREMENTS = {
-            'tank': 4,           # 4 tanks per party
-            'healer': 2,         # 2 healers per party
-            'ranged_dps': 3,     # 3 ranged DPS
-            'melee_dps': 3,      # 3 melee DPS
-            'defensive_tank': 1, # 1 defensive tank
-            'offensive_tank': 1, # 1 offensive tank
-            'offensive_support': 1, # 1 offensive support
+            'tank': role_composition.get('tank', 4),
+            'healer': role_composition.get('healer', 2),
+            'ranged_dps': role_composition.get('ranged_dps', 3),
+            'melee_dps': role_composition.get('melee_dps', 3),
+            'defensive_tank': role_composition.get('defensive_tank', 1),
+            'offensive_tank': role_composition.get('offensive_tank', 1),
+            'offensive_support': role_composition.get('offensive_support', 1),
+            'defensive_support': role_composition.get('defensive_support', 0),
         }
         
         MAX_PARTY_SIZE = 15
         
-        # Group participants by role
-        participants_by_role = {}
-        for participant in participants:
-            role = participant.player.game_role or 'unknown'
-            if role not in participants_by_role:
-                participants_by_role[role] = []
-            participants_by_role[role].append(participant)
-        
-        # Calculate how many parties we need
-        total_participants = len(participants)
-        num_parties = max(1, (total_participants + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
-        
-        parties = []
-        
-        # Create party objects
-        for i in range(num_parties):
-            party = Party.objects.create(
-                event=event,
-                party_number=i + 1,
-                max_members=MAX_PARTY_SIZE
-            )
-            parties.append(party)
-        
-        # Distribute participants across parties
-        party_assignments = [[] for _ in range(num_parties)]
-        party_role_counts = [{} for _ in range(num_parties)]
-        
-        # Initialize role counts
-        for party_idx in range(num_parties):
-            for role in ROLE_REQUIREMENTS.keys():
-                party_role_counts[party_idx][role] = 0
-        
-        # Distribute participants by role, trying to balance
-        for role, role_participants in participants_by_role.items():
-            if role == 'unknown':
-                # Distribute unknown roles evenly
-                for i, participant in enumerate(role_participants):
-                    party_idx = i % num_parties
-                    party_assignments[party_idx].append(participant)
-            else:
-                # Distribute known roles to balance requirements
-                for i, participant in enumerate(role_participants):
-                    # Find party with least of this role
-                    best_party = 0
-                    min_count = party_role_counts[0].get(role, 0)
-                    
-                    for party_idx in range(1, num_parties):
-                        current_count = party_role_counts[party_idx].get(role, 0)
-                        if current_count < min_count:
-                            min_count = current_count
-                            best_party = party_idx
-                    
-                    party_assignments[best_party].append(participant)
-                    party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
-        
-        # Create PartyMember objects
-        party_members_created = 0
-        for party_idx, party in enumerate(parties):
-            for participant in party_assignments[party_idx]:
-                PartyMember.objects.create(
-                    party=party,
-                    event_participant=participant,
-                    player=participant.player,
-                    assigned_role=participant.player.game_role
+        if guild_split:
+            # Group participants by guild first
+            participants_by_guild = {}
+            for participant in participants:
+                guild = participant.player.guild
+                guild_name = guild.name if guild else "No Guild"
+                if guild_name not in participants_by_guild:
+                    participants_by_guild[guild_name] = []
+                participants_by_guild[guild_name].append(participant)
+            
+            total_parties_created = 0
+            total_members_created = 0
+            guild_results = []
+            
+            # Process each guild separately
+            for guild_name, guild_participants in participants_by_guild.items():
+                if len(guild_participants) < 2:
+                    guild_results.append(f"{guild_name}: {len(guild_participants)} participants (minimum 2 needed)")
+                    continue
+                
+                # Group participants by role within this guild
+                participants_by_role = {}
+                for participant in guild_participants:
+                    role = participant.player.game_role or 'unknown'
+                    if role not in participants_by_role:
+                        participants_by_role[role] = []
+                    participants_by_role[role].append(participant)
+                
+                # Calculate how many parties we need for this guild
+                num_parties = max(1, (len(guild_participants) + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
+                
+                # Create party objects for this guild
+                parties = []
+                for i in range(num_parties):
+                    party = Party.objects.create(
+                        event=event,
+                        party_number=total_parties_created + i + 1,
+                        max_members=MAX_PARTY_SIZE
+                    )
+                    parties.append(party)
+                
+                # Distribute participants across parties for this guild
+                party_assignments = [[] for _ in range(num_parties)]
+                party_role_counts = [{} for _ in range(num_parties)]
+                
+                # Initialize role counts
+                for party_idx in range(num_parties):
+                    for role in ROLE_REQUIREMENTS.keys():
+                        party_role_counts[party_idx][role] = 0
+                
+                # Distribute participants by role, trying to balance within guild
+                for role, role_participants in participants_by_role.items():
+                    if role == 'unknown':
+                        # Distribute unknown roles evenly
+                        for i, participant in enumerate(role_participants):
+                            party_idx = i % num_parties
+                            party_assignments[party_idx].append(participant)
+                    else:
+                        # Distribute known roles to balance requirements
+                        for i, participant in enumerate(role_participants):
+                            # Find party with least of this role
+                            best_party = 0
+                            min_count = party_role_counts[0].get(role, 0)
+                            
+                            for party_idx in range(1, num_parties):
+                                current_count = party_role_counts[party_idx].get(role, 0)
+                                if current_count < min_count:
+                                    min_count = current_count
+                                    best_party = party_idx
+                            
+                            party_assignments[best_party].append(participant)
+                            party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
+                
+                # Create PartyMember objects for this guild
+                guild_members_created = 0
+                for party_idx, party in enumerate(parties):
+                    for participant in party_assignments[party_idx]:
+                        PartyMember.objects.create(
+                            party=party,
+                            event_participant=participant,
+                            player=participant.player,
+                            assigned_role=participant.player.game_role
+                        )
+                        guild_members_created += 1
+                
+                total_parties_created += num_parties
+                total_members_created += guild_members_created
+                guild_results.append(f"{guild_name}: {num_parties} parties with {guild_members_created} participants")
+            
+            # Create summary message
+            result_message = f"Guild parties created successfully:\n"
+            result_message += f"Total: {total_parties_created} parties with {total_members_created} participants\n\n"
+            result_message += "Guild breakdown:\n"
+            for result in guild_results:
+                result_message += f"• {result}\n"
+            
+            return Response({
+                'message': result_message,
+                'parties_created': total_parties_created,
+                'members_assigned': total_members_created,
+                'guild_breakdown': guild_results
+            }, status=status.HTTP_200_OK)
+        else:
+            # Original logic for non-guild split
+            # Group participants by role
+            participants_by_role = {}
+            for participant in participants:
+                role = participant.player.game_role or 'unknown'
+                if role not in participants_by_role:
+                    participants_by_role[role] = []
+                participants_by_role[role].append(participant)
+            
+            # Calculate how many parties we need
+            total_participants = len(participants)
+            num_parties = max(1, (total_participants + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
+            
+            parties = []
+            
+            # Create party objects
+            for i in range(num_parties):
+                party = Party.objects.create(
+                    event=event,
+                    party_number=i + 1,
+                    max_members=MAX_PARTY_SIZE
                 )
-                party_members_created += 1
-        
-        return Response({
-            'message': f'Parties created successfully: {num_parties} parties with {party_members_created} participants distributed',
-            'parties_created': num_parties,
-            'members_assigned': party_members_created
-        }, status=status.HTTP_200_OK)
+                parties.append(party)
+            
+            # Distribute participants across parties
+            party_assignments = [[] for _ in range(num_parties)]
+            party_role_counts = [{} for _ in range(num_parties)]
+            
+            # Initialize role counts
+            for party_idx in range(num_parties):
+                for role in ROLE_REQUIREMENTS.keys():
+                    party_role_counts[party_idx][role] = 0
+            
+            # Distribute participants by role, trying to balance
+            for role, role_participants in participants_by_role.items():
+                if role == 'unknown':
+                    # Distribute unknown roles evenly
+                    for i, participant in enumerate(role_participants):
+                        party_idx = i % num_parties
+                        party_assignments[party_idx].append(participant)
+                else:
+                    # Distribute known roles to balance requirements
+                    for i, participant in enumerate(role_participants):
+                        # Find party with least of this role
+                        best_party = 0
+                        min_count = party_role_counts[0].get(role, 0)
+                        
+                        for party_idx in range(1, num_parties):
+                            current_count = party_role_counts[party_idx].get(role, 0)
+                            if current_count < min_count:
+                                min_count = current_count
+                                best_party = party_idx
+                        
+                        party_assignments[best_party].append(participant)
+                        party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
+            
+            # Create PartyMember objects
+            party_members_created = 0
+            for party_idx, party in enumerate(parties):
+                for participant in party_assignments[party_idx]:
+                    PartyMember.objects.create(
+                        party=party,
+                        event_participant=participant,
+                        player=participant.player,
+                        assigned_role=participant.player.game_role
+                    )
+                    party_members_created += 1
+            
+            return Response({
+                'message': f'Parties created successfully: {num_parties} parties with {party_members_created} participants distributed',
+                'parties_created': num_parties,
+                'members_assigned': party_members_created
+            }, status=status.HTTP_200_OK)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -1488,3 +1598,275 @@ def create_guild_parties(request, event_id):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def event_participants(request, event_id):
+    """Get all participants for a specific event"""
+    try:
+        from .models import Event, EventParticipant
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get all active participants with their players and guilds
+        participants = EventParticipant.objects.filter(
+            event=event,
+            is_active=True,
+            player__isnull=False
+        ).select_related('player', 'player__guild')
+        
+        participants_data = []
+        for participant in participants:
+            participants_data.append({
+                'id': participant.id,
+                'player': {
+                    'id': participant.player.id,
+                    'discord_name': participant.player.discord_name,
+                    'game_role': participant.player.game_role,
+                    'guild': {
+                        'id': participant.player.guild.id if participant.player.guild else None,
+                        'name': participant.player.guild.name if participant.player.guild else None
+                    } if participant.player.guild else None
+                },
+                'joined_at': participant.joined_at.isoformat()
+            })
+        
+        return Response({
+            'participants': participants_data,
+            'total_count': len(participants_data)
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def event_parties(request, event_id):
+    """Get all parties for a specific event"""
+    try:
+        from .models import Event, Party, PartyMember
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get all parties for this event with their members
+        parties = Party.objects.filter(
+            event=event,
+            is_active=True
+        ).prefetch_related('members__player', 'members__event_participant').order_by('party_number')
+        
+        parties_data = []
+        for party in parties:
+            members_data = []
+            for member in party.members.filter(is_active=True):
+                members_data.append({
+                    'id': member.id,
+                    'player': {
+                        'id': member.player.id,
+                        'discord_name': member.player.discord_name,
+                        'game_role': member.player.game_role
+                    },
+                    'assigned_role': member.assigned_role,
+                    'assigned_at': member.assigned_at.isoformat()
+                })
+            
+            parties_data.append({
+                'id': party.id,
+                'party_number': party.party_number,
+                'max_members': party.max_members,
+                'member_count': len(members_data),
+                'members': members_data,
+                'created_at': party.created_at.isoformat()
+            })
+        
+        return Response({
+            'parties': parties_data,
+            'total_count': len(parties_data)
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def remove_participant(request, event_id):
+    """Remove a participant from an event"""
+    try:
+        from .models import Event, EventParticipant
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        participant_id = request.data.get('participant_id')
+        if not participant_id:
+            return Response({'error': 'Participant ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the participant
+        try:
+            participant = EventParticipant.objects.get(
+                id=participant_id,
+                event=event,
+                is_active=True
+            )
+        except EventParticipant.DoesNotExist:
+            return Response({'error': 'Participant not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Deactivate the participant
+        participant.is_active = False
+        participant.save()
+        
+        return Response({
+            'message': 'Participant removed successfully',
+            'participant_id': participant.id
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def fill_parties(request, event_id):
+    """Fill existing parties with remaining participants"""
+    try:
+        from .models import Event, Party, PartyMember, EventParticipant
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get party configuration from request
+        party_config = request.data.get('partyConfig', {})
+        role_composition = party_config.get('roleComposition', {})
+        guild_split = party_config.get('guildSplit', False)
+        
+        # Get existing parties
+        existing_parties = list(Party.objects.filter(
+            event=event,
+            is_active=True
+        ).prefetch_related('members').order_by('party_number'))
+        
+        if not existing_parties:
+            return Response({'error': 'No existing parties found. Create parties first.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get unassigned participants
+        assigned_participant_ids = set()
+        for party in existing_parties:
+            for member in party.members.filter(is_active=True):
+                assigned_participant_ids.add(member.event_participant.id)
+        
+        unassigned_participants = list(EventParticipant.objects.filter(
+            event=event,
+            is_active=True,
+            player__isnull=False
+        ).exclude(id__in=assigned_participant_ids).select_related('player', 'player__guild'))
+        
+        if not unassigned_participants:
+            return Response({'message': 'All participants are already assigned to parties'})
+        
+        # Fill parties based on configuration
+        members_assigned = 0
+        
+        if guild_split:
+            # Group unassigned participants by guild
+            participants_by_guild = {}
+            for participant in unassigned_participants:
+                guild = participant.player.guild
+                guild_name = guild.name if guild else "No Guild"
+                if guild_name not in participants_by_guild:
+                    participants_by_guild[guild_name] = []
+                participants_by_guild[guild_name].append(participant)
+            
+            # Fill parties for each guild
+            for guild_name, guild_participants in participants_by_guild.items():
+                guild_members_assigned = fill_parties_for_guild(
+                    existing_parties, guild_participants, role_composition
+                )
+                members_assigned += guild_members_assigned
+        else:
+            # Fill parties without guild consideration
+            members_assigned = fill_parties_for_guild(
+                existing_parties, unassigned_participants, role_composition
+            )
+        
+        return Response({
+            'message': f'Parties filled successfully: {members_assigned} participants assigned',
+            'members_assigned': members_assigned
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+def fill_parties_for_guild(parties, participants, role_composition):
+    """Helper function to fill parties with participants"""
+    from .models import PartyMember
+    
+    # Group participants by role
+    participants_by_role = {}
+    for participant in participants:
+        role = participant.player.game_role or 'unknown'
+        if role not in participants_by_role:
+            participants_by_role[role] = []
+        participants_by_role[role].append(participant)
+    
+    # Calculate current role counts for each party
+    party_role_counts = []
+    for party in parties:
+        role_counts = {}
+        for member in party.members.filter(is_active=True):
+            role = member.assigned_role or 'unknown'
+            role_counts[role] = role_counts.get(role, 0) + 1
+        party_role_counts.append(role_counts)
+    
+    members_assigned = 0
+    
+    # Distribute participants by role
+    for role, role_participants in participants_by_role.items():
+        target_count = role_composition.get(role, 0)
+        
+        for participant in role_participants:
+            # Find the best party for this participant
+            best_party_idx = 0
+            best_score = float('inf')
+            
+            for party_idx, party in enumerate(parties):
+                # Check if party is full
+                if party.member_count >= party.max_members:
+                    continue
+                
+                # Calculate score based on role balance
+                current_count = party_role_counts[party_idx].get(role, 0)
+                if target_count > 0:
+                    # For roles with target count, prefer parties with fewer of this role
+                    score = current_count
+                else:
+                    # For filler roles, prefer parties with fewer total members
+                    total_members = sum(party_role_counts[party_idx].values())
+                    score = total_members
+                
+                if score < best_score:
+                    best_score = score
+                    best_party_idx = party_idx
+            
+            # Assign participant to best party
+            best_party = parties[best_party_idx]
+            if best_party.member_count < best_party.max_members:
+                PartyMember.objects.create(
+                    party=best_party,
+                    event_participant=participant,
+                    player=participant.player,
+                    assigned_role=participant.player.game_role
+                )
+                
+                # Update role counts
+                party_role_counts[best_party_idx][role] = party_role_counts[best_party_idx].get(role, 0) + 1
+                members_assigned += 1
+    
+    return members_assigned
