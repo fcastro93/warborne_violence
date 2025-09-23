@@ -7,6 +7,8 @@ from datetime import datetime
 import pytz
 from .models import Guild, Player, Drifter, Event, EventParticipant, Party, PartyMember, GearItem, GearType, RecommendedBuild, PlayerGear
 import json
+import asyncio
+from .discord_bot import WarborneBot
 
 @api_view(['POST'])
 def update_player_drifter(request, player_id):
@@ -2409,3 +2411,45 @@ def update_party_name(request, event_id, party_id):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+ 
+ @ a p i _ v i e w ( [ ' P O S T ' ] ) 
+ d e f   d i s c o r d _ p r e s e n c e ( r e q u e s t ) : 
+         \  
+ \ \ G e t  
+ D i s c o r d  
+ p r e s e n c e  
+ s t a t u s  
+ f o r  
+ m u l t i p l e  
+ u s e r s \ \ \ 
+         t r y : 
+                 u s e r _ i d s   =   r e q u e s t . d a t a . g e t ( ' u s e r _ i d s ' ,   [ ] ) 
+                 
+                 i f   n o t   u s e r _ i d s : 
+                         r e t u r n   R e s p o n s e ( { ' e r r o r ' :   ' u s e r _ i d s   i s   r e q u i r e d ' } ,   s t a t u s = s t a t u s . H T T P _ 4 0 0 _ B A D _ R E Q U E S T ) 
+                 
+                 #   F o r   n o w ,   r e t u r n   m o c k   d a t a   s i n c e   w e   n e e d   t o   i m p l e m e n t   D i s c o r d   G a t e w a y   c o n n e c t i o n 
+                 #   I n   a   r e a l   i m p l e m e n t a t i o n ,   t h i s   w o u l d   c o n n e c t   t o   D i s c o r d ' s   G a t e w a y   A P I 
+                 p r e s e n c e _ d a t a   =   { } 
+                 
+                 f o r   u s e r _ i d   i n   u s e r _ i d s : 
+                         #   M o c k   p r e s e n c e   d a t a   -   i n   r e a l   i m p l e m e n t a t i o n ,   t h i s   w o u l d   c o m e   f r o m   D i s c o r d   G a t e w a y 
+                         p r e s e n c e _ d a t a [ s t r ( u s e r _ i d ) ]   =   { 
+                                 ' s t a t u s ' :   ' o f f l i n e ' ,     #   o n l i n e ,   i d l e ,   d n d ,   o f f l i n e 
+                                 ' a c t i v i t i e s ' :   [ ] , 
+                                 ' c l i e n t _ s t a t u s ' :   { 
+                                         ' d e s k t o p ' :   ' o f f l i n e ' , 
+                                         ' m o b i l e ' :   ' o f f l i n e ' , 
+                                         ' w e b ' :   ' o f f l i n e ' 
+                                 } 
+                         } 
+                 
+                 r e t u r n   R e s p o n s e ( { 
+                         ' p r e s e n c e ' :   p r e s e n c e _ d a t a , 
+                         ' t i m e s t a m p ' :   t i m e z o n e . n o w ( ) . i s o f o r m a t ( ) 
+                 } ) 
+                 
+         e x c e p t   E x c e p t i o n   a s   e : 
+                 r e t u r n   R e s p o n s e ( { ' e r r o r ' :   s t r ( e ) } ,   s t a t u s = s t a t u s . H T T P _ 5 0 0 _ I N T E R N A L _ S E R V E R _ E R R O R )  
+ 
