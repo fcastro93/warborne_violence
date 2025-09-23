@@ -899,39 +899,44 @@ class WarborneBot(commands.Bot):
         
         print("🔍 Starting command monitoring...")
         
-        while True:
-            try:
-                # Check for new commands
-                command = get_bot_command()
-                if command and not command.get('processed', False):
-                    print(f"🤖 Received command: {command['command']}")
+        try:
+            while True:
+                try:
+                    # Check for new commands
+                    command = get_bot_command()
+                    if command and not command.get('processed', False):
+                        print(f"🤖 Received command: {command['command']}")
+                        
+                        # Process the command
+                        if command['command'] == 'publish_event':
+                            print(f"📢 Processing publish_event command...")
+                            success, message = await self.publish_event_announcement(command['data'])
+                            if success:
+                                print(f"✅ Event published: {message}")
+                            else:
+                                print(f"❌ Failed to publish event: {message}")
+                        
+                        # Mark command as processed
+                        mark_command_processed()
+                        print(f"✅ Command processed and marked as complete")
+                    else:
+                        # Only print every 30 seconds to avoid spam
+                        if int(time.time()) % 30 == 0:
+                            print("🔍 Monitoring for commands...")
                     
-                    # Process the command
-                    if command['command'] == 'publish_event':
-                        print(f"📢 Processing publish_event command...")
-                        success, message = await self.publish_event_announcement(command['data'])
-                        if success:
-                            print(f"✅ Event published: {message}")
-                        else:
-                            print(f"❌ Failed to publish event: {message}")
+                    # Clean up old commands
+                    cleanup_old_commands()
                     
-                    # Mark command as processed
-                    mark_command_processed()
-                    print(f"✅ Command processed and marked as complete")
-                else:
-                    # Only print every 30 seconds to avoid spam
-                    if int(time.time()) % 30 == 0:
-                        print("🔍 Monitoring for commands...")
-                
-                # Clean up old commands
-                cleanup_old_commands()
-                
-                # Wait before checking again
-                await asyncio.sleep(2)  # Check every 2 seconds
-                
-            except Exception as e:
-                print(f"❌ Error in command monitoring: {e}")
-                await asyncio.sleep(5)  # Wait longer on error
+                    # Wait before checking again
+                    await asyncio.sleep(2)  # Check every 2 seconds
+                    
+                except Exception as e:
+                    print(f"❌ Error in command monitoring loop: {e}")
+                    await asyncio.sleep(5)  # Wait longer on error
+        except Exception as e:
+            print(f"❌ Critical error in command monitoring: {e}")
+            import traceback
+            traceback.print_exc()
     
     async def on_reaction_add(self, reaction, user):
         """Handle when a user adds a reaction to an event announcement"""
