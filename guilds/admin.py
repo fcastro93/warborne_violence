@@ -324,7 +324,7 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
 class EventParticipantInline(admin.TabularInline):
     model = EventParticipant
     extra = 0
-    fields = ['discord_name', 'player', 'is_active', 'joined_at']
+    fields = ['discord_name', 'player', 'joined_at']
     readonly_fields = ['discord_name', 'joined_at']
     fk_name = 'event'
 
