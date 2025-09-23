@@ -2470,11 +2470,16 @@ def update_party_name(request, event_id, party_id):
  @ a u t h e n t i c a t i o n _ c l a s s e s ( [ S e s s i o n A u t h e n t i c a t i o n ] ) 
  @ p e r m i s s i o n _ c l a s s e s ( [ A l l o w A n y ] ) 
  d e f   a u t h _ l o g i n ( r e q u e s t ) : 
-         \  
- \ \ D j a n g o  
- b u i l t - i n  
- u s e r  
- a u t h e n t i c a t i o n  
+         \ 
+ 
+ \ \ D j a n g o 
+ 
+ b u i l t - i n 
+ 
+ u s e r 
+ 
+ a u t h e n t i c a t i o n 
+ 
  l o g i n \ \ \ 
          t r y : 
                  u s e r n a m e   =   r e q u e s t . d a t a . g e t ( ' u s e r n a m e ' ) 
@@ -2540,10 +2545,14 @@ def update_party_name(request, event_id, party_id):
  @ a u t h e n t i c a t i o n _ c l a s s e s ( [ S e s s i o n A u t h e n t i c a t i o n ] ) 
  @ p e r m i s s i o n _ c l a s s e s ( [ I s A u t h e n t i c a t e d ] ) 
  d e f   a u t h _ l o g o u t ( r e q u e s t ) : 
-         \ \ \ D j a n g o  
- b u i l t - i n  
- u s e r  
- a u t h e n t i c a t i o n  
+         \ \ \ D j a n g o 
+ 
+ b u i l t - i n 
+ 
+ u s e r 
+ 
+ a u t h e n t i c a t i o n 
+ 
  l o g o u t \ \ \ 
          t r y : 
                  l o g o u t ( r e q u e s t ) 
@@ -2561,10 +2570,14 @@ def update_party_name(request, event_id, party_id):
  @ a u t h e n t i c a t i o n _ c l a s s e s ( [ S e s s i o n A u t h e n t i c a t i o n ] ) 
  @ p e r m i s s i o n _ c l a s s e s ( [ I s A u t h e n t i c a t e d ] ) 
  d e f   a u t h _ v e r i f y ( r e q u e s t ) : 
-         \ \ \ V e r i f y  
- i f  
- u s e r  
- i s  
+         \ \ \ V e r i f y 
+ 
+ i f 
+ 
+ u s e r 
+ 
+ i s 
+ 
  a u t h e n t i c a t e d \ \ \ 
          t r y : 
                  u s e r   =   r e q u e s t . u s e r 
@@ -2597,5 +2610,6 @@ def update_party_name(request, event_id, party_id):
                  r e t u r n   R e s p o n s e ( { 
                          ' s u c c e s s ' :   F a l s e , 
                          ' e r r o r ' :   s t r ( e ) 
-                 } ,   s t a t u s = s t a t u s . H T T P _ 5 0 0 _ I N T E R N A L _ S E R V E R _ E R R O R )  
+                 } ,   s t a t u s = s t a t u s . H T T P _ 5 0 0 _ I N T E R N A L _ S E R V E R _ E R R O R ) 
+ 
  
