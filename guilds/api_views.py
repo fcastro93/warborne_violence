@@ -19,36 +19,53 @@ def update_player_drifter(request, player_id):
         if drifter_slot not in [1, 2, 3]:
             return Response({'error': 'drifter_slot must be 1, 2, or 3'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Get the drifter
-        try:
-            drifter = Drifter.objects.get(id=drifter_id)
-        except Drifter.DoesNotExist:
-            return Response({'error': 'Drifter not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        # Update the appropriate drifter slot
-        if drifter_slot == 1:
-            player.drifter_1 = drifter
-        elif drifter_slot == 2:
-            player.drifter_2 = drifter
-        elif drifter_slot == 3:
-            player.drifter_3 = drifter
+        # Handle clearing drifter (null) or setting a drifter
+        if drifter_id is None:
+            # Clear the drifter slot
+            if drifter_slot == 1:
+                player.drifter_1 = None
+            elif drifter_slot == 2:
+                player.drifter_2 = None
+            elif drifter_slot == 3:
+                player.drifter_3 = None
+        else:
+            # Get the drifter
+            try:
+                drifter = Drifter.objects.get(id=drifter_id)
+            except Drifter.DoesNotExist:
+                return Response({'error': 'Drifter not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Update the appropriate drifter slot
+            if drifter_slot == 1:
+                player.drifter_1 = drifter
+            elif drifter_slot == 2:
+                player.drifter_2 = drifter
+            elif drifter_slot == 3:
+                player.drifter_3 = drifter
         
         player.save()
         
-        return Response({
-            'success': True,
-            'message': f'Drifter {drifter.name} assigned to slot {drifter_slot}',
-            'drifter': {
-                'id': drifter.id,
-                'name': drifter.name,
-                'base_health': drifter.base_health,
-                'base_energy': drifter.base_energy,
-                'base_damage': drifter.base_damage,
-                'base_defense': drifter.base_defense,
-                'base_speed': drifter.base_speed,
-                'special_abilities': drifter.special_abilities
-            }
-        })
+        if drifter_id is None:
+            return Response({
+                'success': True,
+                'message': f'Drifter slot {drifter_slot} cleared',
+                'drifter': None
+            })
+        else:
+            return Response({
+                'success': True,
+                'message': f'Drifter {drifter.name} assigned to slot {drifter_slot}',
+                'drifter': {
+                    'id': drifter.id,
+                    'name': drifter.name,
+                    'base_health': drifter.base_health,
+                    'base_energy': drifter.base_energy,
+                    'base_damage': drifter.base_damage,
+                    'base_defense': drifter.base_defense,
+                    'base_speed': drifter.base_speed,
+                    'special_abilities': drifter.special_abilities
+                }
+            })
         
     except Player.DoesNotExist:
         return Response({'error': 'Player not found'}, status=status.HTTP_404_NOT_FOUND)
