@@ -16,6 +16,7 @@ import asyncio
 from .discord_bot import WarborneBot
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def update_player_drifter(request, player_id):
     """Update a player's drifter selection"""
     try:
@@ -83,6 +84,7 @@ def update_player_drifter(request, player_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def all_drifters(request):
     """Get all available drifters"""
     try:
@@ -219,6 +221,7 @@ def gear_overview(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def gear_items(request):
     """Get all gear items for loadout page"""
     try:
@@ -566,6 +569,7 @@ def unequip_item_from_build(request, build_id):
 
 # Player Loadout API endpoints
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def player_detail(request, player_id):
     """Get player details"""
     try:
@@ -588,6 +592,7 @@ def player_detail(request, player_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def player_drifters(request, player_id):
     """Get player's drifters with gear slots"""
     try:
@@ -677,6 +682,7 @@ def player_drifters(request, player_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def player_equipped_gear(request, player_id):
     """Get player's equipped gear"""
     try:
