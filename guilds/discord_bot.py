@@ -56,8 +56,12 @@ class CheckPartyView(View):
                     if leader:
                         # Get leader's Discord name
                         leader_participant = leader.event_participant
-                        # Note: This will be called from async context, so we need to await it
-                        return leader_participant.discord_user_id  # Return ID for now, will resolve name in async context
+                        # Return party info as a dictionary for detailed display
+                        return {
+                            'party_name': party.name or f"Party {party.id}",
+                            'leader_id': leader_participant.discord_user_id,
+                            'party_id': party.id
+                        }
                     else:
                         return "Party Leader: Unknown"
                         
@@ -68,14 +72,61 @@ class CheckPartyView(View):
             # Get the party status
             party_status = await check_party_status()
             
-            # If we got a Discord user ID, resolve the name
-            if isinstance(party_status, int):
+            # Handle different response types
+            if isinstance(party_status, dict):
+                # User is in a party - show detailed information
+                party_name = party_status['party_name']
+                leader_id = party_status['leader_id']
+                party_id = party_status['party_id']
+                
+                # Get leader name
+                leader_name = await self.get_discord_user_name(leader_id)
+                
+                # Get all party members
+                @sync_to_async
+                def get_party_members():
+                    try:
+                        from .models import Party, PartyMember
+                        party = Party.objects.get(id=party_id)
+                        members = PartyMember.objects.filter(party=party).select_related('event_participant')
+                        
+                        member_list = []
+                        for member in members:
+                            discord_user_id = member.event_participant.discord_user_id
+                            member_list.append(discord_user_id)
+                        
+                        return member_list
+                    except Exception as e:
+                        print(f"Error getting party members: {e}")
+                        return []
+                
+                # Get party members
+                member_ids = await get_party_members()
+                
+                # Resolve member names
+                member_names = []
+                for member_id in member_ids:
+                    member_name = await self.get_discord_user_name(member_id)
+                    member_names.append(member_name)
+                
+                # Create detailed response
+                response_message = (
+                    f"**Party Name:** {party_name}\n"
+                    f"**Party Leader:** {leader_name}\n"
+                    f"**Party Members:** {', '.join(member_names) if member_names else 'None'}"
+                )
+                
+            elif isinstance(party_status, int):
+                # Legacy case - just leader ID
                 leader_name = await self.get_discord_user_name(party_status)
-                party_status = f"Party Leader: {leader_name}"
+                response_message = f"**Party Status:** Party Leader: {leader_name}"
+            else:
+                # String response (No Party Assign, Error, etc.)
+                response_message = f"**Party Status:** {party_status}"
             
             # Send response
             await interaction.response.send_message(
-                f"**Party Status:** {party_status}",
+                response_message,
                 ephemeral=True  # Only visible to the user who clicked
             )
             
