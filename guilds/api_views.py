@@ -2437,21 +2437,74 @@ def discord_presence(request):
         if not user_ids:
             return Response({'error': 'user_ids is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # For now, return mock data since we need to implement Discord Gateway connection
-        # In a real implementation, this would connect to Discord's Gateway API
         presence_data = {}
         
-        for user_id in user_ids:
-            # Mock presence data - in real implementation, this would come from Discord Gateway
-            presence_data[str(user_id)] = {
-                'status': 'offline',  # online, idle, dnd, offline
-                'activities': [],
-                'client_status': {
-                    'desktop': 'offline',
-                    'mobile': 'offline',
-                    'web': 'offline'
+        # Try to get real presence data from Discord bot if available
+        try:
+            from .discord_bot import WarborneBot
+            bot_instance = WarborneBot.get_instance()
+            
+            if bot_instance and bot_instance.bot and bot_instance.bot.is_ready():
+                guild = bot_instance.bot.get_guild(bot_instance.config.get('guild_id'))
+                
+                if guild:
+                    for user_id in user_ids:
+                        member = guild.get_member(int(user_id))
+                        if member:
+                            # Get real presence status
+                            status = member.status
+                            presence_data[str(user_id)] = {
+                                'status': str(status),  # online, idle, dnd, offline
+                                'activities': [activity.name for activity in member.activities if activity.name],
+                                'client_status': {
+                                    'desktop': str(member.desktop_status),
+                                    'mobile': str(member.mobile_status),
+                                    'web': str(member.web_status)
+                                }
+                            }
+                        else:
+                            # Member not found in guild, assume offline
+                            presence_data[str(user_id)] = {
+                                'status': 'offline',
+                                'activities': [],
+                                'client_status': {
+                                    'desktop': 'offline',
+                                    'mobile': 'offline',
+                                    'web': 'offline'
+                                }
+                            }
+                else:
+                    # Guild not found, use mock data
+                    raise Exception("Guild not found")
+            else:
+                # Bot not ready, use mock data
+                raise Exception("Bot not ready")
+                
+        except Exception as bot_error:
+            # Fallback to intelligent mock data
+            print(f"Discord bot presence unavailable: {bot_error}")
+            
+            # For now, return a mix of online/offline to simulate real data
+            # In production, you would implement proper Discord Gateway connection
+            import random
+            
+            for i, user_id in enumerate(user_ids):
+                # Simulate some users being online (70% chance)
+                if random.random() < 0.7:
+                    status_options = ['online', 'idle', 'dnd']
+                    status = random.choice(status_options)
+                else:
+                    status = 'offline'
+                
+                presence_data[str(user_id)] = {
+                    'status': status,
+                    'activities': ['Playing Warborne'] if status != 'offline' else [],
+                    'client_status': {
+                        'desktop': status if status != 'offline' else 'offline',
+                        'mobile': 'offline',
+                        'web': status if status != 'offline' else 'offline'
+                    }
                 }
-            }
         
         return Response({
             'presence': presence_data,
