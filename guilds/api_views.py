@@ -2530,7 +2530,7 @@ def delete_party(request, event_id, party_id):
             return Response({'error': 'Event or party not found'}, status=status.HTTP_404_NOT_FOUND)
         
         # Store party info for response before deletion
-        party_name = party.name
+        party_name = party.party_name or f"Party {party.party_number}"
         party_id = party.id
         
         # Delete all party members first (due to foreign key constraints)
