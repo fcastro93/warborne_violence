@@ -641,6 +641,8 @@ def player_drifters(request, player_id):
                                 'base_name': slot_gear.gear_item.base_name,
                                 'skill_name': slot_gear.gear_item.skill_name,
                                 'rarity': slot_gear.gear_item.rarity,
+                                'tier': slot_gear.gear_item.tier,
+                                'item_level': slot_gear.gear_item.item_level,
                                 'damage': slot_gear.gear_item.damage,
                                 'defense': slot_gear.gear_item.defense,
                                 'health_bonus': slot_gear.gear_item.health_bonus,
@@ -708,8 +710,11 @@ def player_equipped_gear(request, player_id):
                 'id': gear.id,
                 'gear_item_id': gear.gear_item.id,
                 'name': gear.gear_item.base_name,
+                'base_name': gear.gear_item.base_name,
                 'type': gear.gear_item.gear_type.category,
                 'rarity': gear.gear_item.rarity,
+                'tier': gear.gear_item.tier,
+                'item_level': gear.gear_item.item_level,
                 'skill_name': gear.gear_item.skill_name,
                 'damage': gear.gear_item.damage,
                 'defense': gear.gear_item.defense,
@@ -717,6 +722,10 @@ def player_equipped_gear(request, player_id):
                 'slot_type': gear.gear_item.gear_type.category,
                 'game_id': gear.gear_item.game_id,
                 'icon_url': gear.gear_item.icon_url,
+                'gear_type': {
+                    'category': gear.gear_item.gear_type.category,
+                    'name': gear.gear_item.gear_type.name
+                }
             })
         
         return Response({'equipped_gear': gear_data})
