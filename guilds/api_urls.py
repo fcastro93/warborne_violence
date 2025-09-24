@@ -63,4 +63,7 @@ urlpatterns = [
     path('users/create/', api_views.create_user, name='create_user'),
     path('users/<int:user_id>/update/', api_views.update_user, name='update_user'),
     path('users/<int:user_id>/delete/', api_views.delete_user, name='delete_user'),
+    
+    # Analytics endpoints
+    path('analytics/gear-power/', api_views.gear_power_analytics, name='gear_power_analytics'),
 ]

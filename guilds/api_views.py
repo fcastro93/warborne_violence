@@ -3216,3 +3216,74 @@ def delete_user(request, user_id):
             'success': False,
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def gear_power_analytics(request):
+    """Get gear power analytics for all players with their loadouts"""
+    try:
+        from .models import Player, PlayerGear, GearItem
+        
+        # Get all players
+        players = Player.objects.all()
+        analytics_data = []
+        
+        for player in players:
+            # Get player's drifters
+            drifters_data = []
+            for i in range(1, 4):  # 3 drifters
+                drifter = getattr(player, f'drifter_{i}', None)
+                if drifter:
+                    # Get equipped gear for this drifter
+                    equipped_gear = PlayerGear.objects.filter(
+                        player=player, 
+                        is_equipped=True,
+                        equipped_on_drifter=i
+                    ).select_related('gear_item__gear_type')
+                    
+                    # Calculate gear power for this loadout
+                    total_power = 0
+                    gear_count = 0
+                    
+                    # Only count weapon, helmet, chest, boots, off-hand (first 5 slots)
+                    main_slots = ['weapon', 'helmet', 'chest', 'boots', 'consumable']
+                    equipped_list = list(equipped_gear)
+                    
+                    for slot_type in main_slots:
+                        slot_gear = None
+                        for gear in equipped_list:
+                            if gear.gear_item.gear_type.category == slot_type:
+                                slot_gear = gear
+                                break
+                        
+                        if slot_gear:
+                            gear_power = slot_gear.gear_item.get_gear_power()
+                            total_power += gear_power
+                            gear_count += 1
+                    
+                    # Only include loadouts that have at least one equipped item
+                    if gear_count > 0:
+                        loadout_power = total_power // 5  # floor division
+                        drifters_data.append({
+                            'drifter_name': drifter.name,
+                            'drifter_number': i,
+                            'gear_power': loadout_power,
+                            'equipped_count': gear_count
+                        })
+            
+            # Only include players who have at least one complete loadout
+            if drifters_data:
+                analytics_data.append({
+                    'player_id': player.id,
+                    'player_name': player.in_game_name,
+                    'loadouts': drifters_data
+                })
+        
+        return Response({
+            'analytics': analytics_data,
+            'total_players': len(analytics_data),
+            'total_loadouts': sum(len(player['loadouts']) for player in analytics_data)
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
