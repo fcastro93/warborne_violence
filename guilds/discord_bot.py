@@ -995,9 +995,11 @@ class WarborneBot(commands.Bot):
             
             if general_channel:
                 try:
-                    await general_channel.send("🤖 **Warborne Bot is online!**\n\n"
-                                              "This bot helps players manage their characters and participate in guild events.\n"
-                                              "Use `!menu` to see all available commands and get started!")
+                    # TODO: Optimize startup message later - temporarily commented out
+                    # await general_channel.send("🤖 **Warborne Bot is online!**\n\n"
+                    #                           "This bot helps players manage their characters and participate in guild events.\n"
+                    #                           "Use `!menu` to see all available commands and get started!")
+                    pass
                 except Exception as e:
                     print(f"Could not send message to {guild.name}: {e}")
             
