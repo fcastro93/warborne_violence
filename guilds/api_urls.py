@@ -1,6 +1,5 @@
 from django.urls import path
 from . import api_views
-from . import user_management_views
 
 urlpatterns = [
     path('stats/', api_views.guild_stats, name='guild_stats'),
@@ -60,8 +59,8 @@ urlpatterns = [
     path('auth/verify/', api_views.auth_verify, name='auth_verify'),
     
     # User Management endpoints (staff only)
-    path('users/', user_management_views.user_list, name='user_list'),
-    path('users/create/', user_management_views.create_user, name='create_user'),
-    path('users/<int:user_id>/update/', user_management_views.update_user, name='update_user'),
-    path('users/<int:user_id>/delete/', user_management_views.delete_user, name='delete_user'),
+    path('users/', api_views.user_list, name='user_list'),
+    path('users/create/', api_views.create_user, name='create_user'),
+    path('users/<int:user_id>/update/', api_views.update_user, name='update_user'),
+    path('users/<int:user_id>/delete/', api_views.delete_user, name='delete_user'),
 ]
