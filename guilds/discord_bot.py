@@ -74,6 +74,15 @@ class CheckPartyView(View):
                         
                 except Exception as e:
                     print(f"Error checking party status: {e}")
+                    # Log the error to database
+                    from .models import DiscordBotLog
+                    DiscordBotLog.objects.create(
+                        action='error',
+                        message=f"Check Party Status Error: {str(e)}",
+                        user=f"Discord User {user_id}",
+                        success=False,
+                        details={'error': str(e), 'event_id': self.event_id, 'user_id': user_id}
+                    )
                     return "Error checking party status"
             
             # Get the party status

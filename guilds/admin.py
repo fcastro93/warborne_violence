@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
-from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, Event, EventParticipant, Party, PartyMember, RecommendedBuild
+from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, DiscordBotLog, Event, EventParticipant, Party, PartyMember, RecommendedBuild
 
 
 @admin.register(Guild)
@@ -279,6 +279,14 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
     def start_bot(self, request, queryset):
         for config in queryset:
             success, message = config.start_bot_manually()
+            # Log the action
+            DiscordBotLog.objects.create(
+                action='start',
+                message=f"Bot start attempted: {message}",
+                user=request.user.username if request.user.is_authenticated else "Anonymous",
+                success=success,
+                details={'config_id': config.id, 'config_name': config.name}
+            )
             if success:
                 self.message_user(request, f"Bot started: {message}")
             else:
@@ -288,6 +296,14 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
     def stop_bot(self, request, queryset):
         for config in queryset:
             success, message = config.stop_bot_manually()
+            # Log the action
+            DiscordBotLog.objects.create(
+                action='stop',
+                message=f"Bot stop attempted: {message}",
+                user=request.user.username if request.user.is_authenticated else "Anonymous",
+                success=success,
+                details={'config_id': config.id, 'config_name': config.name}
+            )
             if success:
                 self.message_user(request, f"Bot stopped: {message}")
             else:
@@ -297,6 +313,14 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
     def restart_bot(self, request, queryset):
         for config in queryset:
             success, message = config.restart_bot_manually()
+            # Log the action
+            DiscordBotLog.objects.create(
+                action='restart',
+                message=f"Bot restart attempted: {message}",
+                user=request.user.username if request.user.is_authenticated else "Anonymous",
+                success=success,
+                details={'config_id': config.id, 'config_name': config.name}
+            )
             if success:
                 self.message_user(request, f"Bot restarted: {message}")
             else:
@@ -306,6 +330,14 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
     def check_bot_status(self, request, queryset):
         for config in queryset:
             status = config.check_bot_status()
+            # Log the action
+            DiscordBotLog.objects.create(
+                action='status_check',
+                message=f"Bot status check: {'Online' if status else 'Offline'}",
+                user=request.user.username if request.user.is_authenticated else "Anonymous",
+                success=True,
+                details={'config_id': config.id, 'config_name': config.name, 'status': status}
+            )
             if status:
                 self.message_user(request, f"Bot status checked: Online")
             else:
@@ -319,6 +351,45 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Don't allow deletion of bot configuration
         return False
+
+
+@admin.register(DiscordBotLog)
+class DiscordBotLogAdmin(admin.ModelAdmin):
+    list_display = ['action', 'message_short', 'user', 'success', 'timestamp']
+    list_filter = ['action', 'success', 'timestamp']
+    search_fields = ['message', 'user', 'details']
+    ordering = ['-timestamp']
+    readonly_fields = ['timestamp']
+    date_hierarchy = 'timestamp'
+    
+    fieldsets = (
+        ('Log Information', {
+            'fields': ('action', 'message', 'user', 'success', 'timestamp')
+        }),
+        ('Details', {
+            'fields': ('details',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def message_short(self, obj):
+        """Display shortened message"""
+        if len(obj.message) > 60:
+            return obj.message[:60] + "..."
+        return obj.message
+    message_short.short_description = "Message"
+    
+    def has_add_permission(self, request):
+        """Disable manual addition of logs"""
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        """Disable editing of logs"""
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        """Allow deletion of logs"""
+        return True
 
 
 class EventParticipantInline(admin.TabularInline):
