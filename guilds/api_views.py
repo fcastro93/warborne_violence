@@ -734,12 +734,18 @@ def equip_gear(request, player_id):
         gear_id = data.get('gear_id')
         drifter_num = data.get('drifter_num', 1)
         slot_type = data.get('slot_type')
+        tier = data.get('tier', 'II')
         
         if not gear_id:
             return Response({'error': 'gear_id is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Get the gear item
         gear_item = GearItem.objects.get(id=gear_id)
+        
+        # Update the gear item's tier if provided
+        if tier and tier != gear_item.tier:
+            gear_item.tier = tier
+            gear_item.save()
         
         # Check if player owns this gear
         player_gear, created = PlayerGear.objects.get_or_create(
@@ -778,7 +784,16 @@ def equip_gear(request, player_id):
         player_gear.equipped_on_drifter = drifter_num
         player_gear.save()
         
-        return Response({'success': True, 'message': 'Gear equipped successfully'})
+        # Calculate gear power for the response
+        gear_power = gear_item.get_gear_power()
+        
+        return Response({
+            'success': True, 
+            'message': 'Gear equipped successfully',
+            'gear_power': gear_power,
+            'tier': gear_item.tier,
+            'rarity': gear_item.rarity
+        })
         
     except Player.DoesNotExist:
         return Response({'error': 'Player not found'}, status=status.HTTP_404_NOT_FOUND)

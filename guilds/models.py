@@ -197,6 +197,18 @@ class GearItem(models.Model):
     # Required level
     required_level = models.IntegerField(default=1)
     
+    # Tier information
+    TIER_CHOICES = [
+        ('II', 'Tier II'),
+        ('III', 'Tier III'),
+        ('IV', 'Tier IV'),
+        ('V', 'Tier V'),
+        ('VI', 'Tier VI'),
+        ('VII', 'Tier VII'),
+        ('VIII', 'Tier VIII'),
+    ]
+    tier = models.CharField(max_length=5, choices=TIER_CHOICES, default='II', help_text="Item tier for gear power calculation")
+    
     # Base statistics
     damage = models.FloatField(default=0, help_text="Damage bonus percentage")
     defense = models.IntegerField(default=0, help_text="Base defense of the item")
@@ -232,6 +244,31 @@ class GearItem(models.Model):
         ordering = ['gear_type__category', 'rarity', 'required_level', 'base_name']
         verbose_name = "Gear Item"
         verbose_name_plural = "Gear Items"
+    
+    def get_gear_power(self):
+        """Calculate gear power based on tier and rarity according to the game's formula"""
+        # Tier II and III are fixed values
+        if self.tier == 'II':
+            base_power = 40
+        elif self.tier == 'III':
+            base_power = 70
+        else:
+            # Tier IV+ calculation: 90 + (20 × tier difference)
+            tier_num = int(self.tier) if self.tier.isdigit() else 0
+            if tier_num >= 4:
+                base_power = 90 + (20 * (tier_num - 4))
+            else:
+                base_power = 40  # Fallback
+        
+        # Rarity bonus (flat addition)
+        rarity_bonus = {
+            'common': 0,
+            'rare': 12,
+            'epic': 22,
+            'legendary': 22,
+        }
+        
+        return base_power + rarity_bonus.get(self.rarity, 0)
     
     @property
     def name(self):
