@@ -613,6 +613,7 @@ class PartyMember(models.Model):
         help_text="Role assigned in this party (may differ from player's default role)"
     )
     is_active = models.BooleanField(default=True, help_text="Whether the member is still active in the party")
+    is_leader = models.BooleanField(default=False, help_text="Whether this member is the party leader")
     assigned_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:

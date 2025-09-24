@@ -402,7 +402,7 @@ class EventParticipantAdmin(admin.ModelAdmin):
 class PartyMemberInline(admin.TabularInline):
     model = PartyMember
     extra = 0
-    fields = ['player', 'assigned_role', 'is_active', 'assigned_at']
+    fields = ['player', 'assigned_role', 'is_active', 'is_leader', 'assigned_at']
     readonly_fields = ['assigned_at']
     fk_name = 'party'
     
@@ -442,8 +442,8 @@ class PartyAdmin(admin.ModelAdmin):
 
 @admin.register(PartyMember)
 class PartyMemberAdmin(admin.ModelAdmin):
-    list_display = ['player_name', 'party_display', 'assigned_role', 'is_active', 'assigned_at']
-    list_filter = ['is_active', 'assigned_role', 'assigned_at']
+    list_display = ['player_name', 'party_display', 'assigned_role', 'is_active', 'is_leader', 'assigned_at']
+    list_filter = ['is_active', 'is_leader', 'assigned_role', 'assigned_at']
     search_fields = ['player__in_game_name', 'party__event__title']
     ordering = ['-assigned_at']
     readonly_fields = ['assigned_at']
@@ -455,6 +455,16 @@ class PartyMemberAdmin(admin.ModelAdmin):
     def party_display(self, obj):
         return f"Party {obj.party.party_number} - {obj.party.event.title}"
     party_display.short_description = "Party"
+    
+    def save_model(self, request, obj, form, change):
+        """Ensure only one leader per party"""
+        if obj.is_leader:
+            # If this member is being set as leader, remove leader status from other members in the same party
+            PartyMember.objects.filter(
+                party=obj.party,
+                is_active=True
+            ).exclude(id=obj.id).update(is_leader=False)
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(RecommendedBuild)

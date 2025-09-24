@@ -905,6 +905,7 @@ def event_detail(request, event_id):
                         'discord_name': member.event_participant.discord_name
                     },
                     'assigned_role': member.assigned_role,
+                    'is_leader': member.is_leader,
                     'assigned_at': member.assigned_at.isoformat()
                 })
             
@@ -1424,12 +1425,14 @@ def create_parties(request, event_id):
                 # Create PartyMember objects for this guild
                 guild_members_created = 0
                 for party_idx, party in enumerate(parties):
-                    for participant in party_assignments[party_idx]:
+                    for member_idx, participant in enumerate(party_assignments[party_idx]):
+                        is_leader = member_idx == 0  # First member is the leader
                         PartyMember.objects.create(
                             party=party,
                             event_participant=participant,
                             player=participant.player,
-                            assigned_role=participant.player.game_role
+                            assigned_role=participant.player.game_role,
+                            is_leader=is_leader
                         )
                         guild_members_created += 1
                 
@@ -1510,12 +1513,14 @@ def create_parties(request, event_id):
             # Create PartyMember objects
             party_members_created = 0
             for party_idx, party in enumerate(parties):
-                for participant in party_assignments[party_idx]:
+                for member_idx, participant in enumerate(party_assignments[party_idx]):
+                    is_leader = member_idx == 0  # First member is the leader
                     PartyMember.objects.create(
                         party=party,
                         event_participant=participant,
                         player=participant.player,
-                        assigned_role=participant.player.game_role
+                        assigned_role=participant.player.game_role,
+                        is_leader=is_leader
                     )
                     party_members_created += 1
             
@@ -1639,12 +1644,14 @@ def create_guild_parties(request, event_id):
             # Create PartyMember objects for this guild
             guild_members_created = 0
             for party_idx, party in enumerate(parties):
-                for participant in party_assignments[party_idx]:
+                for member_idx, participant in enumerate(party_assignments[party_idx]):
+                    is_leader = member_idx == 0  # First member is the leader
                     PartyMember.objects.create(
                         party=party,
                         event_participant=participant,
                         player=participant.player,
-                        assigned_role=participant.player.game_role
+                        assigned_role=participant.player.game_role,
+                        is_leader=is_leader
                     )
                     guild_members_created += 1
             
@@ -1745,6 +1752,7 @@ def event_parties(request, event_id):
                         'discord_name': member.event_participant.discord_name
                     },
                     'assigned_role': member.assigned_role,
+                    'is_leader': member.is_leader,
                     'assigned_at': member.assigned_at.isoformat()
                 })
             
@@ -1955,11 +1963,14 @@ def fill_parties_for_guild(parties, participants, role_composition):
             # Assign participant to best party
             best_party = parties[best_party_idx]
             if best_party.member_count < best_party.max_members:
+                # Check if this is the first member (will be leader)
+                is_first_member = best_party.member_count == 0
                 PartyMember.objects.create(
                     party=best_party,
                     event_participant=participant,
                     player=participant.player,
-                    assigned_role=participant.player.game_role
+                    assigned_role=participant.player.game_role,
+                    is_leader=is_first_member
                 )
                 
                 # Update role counts
@@ -2302,11 +2313,14 @@ def add_member_to_party(request, event_id, party_id):
             party_member = inactive_member
         else:
             # Create new PartyMember record
+            # Check if this is the first member (will be leader)
+            is_first_member = party.member_count == 0
             party_member = PartyMember.objects.create(
                 party=party,
                 event_participant=participant,
                 player=participant.player,
-                assigned_role=assigned_role or participant.player.game_role if participant.player else None
+                assigned_role=assigned_role or participant.player.game_role if participant.player else None,
+                is_leader=is_first_member
             )
         
         return Response({
@@ -2422,6 +2436,118 @@ def update_party_name(request, event_id, party_id):
                 'party_name': party.party_name,
                 'max_members': party.max_members,
                 'member_count': party.member_count
+            }
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def make_party_leader(request, event_id, party_id):
+    """Make a party member the leader of the party"""
+    try:
+        from .models import Event, Party, PartyMember
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get the party
+        try:
+            party = Party.objects.get(id=party_id, event=event, is_active=True)
+        except Party.DoesNotExist:
+            return Response({'error': 'Party not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get member ID from request
+        member_id = request.data.get('member_id')
+        if not member_id:
+            return Response({'error': 'member_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the member to make leader
+        try:
+            new_leader = PartyMember.objects.get(
+                id=member_id,
+                party=party,
+                is_active=True
+            )
+        except PartyMember.DoesNotExist:
+            return Response({'error': 'Party member not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Update all members in the party to remove leader status
+        PartyMember.objects.filter(
+            party=party,
+            is_active=True
+        ).update(is_leader=False)
+        
+        # Set the new leader
+        new_leader.is_leader = True
+        new_leader.save()
+        
+        return Response({
+            'message': f'{new_leader.player.discord_name} is now the party leader',
+            'leader': {
+                'id': new_leader.id,
+                'discord_name': new_leader.player.discord_name,
+                'player_name': new_leader.player.in_game_name
+            }
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def make_party_leader(request, event_id, party_id):
+    """Make a specific member the party leader"""
+    try:
+        from .models import Event, Party, PartyMember
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get the party
+        try:
+            party = Party.objects.get(id=party_id, event=event, is_active=True)
+        except Party.DoesNotExist:
+            return Response({'error': 'Party not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get member_id from request
+        member_id = request.data.get('member_id')
+        if not member_id:
+            return Response({'error': 'member_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the member to make leader
+        try:
+            member = PartyMember.objects.get(
+                id=member_id,
+                party=party,
+                is_active=True
+            )
+        except PartyMember.DoesNotExist:
+            return Response({'error': 'Party member not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Remove leader status from all other members in the party
+        PartyMember.objects.filter(
+            party=party,
+            is_active=True
+        ).exclude(id=member_id).update(is_leader=False)
+        
+        # Set this member as leader
+        member.is_leader = True
+        member.save()
+        
+        return Response({
+            'message': f'{member.player.discord_name} is now the party leader',
+            'leader': {
+                'id': member.id,
+                'player_name': member.player.discord_name,
+                'is_leader': member.is_leader
             }
         })
         

@@ -54,11 +54,12 @@ class CheckPartyView(View):
                     # Get party info
                     party = party_member.party
                     
-                    # Find the party leader (first member assigned to the party)
+                    # Find the party leader (member with is_leader=True)
                     party_leader = PartyMember.objects.filter(
                         party=party,
-                        is_active=True
-                    ).order_by('id').first()  # First member is typically the leader
+                        is_active=True,
+                        is_leader=True
+                    ).first()
                     
                     if party_leader:
                         leader_participant = party_leader.event_participant

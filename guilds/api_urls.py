@@ -44,6 +44,7 @@ urlpatterns = [
     path('events/<int:event_id>/parties/<int:party_id>/remove-member/', api_views.remove_member_from_party, name='remove_member_from_party'),
     path('events/<int:event_id>/parties/<int:party_id>/delete/', api_views.delete_party, name='delete_party'),
     path('events/<int:event_id>/parties/<int:party_id>/update/', api_views.update_party_name, name='update_party_name'),
+    path('events/<int:event_id>/parties/<int:party_id>/make-leader/', api_views.make_party_leader, name='make_party_leader'),
     path('discord-bot-config/', api_views.discord_bot_config, name='discord_bot_config'),
     path('discord-bot-config/update/', api_views.update_discord_bot_config, name='update_discord_bot_config'),
     path('discord-bot-config/test/', api_views.test_discord_bot_connection, name='test_discord_bot_connection'),
