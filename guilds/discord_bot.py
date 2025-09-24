@@ -326,7 +326,7 @@ class CreatePlayerView(discord.ui.View):
             )
             embed.add_field(
                 name="🔗 Loadout Link",
-                value=f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout",
+                value=f"https://violenceguild.duckdns.org/player/{player.id}/loadout",
                 inline=False
             )
             
@@ -458,7 +458,7 @@ class EditPlayerModal(discord.ui.Modal, title="Edit Player Information"):
             guild_info = f"**Guild:** {updated_player.guild.name}" if updated_player.guild else "**Guild:** Sin guild"
             role_info = f"**Rol:** {updated_player.get_game_role_display()}" if updated_player.game_role else "**Rol:** No asignado"
             
-            loadout_url = f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{updated_player.id}/loadout"
+            loadout_url = f"https://violenceguild.duckdns.org/player/{updated_player.id}/loadout"
             
             embed = discord.Embed(
                 title="✅ Player Updated Successfully",
@@ -540,7 +540,7 @@ class CommandMenuView(discord.ui.View):
             guild_info = player_info['guild_info']
             role_info = player_info['role_info']
             
-            loadout_url = f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player_info['player_id']}/loadout"
+            loadout_url = f"https://violenceguild.duckdns.org/player/{player_info['player_id']}/loadout"
             
             embed = discord.Embed(
                 title="📊 Player Information",
@@ -885,8 +885,8 @@ class WarborneBot(commands.Bot):
                 player_info = await _get_player_info_for_command(player)
                 
                 if player_info:
-                    base_url = self.config.get('base_url', 'http://127.0.0.1:8000')
-                    loadout_url = f"{base_url}/guilds/player/{player_info['player_id']}/loadout/"
+                    base_url = self.config.get('base_url', 'https://violenceguild.duckdns.org')
+                    loadout_url = f"{base_url}/player/{player_info['player_id']}/loadout"
                     
                     embed = discord.Embed(
                         title="📊 Player Information",
