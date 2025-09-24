@@ -2518,9 +2518,9 @@ def remove_member_from_party(request, event_id, party_id):
 
 @api_view(['DELETE'])
 def delete_party(request, event_id, party_id):
-    """Delete a party (soft delete)"""
+    """Delete a party and all its members"""
     try:
-        from .models import Event, Party
+        from .models import Event, Party, PartyMember
         
         # Get the event and party
         try:
@@ -2529,16 +2529,20 @@ def delete_party(request, event_id, party_id):
         except (Event.DoesNotExist, Party.DoesNotExist):
             return Response({'error': 'Event or party not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Soft delete the party
-        party.is_active = False
-        party.save()
+        # Store party info for response before deletion
+        party_name = party.name
+        party_id = party.id
         
-        # Also deactivate all party members
-        party.members.filter(is_active=True).update(is_active=False)
+        # Delete all party members first (due to foreign key constraints)
+        deleted_members_count = PartyMember.objects.filter(party=party).delete()[0]
+        
+        # Delete the party itself
+        party.delete()
         
         return Response({
-            'message': 'Party deleted successfully',
-            'party_id': party.id
+            'message': f'Party "{party_name}" and {deleted_members_count} members deleted successfully',
+            'party_id': party_id,
+            'deleted_members_count': deleted_members_count
         })
         
     except Exception as e:
