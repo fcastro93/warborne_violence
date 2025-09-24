@@ -199,6 +199,7 @@ class GearItem(models.Model):
     
     # Tier information
     TIER_CHOICES = [
+        ('I', 'Tier I'),
         ('II', 'Tier II'),
         ('III', 'Tier III'),
         ('IV', 'Tier IV'),
@@ -206,6 +207,9 @@ class GearItem(models.Model):
         ('VI', 'Tier VI'),
         ('VII', 'Tier VII'),
         ('VIII', 'Tier VIII'),
+        ('IX', 'Tier IX'),
+        ('X', 'Tier X'),
+        ('XI', 'Tier XI'),
     ]
     tier = models.CharField(max_length=5, choices=TIER_CHOICES, default='II', help_text="Item tier for gear power calculation")
     
@@ -247,14 +251,22 @@ class GearItem(models.Model):
     
     def get_gear_power(self):
         """Calculate gear power based on tier and rarity according to the game's formula"""
+        # Tier I is special case (assuming 20 based on pattern)
+        if self.tier == 'I':
+            base_power = 20
         # Tier II and III are fixed values
-        if self.tier == 'II':
+        elif self.tier == 'II':
             base_power = 40
         elif self.tier == 'III':
             base_power = 70
         else:
             # Tier IV+ calculation: 90 + (20 × tier difference)
-            tier_num = int(self.tier) if self.tier.isdigit() else 0
+            # Handle Roman numerals for higher tiers
+            tier_mapping = {
+                'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6,
+                'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10, 'XI': 11
+            }
+            tier_num = tier_mapping.get(self.tier, 4)
             if tier_num >= 4:
                 base_power = 90 + (20 * (tier_num - 4))
             else:
