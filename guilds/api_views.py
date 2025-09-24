@@ -800,9 +800,6 @@ def equip_gear(request, player_id):
         # Calculate gear power for the response (using item's own level)
         gear_power = gear_item.get_gear_power()
         
-        # Update player's total gear power
-        player.update_total_gear_power()
-        
         return Response({
             'success': True, 
             'message': 'Gear equipped successfully',
@@ -841,9 +838,6 @@ def unequip_gear(request, player_id):
         player_gear.is_equipped = False
         player_gear.equipped_on_drifter = None
         player_gear.save()
-        
-        # Update player's total gear power
-        player.update_total_gear_power()
         
         return Response({'success': True, 'message': 'Gear unequipped successfully'})
         
