@@ -75,6 +75,7 @@ class Player(models.Model):
     discord_name = models.CharField(max_length=100, default="", help_text="Discord username (e.g., PlayerName#1234)")
     discord_user_id = models.BigIntegerField(null=True, blank=True, help_text="Discord User ID of the player owner")
     character_level = models.IntegerField(default=1)
+    total_gear_power = models.IntegerField(default=0, help_text="Total power from all equipped gear")
     faction = models.CharField(
         max_length=50,
         choices=[
@@ -135,6 +136,25 @@ class Player(models.Model):
         verbose_name = "Player"
         verbose_name_plural = "Players"
     
+    def calculate_total_gear_power(self):
+        """Calculate total gear power from all equipped items"""
+        total_power = 0
+        equipped_gear = self.gear_items.filter(is_equipped=True)
+        
+        for player_gear in equipped_gear:
+            gear_item = player_gear.gear_item
+            # Only count weapons and armor (exclude mods and consumables)
+            if gear_item.gear_type and gear_item.gear_type.category.lower() not in ['mod', 'consumable']:
+                total_power += gear_item.get_gear_power()
+        
+        return total_power
+    
+    def update_total_gear_power(self):
+        """Update and save the total gear power"""
+        self.total_gear_power = self.calculate_total_gear_power()
+        self.save(update_fields=['total_gear_power'])
+        return self.total_gear_power
+
     def __str__(self):
         return f"{self.in_game_name} ({self.get_role_display()})"
     

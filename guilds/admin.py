@@ -41,7 +41,7 @@ class PlayerInline(admin.TabularInline):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ['in_game_name', 'discord_name', 'discord_user_id', 'discord_owner', 'guild', 'character_level', 'role', 'game_role', 'faction', 'loadout_link', 'is_active']
+    list_display = ['in_game_name', 'discord_name', 'discord_user_id', 'discord_owner', 'guild', 'character_level', 'total_gear_power', 'role', 'game_role', 'faction', 'loadout_link', 'is_active']
     list_filter = ['guild', 'role', 'game_role', 'faction', 'is_active', 'created_at', 'discord_user_id']
     search_fields = ['in_game_name', 'discord_name', 'notes', 'discord_user_id']
     ordering = ['in_game_name']
