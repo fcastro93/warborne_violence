@@ -1,12 +1,102 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from discord.ui import View, Button
 import os
 import asyncio
 from datetime import datetime, timezone
 from django.conf import settings
 from .models import DiscordBotConfig, Player, Guild, Event, EventParticipant
 from asgiref.sync import sync_to_async
+
+# Check Party View for event announcements
+class CheckPartyView(View):
+    def __init__(self, event_id, bot_instance=None):
+        super().__init__(timeout=None)  # No timeout so button stays active
+        self.event_id = event_id
+        self.bot_instance = bot_instance
+    
+    @discord.ui.button(label="Check Party", style=discord.ButtonStyle.secondary, emoji="👥")
+    async def check_party_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Handle the Check Party button click"""
+        try:
+            from .models import Event, EventParticipant, Party, PartyMember
+            
+            # Get the user's Discord ID
+            user_id = interaction.user.id
+            
+            # Check if user is participating in the event and their party status
+            @sync_to_async
+            def check_party_status():
+                try:
+                    # Get the event
+                    event = Event.objects.get(id=self.event_id)
+                    
+                    # Check if user is participating in this event
+                    participant = EventParticipant.objects.filter(
+                        event=event,
+                        discord_user_id=user_id
+                    ).first()
+                    
+                    if not participant:
+                        return "No Party Assign"
+                    
+                    # Check if user is assigned to a party
+                    party_member = PartyMember.objects.filter(
+                        event_participant=participant
+                    ).select_related('party', 'party__leader').first()
+                    
+                    if not party_member:
+                        return "No Party Assign"
+                    
+                    # Get party leader info
+                    party = party_member.party
+                    leader = party.leader
+                    
+                    if leader:
+                        # Get leader's Discord name
+                        leader_participant = leader.event_participant
+                        # Note: This will be called from async context, so we need to await it
+                        return leader_participant.discord_user_id  # Return ID for now, will resolve name in async context
+                    else:
+                        return "Party Leader: Unknown"
+                        
+                except Exception as e:
+                    print(f"Error checking party status: {e}")
+                    return "Error checking party status"
+            
+            # Get the party status
+            party_status = await check_party_status()
+            
+            # If we got a Discord user ID, resolve the name
+            if isinstance(party_status, int):
+                leader_name = await self.get_discord_user_name(party_status)
+                party_status = f"Party Leader: {leader_name}"
+            
+            # Send response
+            await interaction.response.send_message(
+                f"**Party Status:** {party_status}",
+                ephemeral=True  # Only visible to the user who clicked
+            )
+            
+        except Exception as e:
+            print(f"Error in check party button: {e}")
+            await interaction.response.send_message(
+                "❌ An error occurred while checking your party status.",
+                ephemeral=True
+            )
+    
+    async def get_discord_user_name(self, discord_user_id):
+        """Get Discord user name from user ID"""
+        try:
+            if self.bot_instance:
+                user = self.bot_instance.get_user(discord_user_id)
+                if user:
+                    return user.display_name or user.name
+            # Fallback to mention format
+            return f"<@{discord_user_id}>"
+        except:
+            return f"User_{discord_user_id}"
 
 
 # Global helper functions for database operations
@@ -1063,8 +1153,11 @@ class WarborneBot(commands.Bot):
                 text="React with ✅ to join this event! Use !menu to see all available commands."
             )
             
-            # Send the announcement
-            message = await announcement_channel.send(embed=embed)
+            # Create a view with the Check Party button
+            view = CheckPartyView(event_data['event_id'], self)
+            
+            # Send the announcement with the button
+            message = await announcement_channel.send(embed=embed, view=view)
             
             # Add reaction for joining
             await message.add_reaction("✅")
