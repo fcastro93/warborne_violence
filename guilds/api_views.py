@@ -823,6 +823,7 @@ def unequip_gear(request, player_id):
 
 # Event Management API endpoints
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def events_list(request):
     """Get all events with participant counts"""
     try:
