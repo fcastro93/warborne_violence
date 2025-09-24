@@ -32,12 +32,11 @@ class CheckPartyView(View):
                     # Get the event
                     event = Event.objects.get(id=self.event_id)
                     
-                    # Check if user is participating in this event
-                    participant = EventParticipant.objects.filter(
-                        event=event,
-                        discord_user_id=user_id,
-                        is_active=True
-                    ).first()
+               # Check if user is participating in this event
+               participant = EventParticipant.objects.filter(
+                   event=event,
+                   discord_user_id=user_id
+               ).first()
                     
                     if not participant:
                         return "No Party Assign"
