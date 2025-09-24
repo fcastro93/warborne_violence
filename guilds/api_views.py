@@ -250,6 +250,7 @@ def gear_items(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def recommended_builds(request):
     """Get recommended builds"""
     try:
