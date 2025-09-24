@@ -61,11 +61,12 @@ class CheckPartyView(View):
                     ).first()
                     
                     if party_leader:
-                        leader_participant = party_leader.event_participant
+                        # Get Discord user ID from the Player model, not EventParticipant
+                        leader_discord_id = party_leader.player.discord_user_id if party_leader.player else None
                         # Return party info as a dictionary for detailed display
                         return {
                             'party_name': party.party_name or f"Party {party.party_number}",
-                            'leader_id': leader_participant.discord_user_id,
+                            'leader_id': leader_discord_id,
                             'party_id': party.id
                         }
                     else:
@@ -103,11 +104,12 @@ class CheckPartyView(View):
                     try:
                         from .models import Party, PartyMember
                         party = Party.objects.get(id=party_id)
-                        members = PartyMember.objects.filter(party=party).select_related('event_participant')
+                        members = PartyMember.objects.filter(party=party).select_related('player')
                         
                         member_list = []
                         for member in members:
-                            discord_user_id = member.event_participant.discord_user_id
+                            # Get Discord user ID from the Player model, not EventParticipant
+                            discord_user_id = member.player.discord_user_id if member.player else None
                             member_list.append(discord_user_id)
                         
                         return member_list
