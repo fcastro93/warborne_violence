@@ -754,8 +754,16 @@ def equip_gear(request, player_id):
             defaults={'is_equipped': False}
         )
         
+        # If gear is already equipped, unequip it first (allows moving gear between slots/drifters)
         if not created and player_gear.is_equipped:
-            return Response({'error': 'Gear is already equipped'}, status=status.HTTP_400_BAD_REQUEST)
+            # Check if it's the same slot on the same drifter (no change needed)
+            if player_gear.equipped_on_drifter == drifter_num and slot_type != 'mod' and player_gear.gear_item.gear_type.category == slot_type:
+                return Response({'error': 'Gear is already equipped in this slot'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Unequip the gear from its current location
+            player_gear.is_equipped = False
+            player_gear.equipped_on_drifter = None
+            player_gear.save()
         
         # For mods, find the next available mod slot
         if slot_type == 'mod':
