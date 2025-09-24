@@ -158,6 +158,7 @@ def guild_members(request):
                 'id': player.id,
                 'name': player.in_game_name,
                 'discord_name': player.discord_name,
+                'discord_user_id': player.discord_user_id,
                 'role': player.role,
                 'game_role': player.game_role,
                 'faction': player.faction,
