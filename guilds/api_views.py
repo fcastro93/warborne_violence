@@ -3044,3 +3044,134 @@ def create_user(request):
             'success': False,
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def update_user(request, user_id):
+    """Update user information (staff only)"""
+    try:
+        # Check if user is staff
+        if not request.user.is_staff:
+            return Response({
+                'success': False,
+                'error': 'Permission denied. Staff access required.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'User not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Update fields if provided
+        if 'username' in request.data:
+            # Check if new username already exists
+            new_username = request.data['username']
+            if new_username != user.username and User.objects.filter(username=new_username).exists():
+                return Response({
+                    'success': False,
+                    'error': 'Username already exists'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            user.username = new_username
+        
+        if 'email' in request.data:
+            # Check if new email already exists
+            new_email = request.data['email']
+            if new_email != user.email and new_email and User.objects.filter(email=new_email).exists():
+                return Response({
+                    'success': False,
+                    'error': 'Email already exists'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            user.email = new_email
+        
+        if 'first_name' in request.data:
+            user.first_name = request.data['first_name']
+        
+        if 'last_name' in request.data:
+            user.last_name = request.data['last_name']
+        
+        if 'is_active' in request.data:
+            user.is_active = request.data['is_active']
+        
+        if 'is_staff' in request.data:
+            user.is_staff = request.data['is_staff']
+        
+        if 'password' in request.data and request.data['password']:
+            user.set_password(request.data['password'])
+        
+        user.save()
+        
+        return Response({
+            'success': True,
+            'message': f'User {user.username} updated successfully',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_active': user.is_active,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'date_joined': user.date_joined.isoformat(),
+                'last_login': user.last_login.isoformat() if user.last_login else None
+            }
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_user(request, user_id):
+    """Delete a user (staff only, cannot delete superuser)"""
+    try:
+        # Check if user is staff
+        if not request.user.is_staff:
+            return Response({
+                'success': False,
+                'error': 'Permission denied. Staff access required.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'User not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Prevent deletion of superusers
+        if user.is_superuser:
+            return Response({
+                'success': False,
+                'error': 'Cannot delete superuser accounts'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Prevent self-deletion
+        if user.id == request.user.id:
+            return Response({
+                'success': False,
+                'error': 'Cannot delete your own account'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        username = user.username
+        user.delete()
+        
+        return Response({
+            'success': True,
+            'message': f'User {username} deleted successfully'
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
