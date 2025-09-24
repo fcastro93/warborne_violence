@@ -67,4 +67,5 @@ urlpatterns = [
     # Analytics endpoints
     path('analytics/gear-power/', api_views.gear_power_analytics, name='gear_power_analytics'),
     path('analytics/role-distribution/', api_views.role_analytics, name='role_analytics'),
+    path('analytics/event-participation/', api_views.event_participation_analytics, name='event_participation_analytics'),
 ]

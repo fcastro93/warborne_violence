@@ -3344,3 +3344,79 @@ def role_analytics(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def event_participation_analytics(request):
+    """Get event participation analytics showing time vs number of players by event category"""
+    try:
+        from .models import Event, EventParticipant
+        from django.db.models import Count
+        from datetime import datetime, timedelta
+        import json
+        
+        # Get events from the last 30 days
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        events = Event.objects.filter(
+            event_datetime__gte=thirty_days_ago,
+            is_active=True,
+            is_cancelled=False
+        ).order_by('event_datetime')
+        
+        # Group events by date and category
+        daily_data = {}
+        categories = set()
+        
+        for event in events:
+            # Get participant count for this event
+            participant_count = EventParticipant.objects.filter(event=event).count()
+            
+            # Format date as YYYY-MM-DD
+            event_date = event.event_datetime.date().strftime('%Y-%m-%d')
+            event_category = event.event_type or 'other'
+            categories.add(event_category)
+            
+            if event_date not in daily_data:
+                daily_data[event_date] = {}
+            
+            if event_category not in daily_data[event_date]:
+                daily_data[event_date][event_category] = 0
+            
+            daily_data[event_date][event_category] += participant_count
+        
+        # Convert to chart format
+        chart_data = []
+        for date_str, categories_data in sorted(daily_data.items()):
+            chart_data.append({
+                'date': date_str,
+                **categories_data
+            })
+        
+        # Prepare series data for each category
+        series_data = {}
+        for category in sorted(categories):
+            series_data[category] = {
+                'name': category.replace('_', ' ').title(),
+                'data': []
+            }
+            
+            for point in chart_data:
+                value = point.get(category, 0)
+                series_data[category]['data'].append({
+                    'x': point['date'],
+                    'y': value
+                })
+        
+        return Response({
+            'analytics': list(series_data.values()),
+            'categories': sorted(categories),
+            'total_events': events.count(),
+            'date_range': {
+                'start': (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d'),
+                'end': datetime.now().strftime('%Y-%m-%d')
+            }
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
