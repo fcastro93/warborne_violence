@@ -35,7 +35,8 @@ class CheckPartyView(View):
                     # Check if user is participating in this event
                     participant = EventParticipant.objects.filter(
                         event=event,
-                        discord_user_id=user_id
+                        discord_user_id=user_id,
+                        is_active=True
                     ).first()
                     
                     if not participant:
@@ -43,22 +44,27 @@ class CheckPartyView(View):
                     
                     # Check if user is assigned to a party
                     party_member = PartyMember.objects.filter(
-                        event_participant=participant
-                    ).select_related('party', 'party__leader').first()
+                        event_participant=participant,
+                        is_active=True
+                    ).select_related('party', 'event_participant').first()
                     
                     if not party_member:
                         return "No Party Assign"
                     
-                    # Get party leader info
+                    # Get party info
                     party = party_member.party
-                    leader = party.leader
                     
-                    if leader:
-                        # Get leader's Discord name
-                        leader_participant = leader.event_participant
+                    # Find the party leader (first member assigned to the party)
+                    party_leader = PartyMember.objects.filter(
+                        party=party,
+                        is_active=True
+                    ).order_by('id').first()  # First member is typically the leader
+                    
+                    if party_leader:
+                        leader_participant = party_leader.event_participant
                         # Return party info as a dictionary for detailed display
                         return {
-                            'party_name': party.name or f"Party {party.id}",
+                            'party_name': party.party_name or f"Party {party.party_number}",
                             'leader_id': leader_participant.discord_user_id,
                             'party_id': party.id
                         }
