@@ -792,8 +792,8 @@ def equip_gear(request, player_id):
         player_gear.equipped_on_drifter = drifter_num
         player_gear.save()
         
-        # Calculate gear power for the response
-        gear_power = gear_item.get_gear_power()
+        # Calculate gear power for the response (using player's character level)
+        gear_power = gear_item.get_gear_power(player.character_level or 30)
         
         return Response({
             'success': True, 

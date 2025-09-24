@@ -249,26 +249,24 @@ class GearItem(models.Model):
         verbose_name = "Gear Item"
         verbose_name_plural = "Gear Items"
     
-    def get_gear_power(self):
-        """Calculate gear power based on tier and rarity according to the game's formula"""
-        # Tier I is special case (assuming 20 based on pattern)
-        if self.tier == 'I':
-            base_power = 20
-        # Tier II and III are fixed values
-        elif self.tier == 'II':
-            base_power = 40
-        elif self.tier == 'III':
-            base_power = 70
+    def get_gear_power(self, level=30):
+        """Calculate gear power based on tier, rarity, and level according to the game's formula"""
+        # Handle Roman numerals for tier mapping
+        tier_mapping = {
+            'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6,
+            'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10, 'XI': 11
+        }
+        tier_num = tier_mapping.get(self.tier, 4)
+        
+        # Base power calculation: 90 + 20 × (Tier − 4) + RarityBonus
+        if tier_num >= 4:
+            base_power = 90 + (20 * (tier_num - 4))
         else:
-            # Tier IV+ calculation: 90 + (20 × tier difference)
-            # Handle Roman numerals for higher tiers
-            tier_mapping = {
-                'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6,
-                'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10, 'XI': 11
-            }
-            tier_num = tier_mapping.get(self.tier, 4)
-            if tier_num >= 4:
-                base_power = 90 + (20 * (tier_num - 4))
+            # Tier II and III are fixed values (though not mentioned in temp.txt)
+            if tier_num == 2:
+                base_power = 40
+            elif tier_num == 3:
+                base_power = 70
             else:
                 base_power = 40  # Fallback
         
@@ -280,7 +278,10 @@ class GearItem(models.Model):
             'legendary': 22,
         }
         
-        return base_power + rarity_bonus.get(self.rarity, 0)
+        # Level contribution: 2 × (Level − 1)
+        level_contribution = 2 * (level - 1)
+        
+        return base_power + rarity_bonus.get(self.rarity, 0) + level_contribution
     
     @property
     def name(self):
