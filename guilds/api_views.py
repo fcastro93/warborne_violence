@@ -1210,16 +1210,16 @@ def publish_event(request, event_id):
     logger = logging.getLogger(__name__)
     
     try:
-        logger.info(f"🚀 Starting publish_event for event_id: {event_id}")
+        logger.info(f" Starting publish_event for event_id: {event_id}")
         
         from .models import Event, DiscordBotConfig
         
         # Get the event
         try:
             event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
-            logger.info(f"✅ Event found: {event.title} (ID: {event.id})")
+            logger.info(f" Event found: {event.title} (ID: {event.id})")
         except Event.DoesNotExist:
-            logger.error(f"❌ Event not found or not active: {event_id}")
+            logger.error(f" Event not found or not active: {event_id}")
             return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
         
         # Get bot config
@@ -1228,7 +1228,7 @@ def publish_event(request, event_id):
         logger.info(f"📢 Event announcements channel ID: {config.event_announcements_channel_id if config else 'None'}")
         
         if not config or not config.event_announcements_channel_id:
-            logger.error("❌ Event announcements channel not configured")
+            logger.error(" Event announcements channel not configured")
             return Response({'error': 'Event announcements channel not configured'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Get participant count
@@ -1263,10 +1263,10 @@ def publish_event(request, event_id):
         logger.info("📤 Sending command to Discord bot...")
         success = send_bot_command('publish_event', announcement_data)
         if not success:
-            logger.error("❌ Failed to send command to Discord bot")
+            logger.error(" Failed to send command to Discord bot")
             return Response({'error': 'Failed to send command to Discord bot'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        logger.info("✅ Command sent successfully to Discord bot")
+        logger.info(" Command sent successfully to Discord bot")
         
         return Response({
             'message': f'Event "{event.title}" published successfully to Discord announcements channel',
@@ -2420,21 +2420,7 @@ def update_party_name(request, event_id, party_id):
 
 @api_view(['POST'])
 def discord_presence(request):
-    \
-
-\\Get
-
-Discord
-
-presence
-
-status
-
-for
-
-multiple
-
-users\\\
+    """Get Discord presence status for multiple users"""
     try:
         user_ids = request.data.get('user_ids', [])
         
@@ -2468,20 +2454,9 @@ users\\\
 
 
 @api_view(['POST'])
-@authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def auth_login(request):
-    \
-
-\\Django
-
-built-in
-
-user
-
-authentication
-
-login\\\
+    """JWT-based authentication login"""
     try:
         username = request.data.get('username')
         password = request.data.get('password')
@@ -2543,20 +2518,18 @@ login\\\
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
-@authentication_classes([SessionAuthentication])
+@authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def auth_logout(request):
-    \\\Django
-
-built-in
-
-user
-
-authentication
-
-logout\\\
+    """JWT-based logout (blacklist refresh token)"""
     try:
-        logout(request)
+        refresh_token = request.data.get('refresh')
+        
+        if refresh_token:
+            from rest_framework_simplejwt.tokens import RefreshToken
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        
         return Response({
             'success': True,
             'message': 'Logout successful'
@@ -2567,19 +2540,12 @@ logout\\\
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication])
+@authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def auth_verify(request):
-    \\\Verify
-
-if
-
-user
-
-is
-
-authenticated\\\
+    """Verify JWT token and return user info"""
     try:
         user = request.user
         
