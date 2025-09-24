@@ -212,6 +212,7 @@ class GearItem(models.Model):
         ('XI', 'Tier XI'),
     ]
     tier = models.CharField(max_length=5, choices=TIER_CHOICES, default='II', help_text="Item tier for gear power calculation")
+    item_level = models.IntegerField(default=30, help_text="Item level (1-30) for gear power calculation")
     
     # Base statistics
     damage = models.FloatField(default=0, help_text="Damage bonus percentage")
@@ -249,8 +250,8 @@ class GearItem(models.Model):
         verbose_name = "Gear Item"
         verbose_name_plural = "Gear Items"
     
-    def get_gear_power(self, level=30):
-        """Calculate gear power based on tier, rarity, and level according to the game's formula"""
+    def get_gear_power(self):
+        """Calculate gear power based on tier, rarity, and item level according to the game's formula"""
         # Handle Roman numerals for tier mapping
         tier_mapping = {
             'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6,
@@ -258,30 +259,28 @@ class GearItem(models.Model):
         }
         tier_num = tier_mapping.get(self.tier, 4)
         
-        # Base power calculation: 90 + 20 × (Tier − 4) + RarityBonus
-        if tier_num >= 4:
+        # Base power calculation
+        if tier_num == 2:  # Tier II → 40 (rarity does not change this)
+            base_power = 40
+        elif tier_num == 3:  # Tier III → 70 (rarity does not change this)
+            base_power = 70
+        elif tier_num >= 4:  # Tier ≥ IV → 90 + 20 × (Tier − 4) + Rarity Bonus
             base_power = 90 + (20 * (tier_num - 4))
+            # Rarity bonus only applies to Tier ≥ IV
+            rarity_bonus = {
+                'common': 0,
+                'rare': 12,
+                'epic': 22,
+                'legendary': 22,
+            }
+            base_power += rarity_bonus.get(self.rarity, 0)
         else:
-            # Tier II and III are fixed values (though not mentioned in temp.txt)
-            if tier_num == 2:
-                base_power = 40
-            elif tier_num == 3:
-                base_power = 70
-            else:
-                base_power = 40  # Fallback
+            base_power = 40  # Fallback
         
-        # Rarity bonus (flat addition)
-        rarity_bonus = {
-            'common': 0,
-            'rare': 12,
-            'epic': 22,
-            'legendary': 22,
-        }
+        # Level bonus: 2 × (Item Level − 1)
+        level_bonus = 2 * (self.item_level - 1)
         
-        # Level contribution: 2 × (Level − 1)
-        level_contribution = 2 * (level - 1)
-        
-        return base_power + rarity_bonus.get(self.rarity, 0) + level_contribution
+        return base_power + level_bonus
     
     @property
     def name(self):

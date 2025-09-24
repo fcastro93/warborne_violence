@@ -151,15 +151,15 @@ class GearTypeAdmin(admin.ModelAdmin):
 
 @admin.register(GearItem)
 class GearItemAdmin(admin.ModelAdmin):
-    list_display = ['base_name', 'skill_name', 'gear_type', 'tier', 'rarity', 'required_level', 'damage', 'defense', 'is_craftable']
-    list_filter = ['gear_type__category', 'tier', 'rarity', 'required_level', 'is_craftable', 'is_tradeable']
+    list_display = ['base_name', 'skill_name', 'gear_type', 'tier', 'item_level', 'rarity', 'required_level', 'damage', 'defense', 'is_craftable']
+    list_filter = ['gear_type__category', 'tier', 'item_level', 'rarity', 'required_level', 'is_craftable', 'is_tradeable']
     search_fields = ['base_name', 'skill_name', 'description']
     ordering = ['gear_type__category', 'rarity', 'required_level', 'base_name']
     readonly_fields = ['created_at'] if hasattr(GearItem, 'created_at') else []
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('base_name', 'skill_name', 'gear_type', 'tier', 'rarity', 'required_level', 'game_id')
+            'fields': ('base_name', 'skill_name', 'gear_type', 'tier', 'item_level', 'rarity', 'required_level', 'game_id')
         }),
         ('Statistics', {
             'fields': ('damage', 'defense', 'health_bonus', 'energy_bonus')

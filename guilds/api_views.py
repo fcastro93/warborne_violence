@@ -735,6 +735,7 @@ def equip_gear(request, player_id):
         drifter_num = data.get('drifter_num', 1)
         slot_type = data.get('slot_type')
         tier = data.get('tier', 'II')
+        item_level = data.get('item_level', 30)
         
         if not gear_id:
             return Response({'error': 'gear_id is required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -742,10 +743,12 @@ def equip_gear(request, player_id):
         # Get the gear item
         gear_item = GearItem.objects.get(id=gear_id)
         
-        # Update the gear item's tier if provided
+        # Update the gear item's tier and level if provided
         if tier and tier != gear_item.tier:
             gear_item.tier = tier
-            gear_item.save()
+        if item_level and item_level != gear_item.item_level:
+            gear_item.item_level = item_level
+        gear_item.save()
         
         # Check if player owns this gear
         player_gear, created = PlayerGear.objects.get_or_create(
@@ -792,8 +795,8 @@ def equip_gear(request, player_id):
         player_gear.equipped_on_drifter = drifter_num
         player_gear.save()
         
-        # Calculate gear power for the response (using player's character level)
-        gear_power = gear_item.get_gear_power(player.character_level or 30)
+        # Calculate gear power for the response (using item's own level)
+        gear_power = gear_item.get_gear_power()
         
         return Response({
             'success': True, 
