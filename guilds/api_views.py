@@ -3287,3 +3287,60 @@ def gear_power_analytics(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def role_analytics(request):
+    """Get role distribution analytics for all players with loadouts"""
+    try:
+        from .models import Player, PlayerGear, GearItem
+        
+        # Get all players
+        players = Player.objects.all()
+        role_data = {}
+        
+        for player in players:
+            # Get player's drifters and check if they have any equipped loadouts
+            has_loadout = False
+            for i in range(1, 4):  # 3 drifters
+                drifter = getattr(player, f'drifter_{i}', None)
+                if drifter:
+                    # Check if this drifter has equipped gear
+                    equipped_gear = PlayerGear.objects.filter(
+                        player=player, 
+                        is_equipped=True,
+                        equipped_on_drifter=i
+                    ).exists()
+                    
+                    if equipped_gear:
+                        has_loadout = True
+                        break
+            
+            # Only count players who have at least one equipped loadout
+            if has_loadout and player.game_role:
+                role = player.game_role
+                if role not in role_data:
+                    role_data[role] = {
+                        'role_name': role,
+                        'player_count': 0,
+                        'players': []
+                    }
+                role_data[role]['player_count'] += 1
+                role_data[role]['players'].append({
+                    'player_name': player.in_game_name,
+                    'player_id': player.id
+                })
+        
+        # Convert to list and sort by player count
+        analytics_data = list(role_data.values())
+        analytics_data.sort(key=lambda x: x['player_count'], reverse=True)
+        
+        return Response({
+            'analytics': analytics_data,
+            'total_roles': len(analytics_data),
+            'total_players': sum(role['player_count'] for role in analytics_data)
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
