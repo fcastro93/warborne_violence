@@ -2467,14 +2467,11 @@ def discord_presence(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def auth_logout(request):
-    """JWT-based logout (blacklist refresh token)"""
+    """JWT-based logout (client-side token removal)"""
     try:
-        refresh_token = request.data.get('refresh')
-        
-        if refresh_token:
-            from rest_framework_simplejwt.tokens import RefreshToken
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+        # For JWT logout, we don't need to blacklist on server side
+        # The client should remove tokens from localStorage
+        # This is a simple logout that just returns success
         
         return Response({
             'success': True,
