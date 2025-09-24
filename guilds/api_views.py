@@ -723,6 +723,7 @@ def player_equipped_gear(request, player_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def equip_gear(request, player_id):
     """Equip gear to a player's drifter"""
     try:
@@ -786,6 +787,7 @@ def equip_gear(request, player_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def unequip_gear(request, player_id):
     """Unequip gear from a player"""
     try:
