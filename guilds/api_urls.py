@@ -57,4 +57,10 @@ urlpatterns = [
     path('auth/refresh/', api_views.auth_refresh, name='auth_refresh'),
     path('auth/logout/', api_views.auth_logout, name='auth_logout'),
     path('auth/verify/', api_views.auth_verify, name='auth_verify'),
+    
+    # User Management endpoints (staff only)
+    path('users/', api_views.user_list, name='user_list'),
+    path('users/create/', api_views.create_user, name='create_user'),
+    path('users/<int:user_id>/update/', api_views.update_user, name='update_user'),
+    path('users/<int:user_id>/delete/', api_views.delete_user, name='delete_user'),
 ]
