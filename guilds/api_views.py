@@ -1833,8 +1833,16 @@ def fill_parties(request, event_id):
             is_active=True
         ).prefetch_related('members').order_by('party_number'))
         
+        # If no parties exist, create one automatically
         if not existing_parties:
-            return Response({'error': 'No existing parties found. Create parties first.'}, status=status.HTTP_400_BAD_REQUEST)
+            party = Party.objects.create(
+                event=event,
+                party_number=1,
+                party_name="Party 1",
+                max_members=15,
+                is_active=True
+            )
+            existing_parties = [party]
         
         # Get unassigned participants
         assigned_participant_ids = set()
@@ -1911,7 +1919,10 @@ def fill_parties(request, event_id):
 
 def fill_parties_for_guild(parties, participants, role_composition):
     """Helper function to fill parties with participants"""
-    from .models import PartyMember
+    from .models import PartyMember, Party
+    
+    if not participants:
+        return 0
     
     # Group participants by role
     participants_by_role = {}
@@ -1921,61 +1932,155 @@ def fill_parties_for_guild(parties, participants, role_composition):
             participants_by_role[role] = []
         participants_by_role[role].append(participant)
     
-    # Calculate current role counts for each party
-    party_role_counts = []
-    for party in parties:
-        role_counts = {}
-        for member in party.members.filter(is_active=True):
-            role = member.assigned_role or 'unknown'
-            role_counts[role] = role_counts.get(role, 0) + 1
-        party_role_counts.append(role_counts)
-    
     members_assigned = 0
     
-    # Distribute participants by role
+    # First pass: Try to assign participants to existing parties following role composition
     for role, role_participants in participants_by_role.items():
         target_count = role_composition.get(role, 0)
         
         for participant in role_participants:
-            # Find the best party for this participant
-            best_party_idx = 0
-            best_score = float('inf')
+            assigned = False
             
-            for party_idx, party in enumerate(parties):
-                # Check if party is full
+            # Try to find a party that needs this role
+            for party in parties:
                 if party.member_count >= party.max_members:
                     continue
                 
-                # Calculate score based on role balance
-                current_count = party_role_counts[party_idx].get(role, 0)
-                if target_count > 0:
-                    # For roles with target count, prefer parties with fewer of this role
-                    score = current_count
-                else:
-                    # For filler roles, prefer parties with fewer total members
-                    total_members = sum(party_role_counts[party_idx].values())
-                    score = total_members
+                # Count current role in this party
+                current_role_count = 0
+                for member in party.members.filter(is_active=True):
+                    if member.assigned_role == role:
+                        current_role_count += 1
                 
-                if score < best_score:
-                    best_score = score
-                    best_party_idx = party_idx
+                # Check if this party needs more of this role
+                if target_count > 0 and current_role_count < target_count:
+                    # Assign to this party
+                    is_first_member = party.member_count == 0
+                    PartyMember.objects.create(
+                        party=party,
+                        event_participant=participant,
+                        player=participant.player,
+                        assigned_role=participant.player.game_role,
+                        is_leader=is_first_member
+                    )
+                    members_assigned += 1
+                    assigned = True
+                    break
             
-            # Assign participant to best party
-            best_party = parties[best_party_idx]
-            if best_party.member_count < best_party.max_members:
-                # Check if this is the first member (will be leader)
-                is_first_member = best_party.member_count == 0
+            # If not assigned and we have filler roles (target_count = 0), try to assign to any available party
+            if not assigned and target_count == 0:
+                for party in parties:
+                    if party.member_count < party.max_members:
+                        is_first_member = party.member_count == 0
+                        PartyMember.objects.create(
+                            party=party,
+                            event_participant=participant,
+                            player=participant.player,
+                            assigned_role=participant.player.game_role,
+                            is_leader=is_first_member
+                        )
+                        members_assigned += 1
+                        assigned = True
+                        break
+    
+    # Second pass: Create new parties for remaining participants
+    remaining_participants = []
+    for role, role_participants in participants_by_role.items():
+        for participant in role_participants:
+            # Check if this participant is already assigned
+            assigned = PartyMember.objects.filter(
+                event_participant=participant,
+                is_active=True
+            ).exists()
+            if not assigned:
+                remaining_participants.append(participant)
+    
+    # Create new parties for remaining participants
+    while remaining_participants:
+        # Get the event from the first participant
+        event = remaining_participants[0].event
+        
+        # Find the next party number
+        next_party_number = Party.objects.filter(
+            event=event,
+            is_active=True
+        ).count() + 1
+        
+        # Create new party
+        new_party = Party.objects.create(
+            event=event,
+            party_number=next_party_number,
+            party_name=f"Party {next_party_number}",
+            max_members=15,
+            is_active=True
+        )
+        parties.append(new_party)
+        
+        # Fill this new party with participants
+        party_filled = False
+        for i, participant in enumerate(remaining_participants[:]):
+            if new_party.member_count < new_party.max_members:
+                is_first_member = new_party.member_count == 0
                 PartyMember.objects.create(
-                    party=best_party,
+                    party=new_party,
                     event_participant=participant,
                     player=participant.player,
                     assigned_role=participant.player.game_role,
                     is_leader=is_first_member
                 )
-                
-                # Update role counts
-                party_role_counts[best_party_idx][role] = party_role_counts[best_party_idx].get(role, 0) + 1
                 members_assigned += 1
+                remaining_participants.remove(participant)
+                party_filled = True
+            else:
+                break
+        
+        # If we couldn't fill the party with remaining participants, break
+        if not party_filled:
+            break
+    
+    # Third pass: Final distribution - mix participants to minimize incomplete parties
+    # This happens when we have 2+ parties not full - redistribute to have only 1 incomplete party max
+    active_parties = [p for p in parties if p.member_count < p.max_members and p.member_count > 0]
+    
+    if len(active_parties) > 1:
+        # Count total remaining slots
+        total_slots = sum(p.max_members - p.member_count for p in active_parties)
+        total_participants = len(remaining_participants)
+        
+        if total_slots >= total_participants:
+            # We can fill all participants, redistribute to minimize incomplete parties
+            # Sort parties by current member count (ascending)
+            active_parties.sort(key=lambda p: p.member_count)
+            
+            # Redistribute participants to fill parties as much as possible
+            for participant in remaining_participants[:]:
+                # Find the party with the most members that still has space
+                best_party = None
+                for party in active_parties:
+                    if party.member_count < party.max_members:
+                        best_party = party
+                        break
+                
+                if best_party:
+                    # Remove participant from their current party if any
+                    current_membership = PartyMember.objects.filter(
+                        event_participant=participant,
+                        is_active=True
+                    ).first()
+                    if current_membership:
+                        current_membership.delete()
+                    
+                    # Add to the best party
+                    is_first_member = best_party.member_count == 0
+                    PartyMember.objects.create(
+                        party=best_party,
+                        event_participant=participant,
+                        player=participant.player,
+                        assigned_role=participant.player.game_role,
+                        is_leader=is_first_member
+                    )
+                    members_assigned += 1
+                    remaining_participants.remove(participant)
     
     return members_assigned
 
