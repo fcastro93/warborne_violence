@@ -2549,16 +2549,13 @@ def auth_verify(request):
     try:
         user = request.user
         
-        # Get or create a Player profile for the user
-        player, created = Player.objects.get_or_create(
-            user=user,
-            defaults={
-                'in_game_name': user.username,
-                'character_level': 1,
-                'faction': 'emberwild',
-                'game_role': 'ranged_dps'
-            }
-        )
+        # Check if user has a player profile (optional)
+        player = None
+        try:
+            player = Player.objects.get(in_game_name=user.username)
+        except Player.DoesNotExist:
+            # Player profile doesn't exist, which is fine for web users
+            pass
         
         return Response({
             'success': True,
@@ -2596,16 +2593,13 @@ def auth_login(request):
         user = authenticate(request, username=username, password=password)
         
         if user is not None and user.is_active:
-            # Create or get player profile
-            player, created = Player.objects.get_or_create(
-                user=user,
-                defaults={
-                    'in_game_name': user.username,
-                    'character_level': 1,
-                    'faction': 'emberwild',
-                    'game_role': 'ranged_dps'
-                }
-            )
+            # Check if user has a player profile (optional)
+            player = None
+            try:
+                player = Player.objects.get(in_game_name=user.username)
+            except Player.DoesNotExist:
+                # Player profile doesn't exist, which is fine for web users
+                pass
             
             # Generate JWT tokens
             from rest_framework_simplejwt.tokens import RefreshToken
