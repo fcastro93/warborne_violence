@@ -512,17 +512,35 @@ class CommandMenuView(discord.ui.View):
         def _get_player_by_discord_user(discord_user_id):
             from .models import Player
             try:
-                return Player.objects.get(discord_user_id=discord_user_id)
+                return Player.objects.select_related('guild').get(discord_user_id=discord_user_id)
             except Player.DoesNotExist:
                 return None
         
-        player = await _get_player_by_discord_user(interaction.user.id)
-        
-        if player:
+        @sync_to_async
+        def _get_player_info(player):
+            if not player:
+                return None
+            
             guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
             role_info = f"**Rol:** {player.get_game_role_display()}" if player.game_role else "**Rol:** No asignado"
             
-            loadout_url = f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player.id}/loadout"
+            return {
+                'guild_info': guild_info,
+                'role_info': role_info,
+                'in_game_name': player.in_game_name,
+                'character_level': player.character_level,
+                'faction': player.get_faction_display(),
+                'player_id': player.id
+            }
+        
+        player = await _get_player_by_discord_user(interaction.user.id)
+        player_info = await _get_player_info(player)
+        
+        if player_info:
+            guild_info = player_info['guild_info']
+            role_info = player_info['role_info']
+            
+            loadout_url = f"https://strategic-brena-charfire-afecfd9e.koyeb.app/guilds/player/{player_info['player_id']}/loadout"
             
             embed = discord.Embed(
                 title="📊 Player Information",
@@ -530,9 +548,9 @@ class CommandMenuView(discord.ui.View):
             )
             embed.add_field(
                 name="👤 Player Details",
-                value=f"**Name:** {player.in_game_name}\n"
-                      f"**Level:** {player.character_level}\n"
-                      f"**Faction:** {player.get_faction_display()}\n"
+                value=f"**Name:** {player_info['in_game_name']}\n"
+                      f"**Level:** {player_info['character_level']}\n"
+                      f"**Faction:** {player_info['faction']}\n"
                       f"{guild_info}\n"
                       f"{role_info}\n"
                       f"**Loadouts:** [View Loadouts]({loadout_url})",
@@ -805,7 +823,7 @@ class WarborneBot(commands.Bot):
         @sync_to_async
         def _get_player_by_discord_user(discord_user_id):
             """Get player by Discord user ID"""
-            return Player.objects.filter(discord_user_id=discord_user_id).first()
+            return Player.objects.select_related('guild').filter(discord_user_id=discord_user_id).first()
 
         
         
@@ -840,18 +858,35 @@ class WarborneBot(commands.Bot):
             print(f"🔥 DEBUG: Sending view with {len(view.children)} dropdowns")
             await ctx.send(embed=embed, view=view, ephemeral=True)
         
+        @sync_to_async
+        def _get_player_info_for_command(player):
+            """Get player info for command display"""
+            if not player:
+                return None
+            
+            guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
+            role_info = f"**Rol:** {player.get_game_role_display()}" if player.game_role else "**Rol:** No asignado"
+            
+            return {
+                'guild_info': guild_info,
+                'role_info': role_info,
+                'in_game_name': player.in_game_name,
+                'character_level': player.character_level,
+                'faction': player.get_faction_display(),
+                'player_id': player.id
+            }
+        
         @self.command(name="myplayer")
         async def myplayer(ctx):
             """Show your registered player information"""
             print(f"🔥 DEBUG: myplayer command called by {ctx.author.name}")
             try:
                 player = await _get_player_by_discord_user(ctx.author.id)
-                if player:
+                player_info = await _get_player_info_for_command(player)
+                
+                if player_info:
                     base_url = self.config.get('base_url', 'http://127.0.0.1:8000')
-                    loadout_url = f"{base_url}/guilds/player/{player.id}/loadout/"
-                    
-                    guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
-                    role_info = f"**Rol:** {player.get_game_role_display()}" if player.game_role else "**Rol:** No asignado"
+                    loadout_url = f"{base_url}/guilds/player/{player_info['player_id']}/loadout/"
                     
                     embed = discord.Embed(
                         title="📊 Player Information",
@@ -859,11 +894,11 @@ class WarborneBot(commands.Bot):
                     )
                     embed.add_field(
                         name="👤 Player Details",
-                        value=f"**Name:** {player.in_game_name}\n"
-                              f"**Level:** {player.character_level}\n"
-                              f"**Faction:** {player.get_faction_display()}\n"
-                              f"{guild_info}\n"
-                              f"{role_info}\n"
+                        value=f"**Name:** {player_info['in_game_name']}\n"
+                              f"**Level:** {player_info['character_level']}\n"
+                              f"**Faction:** {player_info['faction']}\n"
+                              f"{player_info['guild_info']}\n"
+                              f"{player_info['role_info']}\n"
                               f"**Loadouts:** [View Loadouts]({loadout_url})",
                         inline=False
                     )
