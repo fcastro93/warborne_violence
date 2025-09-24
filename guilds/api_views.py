@@ -2453,69 +2453,6 @@ def discord_presence(request):
 
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def auth_login(request):
-    """JWT-based authentication login"""
-    try:
-        username = request.data.get('username')
-        password = request.data.get('password')
-        
-        if not username or not password:
-            return Response({
-                'success': False,
-                'error': 'Username and password are required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Authenticate user using Django's built-in authentication
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            if user.is_active:
-                # Log the user in
-                login(request, user)
-                
-                # Get or create a Player profile for the user
-                player, created = Player.objects.get_or_create(
-                    user=user,
-                    defaults={
-                        'in_game_name': user.username,
-                        'character_level': 1,
-                        'faction': 'emberwild',
-                        'game_role': 'ranged_dps'
-                    }
-                )
-                
-                return Response({
-                    'success': True,
-                    'user': {
-                        'id': user.id,
-                        'username': user.username,
-                        'email': user.email,
-                        'first_name': user.first_name,
-                        'last_name': user.last_name,
-                        'is_staff': user.is_staff,
-                        'is_superuser': user.is_superuser,
-                        'player_id': player.id if player else None
-                    },
-                    'message': 'Login successful'
-                })
-            else:
-                return Response({
-                    'success': False,
-                    'error': 'Account is disabled'
-                }, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({
-                'success': False,
-                'error': 'Invalid username or password'
-            }, status=status.HTTP_401_UNAUTHORIZED)
-            
-    except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
