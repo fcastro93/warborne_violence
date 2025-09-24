@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
@@ -2416,200 +2417,355 @@ def update_party_name(request, event_id, party_id):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
- 
- @ a p i _ v i e w ( [ ' P O S T ' ] ) 
- d e f   d i s c o r d _ p r e s e n c e ( r e q u e s t ) : 
-         \ 
- 
- \ \ G e t 
- 
- D i s c o r d 
- 
- p r e s e n c e 
- 
- s t a t u s 
- 
- f o r 
- 
- m u l t i p l e 
- 
- u s e r s \ \ \ 
-         t r y : 
-                 u s e r _ i d s   =   r e q u e s t . d a t a . g e t ( ' u s e r _ i d s ' ,   [ ] ) 
-                 
-                 i f   n o t   u s e r _ i d s : 
-                         r e t u r n   R e s p o n s e ( { ' e r r o r ' :   ' u s e r _ i d s   i s   r e q u i r e d ' } ,   s t a t u s = s t a t u s . H T T P _ 4 0 0 _ B A D _ R E Q U E S T ) 
-                 
-                 #   F o r   n o w ,   r e t u r n   m o c k   d a t a   s i n c e   w e   n e e d   t o   i m p l e m e n t   D i s c o r d   G a t e w a y   c o n n e c t i o n 
-                 #   I n   a   r e a l   i m p l e m e n t a t i o n ,   t h i s   w o u l d   c o n n e c t   t o   D i s c o r d ' s   G a t e w a y   A P I 
-                 p r e s e n c e _ d a t a   =   { } 
-                 
-                 f o r   u s e r _ i d   i n   u s e r _ i d s : 
-                         #   M o c k   p r e s e n c e   d a t a   -   i n   r e a l   i m p l e m e n t a t i o n ,   t h i s   w o u l d   c o m e   f r o m   D i s c o r d   G a t e w a y 
-                         p r e s e n c e _ d a t a [ s t r ( u s e r _ i d ) ]   =   { 
-                                 ' s t a t u s ' :   ' o f f l i n e ' ,     #   o n l i n e ,   i d l e ,   d n d ,   o f f l i n e 
-                                 ' a c t i v i t i e s ' :   [ ] , 
-                                 ' c l i e n t _ s t a t u s ' :   { 
-                                         ' d e s k t o p ' :   ' o f f l i n e ' , 
-                                         ' m o b i l e ' :   ' o f f l i n e ' , 
-                                         ' w e b ' :   ' o f f l i n e ' 
-                                 } 
-                         } 
-                 
-                 r e t u r n   R e s p o n s e ( { 
-                         ' p r e s e n c e ' :   p r e s e n c e _ d a t a , 
-                         ' t i m e s t a m p ' :   t i m e z o n e . n o w ( ) . i s o f o r m a t ( ) 
-                 } ) 
-                 
-         e x c e p t   E x c e p t i o n   a s   e : 
-                 r e t u r n   R e s p o n s e ( { ' e r r o r ' :   s t r ( e ) } ,   s t a t u s = s t a t u s . H T T P _ 5 0 0 _ I N T E R N A L _ S E R V E R _ E R R O R ) 
- 
- 
- 
- @ a p i _ v i e w ( [ ' P O S T ' ] ) 
- @ a u t h e n t i c a t i o n _ c l a s s e s ( [ S e s s i o n A u t h e n t i c a t i o n ] ) 
- @ p e r m i s s i o n _ c l a s s e s ( [ A l l o w A n y ] ) 
- d e f   a u t h _ l o g i n ( r e q u e s t ) : 
-         \ 
- 
- \ \ D j a n g o 
- 
- b u i l t - i n 
- 
- u s e r 
- 
- a u t h e n t i c a t i o n 
- 
- l o g i n \ \ \ 
-         t r y : 
-                 u s e r n a m e   =   r e q u e s t . d a t a . g e t ( ' u s e r n a m e ' ) 
-                 p a s s w o r d   =   r e q u e s t . d a t a . g e t ( ' p a s s w o r d ' ) 
-                 
-                 i f   n o t   u s e r n a m e   o r   n o t   p a s s w o r d : 
-                         r e t u r n   R e s p o n s e ( { 
-                                 ' s u c c e s s ' :   F a l s e , 
-                                 ' e r r o r ' :   ' U s e r n a m e   a n d   p a s s w o r d   a r e   r e q u i r e d ' 
-                         } ,   s t a t u s = s t a t u s . H T T P _ 4 0 0 _ B A D _ R E Q U E S T ) 
-                 
-                 #   A u t h e n t i c a t e   u s e r   u s i n g   D j a n g o ' s   b u i l t - i n   a u t h e n t i c a t i o n 
-                 u s e r   =   a u t h e n t i c a t e ( r e q u e s t ,   u s e r n a m e = u s e r n a m e ,   p a s s w o r d = p a s s w o r d ) 
-                 
-                 i f   u s e r   i s   n o t   N o n e : 
-                         i f   u s e r . i s _ a c t i v e : 
-                                 #   L o g   t h e   u s e r   i n 
-                                 l o g i n ( r e q u e s t ,   u s e r ) 
-                                 
-                                 #   G e t   o r   c r e a t e   a   P l a y e r   p r o f i l e   f o r   t h e   u s e r 
-                                 p l a y e r ,   c r e a t e d   =   P l a y e r . o b j e c t s . g e t _ o r _ c r e a t e ( 
-                                         u s e r = u s e r , 
-                                         d e f a u l t s = { 
-                                                 ' i n _ g a m e _ n a m e ' :   u s e r . u s e r n a m e , 
-                                                 ' c h a r a c t e r _ l e v e l ' :   1 , 
-                                                 ' f a c t i o n ' :   ' e m b e r w i l d ' , 
-                                                 ' g a m e _ r o l e ' :   ' r a n g e d _ d p s ' 
-                                         } 
-                                 ) 
-                                 
-                                 r e t u r n   R e s p o n s e ( { 
-                                         ' s u c c e s s ' :   T r u e , 
-                                         ' u s e r ' :   { 
-                                                 ' i d ' :   u s e r . i d , 
-                                                 ' u s e r n a m e ' :   u s e r . u s e r n a m e , 
-                                                 ' e m a i l ' :   u s e r . e m a i l , 
-                                                 ' f i r s t _ n a m e ' :   u s e r . f i r s t _ n a m e , 
-                                                 ' l a s t _ n a m e ' :   u s e r . l a s t _ n a m e , 
-                                                 ' i s _ s t a f f ' :   u s e r . i s _ s t a f f , 
-                                                 ' i s _ s u p e r u s e r ' :   u s e r . i s _ s u p e r u s e r , 
-                                                 ' p l a y e r _ i d ' :   p l a y e r . i d   i f   p l a y e r   e l s e   N o n e 
-                                         } , 
-                                         ' m e s s a g e ' :   ' L o g i n   s u c c e s s f u l ' 
-                                 } ) 
-                         e l s e : 
-                                 r e t u r n   R e s p o n s e ( { 
-                                         ' s u c c e s s ' :   F a l s e , 
-                                         ' e r r o r ' :   ' A c c o u n t   i s   d i s a b l e d ' 
-                                 } ,   s t a t u s = s t a t u s . H T T P _ 4 0 0 _ B A D _ R E Q U E S T ) 
-                 e l s e : 
-                         r e t u r n   R e s p o n s e ( { 
-                                 ' s u c c e s s ' :   F a l s e , 
-                                 ' e r r o r ' :   ' I n v a l i d   u s e r n a m e   o r   p a s s w o r d ' 
-                         } ,   s t a t u s = s t a t u s . H T T P _ 4 0 1 _ U N A U T H O R I Z E D ) 
-                         
-         e x c e p t   E x c e p t i o n   a s   e : 
-                 r e t u r n   R e s p o n s e ( { 
-                         ' s u c c e s s ' :   F a l s e , 
-                         ' e r r o r ' :   s t r ( e ) 
-                 } ,   s t a t u s = s t a t u s . H T T P _ 5 0 0 _ I N T E R N A L _ S E R V E R _ E R R O R ) 
- 
- @ a p i _ v i e w ( [ ' P O S T ' ] ) 
- @ a u t h e n t i c a t i o n _ c l a s s e s ( [ S e s s i o n A u t h e n t i c a t i o n ] ) 
- @ p e r m i s s i o n _ c l a s s e s ( [ I s A u t h e n t i c a t e d ] ) 
- d e f   a u t h _ l o g o u t ( r e q u e s t ) : 
-         \ \ \ D j a n g o 
- 
- b u i l t - i n 
- 
- u s e r 
- 
- a u t h e n t i c a t i o n 
- 
- l o g o u t \ \ \ 
-         t r y : 
-                 l o g o u t ( r e q u e s t ) 
-                 r e t u r n   R e s p o n s e ( { 
-                         ' s u c c e s s ' :   T r u e , 
-                         ' m e s s a g e ' :   ' L o g o u t   s u c c e s s f u l ' 
-                 } ) 
-         e x c e p t   E x c e p t i o n   a s   e : 
-                 r e t u r n   R e s p o n s e ( { 
-                         ' s u c c e s s ' :   F a l s e , 
-                         ' e r r o r ' :   s t r ( e ) 
-                 } ,   s t a t u s = s t a t u s . H T T P _ 5 0 0 _ I N T E R N A L _ S E R V E R _ E R R O R ) 
- 
- @ a p i _ v i e w ( [ ' G E T ' ] ) 
- @ a u t h e n t i c a t i o n _ c l a s s e s ( [ S e s s i o n A u t h e n t i c a t i o n ] ) 
- @ p e r m i s s i o n _ c l a s s e s ( [ I s A u t h e n t i c a t e d ] ) 
- d e f   a u t h _ v e r i f y ( r e q u e s t ) : 
-         \ \ \ V e r i f y 
- 
- i f 
- 
- u s e r 
- 
- i s 
- 
- a u t h e n t i c a t e d \ \ \ 
-         t r y : 
-                 u s e r   =   r e q u e s t . u s e r 
-                 
-                 #   G e t   o r   c r e a t e   a   P l a y e r   p r o f i l e   f o r   t h e   u s e r 
-                 p l a y e r ,   c r e a t e d   =   P l a y e r . o b j e c t s . g e t _ o r _ c r e a t e ( 
-                         u s e r = u s e r , 
-                         d e f a u l t s = { 
-                                 ' i n _ g a m e _ n a m e ' :   u s e r . u s e r n a m e , 
-                                 ' c h a r a c t e r _ l e v e l ' :   1 , 
-                                 ' f a c t i o n ' :   ' e m b e r w i l d ' , 
-                                 ' g a m e _ r o l e ' :   ' r a n g e d _ d p s ' 
-                         } 
-                 ) 
-                 
-                 r e t u r n   R e s p o n s e ( { 
-                         ' s u c c e s s ' :   T r u e , 
-                         ' u s e r ' :   { 
-                                 ' i d ' :   u s e r . i d , 
-                                 ' u s e r n a m e ' :   u s e r . u s e r n a m e , 
-                                 ' e m a i l ' :   u s e r . e m a i l , 
-                                 ' f i r s t _ n a m e ' :   u s e r . f i r s t _ n a m e , 
-                                 ' l a s t _ n a m e ' :   u s e r . l a s t _ n a m e , 
-                                 ' i s _ s t a f f ' :   u s e r . i s _ s t a f f , 
-                                 ' i s _ s u p e r u s e r ' :   u s e r . i s _ s u p e r u s e r , 
-                                 ' p l a y e r _ i d ' :   p l a y e r . i d   i f   p l a y e r   e l s e   N o n e 
-                         } 
-                 } ) 
-         e x c e p t   E x c e p t i o n   a s   e : 
-                 r e t u r n   R e s p o n s e ( { 
-                         ' s u c c e s s ' :   F a l s e , 
-                         ' e r r o r ' :   s t r ( e ) 
-                 } ,   s t a t u s = s t a t u s . H T T P _ 5 0 0 _ I N T E R N A L _ S E R V E R _ E R R O R ) 
- 
- 
+
+@api_view(['POST'])
+def discord_presence(request):
+    \
+
+\\Get
+
+Discord
+
+presence
+
+status
+
+for
+
+multiple
+
+users\\\
+    try:
+        user_ids = request.data.get('user_ids', [])
+        
+        if not user_ids:
+            return Response({'error': 'user_ids is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # For now, return mock data since we need to implement Discord Gateway connection
+        # In a real implementation, this would connect to Discord's Gateway API
+        presence_data = {}
+        
+        for user_id in user_ids:
+            # Mock presence data - in real implementation, this would come from Discord Gateway
+            presence_data[str(user_id)] = {
+                'status': 'offline',  # online, idle, dnd, offline
+                'activities': [],
+                'client_status': {
+                    'desktop': 'offline',
+                    'mobile': 'offline',
+                    'web': 'offline'
+                }
+            }
+        
+        return Response({
+            'presence': presence_data,
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def auth_login(request):
+    \
+
+\\Django
+
+built-in
+
+user
+
+authentication
+
+login\\\
+    try:
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        if not username or not password:
+            return Response({
+                'success': False,
+                'error': 'Username and password are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Authenticate user using Django's built-in authentication
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            if user.is_active:
+                # Log the user in
+                login(request, user)
+                
+                # Get or create a Player profile for the user
+                player, created = Player.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        'in_game_name': user.username,
+                        'character_level': 1,
+                        'faction': 'emberwild',
+                        'game_role': 'ranged_dps'
+                    }
+                )
+                
+                return Response({
+                    'success': True,
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'is_staff': user.is_staff,
+                        'is_superuser': user.is_superuser,
+                        'player_id': player.id if player else None
+                    },
+                    'message': 'Login successful'
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'error': 'Account is disabled'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                'success': False,
+                'error': 'Invalid username or password'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+            
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def auth_logout(request):
+    \\\Django
+
+built-in
+
+user
+
+authentication
+
+logout\\\
+    try:
+        logout(request)
+        return Response({
+            'success': True,
+            'message': 'Logout successful'
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def auth_verify(request):
+    \\\Verify
+
+if
+
+user
+
+is
+
+authenticated\\\
+    try:
+        user = request.user
+        
+        # Get or create a Player profile for the user
+        player, created = Player.objects.get_or_create(
+            user=user,
+            defaults={
+                'in_game_name': user.username,
+                'character_level': 1,
+                'faction': 'emberwild',
+                'game_role': 'ranged_dps'
+            }
+        )
+        
+        return Response({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'player_id': player.id if player else None
+            }
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def auth_login(request):
+    """JWT-based authentication login"""
+    try:
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        if not username or not password:
+            return Response({
+                'success': False,
+                'error': 'Username and password are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None and user.is_active:
+            # Create or get player profile
+            player, created = Player.objects.get_or_create(
+                user=user,
+                defaults={
+                    'in_game_name': user.username,
+                    'character_level': 1,
+                    'faction': 'emberwild',
+                    'game_role': 'ranged_dps'
+                }
+            )
+            
+            # Generate JWT tokens
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken.for_user(user)
+            access_token = refresh.access_token
+            
+            return Response({
+                'success': True,
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'is_staff': user.is_staff,
+                    'is_superuser': user.is_superuser,
+                    'player_id': player.id if player else None
+                },
+                'tokens': {
+                    'access': str(access_token),
+                    'refresh': str(refresh)
+                },
+                'message': 'Login successful'
+            })
+        else:
+            return Response({
+                'success': False,
+                'error': 'Invalid username or password'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+            
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def auth_refresh(request):
+    """Refresh JWT token"""
+    try:
+        refresh_token = request.data.get('refresh')
+        
+        if not refresh_token:
+            return Response({
+                'success': False,
+                'error': 'Refresh token is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken(refresh_token)
+        access_token = refresh.access_token
+        
+        return Response({
+            'success': True,
+            'tokens': {
+                'access': str(access_token),
+                'refresh': str(refresh)
+            }
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': 'Invalid refresh token'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def auth_logout(request):
+    """JWT-based logout (blacklist refresh token)"""
+    try:
+        refresh_token = request.data.get('refresh')
+        
+        if refresh_token:
+            from rest_framework_simplejwt.tokens import RefreshToken
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        
+        return Response({
+            'success': True,
+            'message': 'Logout successful'
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def auth_verify(request):
+    """Verify JWT token and return user info"""
+    try:
+        user = request.user
+        
+        player, created = Player.objects.get_or_create(
+            user=user,
+            defaults={
+                'in_game_name': user.username,
+                'character_level': 1,
+                'faction': 'emberwild',
+                'game_role': 'ranged_dps'
+            }
+        )
+        
+        return Response({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'player_id': player.id if player else None
+            }
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

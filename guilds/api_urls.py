@@ -53,6 +53,7 @@ urlpatterns = [
     
     # Authentication endpoints
     path('auth/login/', api_views.auth_login, name='auth_login'),
+    path('auth/refresh/', api_views.auth_refresh, name='auth_refresh'),
     path('auth/logout/', api_views.auth_logout, name='auth_logout'),
     path('auth/verify/', api_views.auth_verify, name='auth_verify'),
 ]
