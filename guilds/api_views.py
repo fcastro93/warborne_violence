@@ -456,6 +456,7 @@ def assign_drifter_to_build(request, build_id):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def equip_item_to_build(request, build_id):
     """Equip an item to a recommended build"""
     try:
@@ -521,6 +522,7 @@ def equip_item_to_build(request, build_id):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def unequip_item_from_build(request, build_id):
     """Unequip an item from a recommended build"""
     try:
