@@ -1317,6 +1317,80 @@ def publish_event(request, event_id):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+def balance_parties(parties):
+    """Balance parties by moving members from incomplete parties to fill numbers"""
+    from .models import PartyMember
+    
+    logger.info("🔄 Starting party balancing...")
+    
+    # Get current member counts for all parties
+    party_counts = []
+    for party in parties:
+        member_count = PartyMember.objects.filter(party=party, is_active=True).count()
+        party_counts.append((party, member_count))
+    
+    # Sort parties by member count (ascending)
+    party_counts.sort(key=lambda x: x[1])
+    
+    logger.info(f"📊 Party counts before balancing: {[f'Party {p.party_number}: {count}' for p, count in party_counts]}")
+    
+    # Move members from parties with fewer members to parties with more members
+    # until we have at most 1 incomplete party
+    parties_moved = 0
+    
+    while len([count for _, count in party_counts if count < 15]) > 1:
+        # Find the party with the fewest members
+        smallest_party, smallest_count = party_counts[0]
+        
+        # Find the party with the most members that's not full
+        largest_party, largest_count = None, 0
+        for party, count in party_counts[1:]:
+            if count < 15 and count > largest_count:
+                largest_party, largest_count = party, count
+        
+        if largest_party is None:
+            break  # No more parties to balance with
+        
+        # Move a member from smallest to largest party
+        member_to_move = PartyMember.objects.filter(
+            party=smallest_party, 
+            is_active=True
+        ).exclude(is_leader=True).first()  # Don't move leaders
+        
+        if member_to_move:
+            # Update the member's party
+            member_to_move.party = largest_party
+            member_to_move.save()
+            
+            # Update our counts
+            party_counts[0] = (smallest_party, smallest_count - 1)
+            for i, (party, count) in enumerate(party_counts[1:], 1):
+                if party == largest_party:
+                    party_counts[i] = (largest_party, largest_count + 1)
+                    break
+            
+            parties_moved += 1
+            logger.info(f"  - Moved {member_to_move.player.in_game_name} from Party {smallest_party.party_number} to Party {largest_party.party_number}")
+            
+            # Re-sort the list
+            party_counts.sort(key=lambda x: x[1])
+        else:
+            break  # No more members to move
+    
+    # Delete empty parties
+    empty_parties = []
+    for party, count in party_counts:
+        if count == 0:
+            empty_parties.append(party)
+    
+    for party in empty_parties:
+        logger.info(f"🗑️ Deleting empty Party {party.party_number}")
+        party.delete()
+        parties_moved += 1
+    
+    logger.info(f"✅ Party balancing completed: {parties_moved} moves/deletions")
+    return parties_moved
+
 @api_view(['POST'])
 def create_parties(request, event_id):
     """Create balanced parties for an event (migrated from Discord bot logic)"""
@@ -1448,34 +1522,48 @@ def create_parties(request, event_id):
                 # Distribute participants across parties for this guild
                 party_assignments = [[] for _ in range(num_parties)]
                 party_role_counts = [{} for _ in range(num_parties)]
+                party_assigned_roles = [[] for _ in range(num_parties)]  # Track assigned roles for each party
                 
                 # Initialize role counts
                 for party_idx in range(num_parties):
                     for role in ROLE_REQUIREMENTS.keys():
                         party_role_counts[party_idx][role] = 0
                 
-                # Distribute participants by role, trying to balance within guild
+                # Create a list of all participants with their roles
+                all_participants = []
                 for role, role_participants in participants_by_role.items():
-                    if role == 'unknown':
-                        # Distribute unknown roles evenly
-                        for i, participant in enumerate(role_participants):
-                            party_idx = i % num_parties
-                            party_assignments[party_idx].append(participant)
-                    else:
-                        # Distribute known roles to balance requirements
-                        for i, participant in enumerate(role_participants):
-                            # Find party with least of this role
-                            best_party = 0
-                            min_count = party_role_counts[0].get(role, 0)
-                            
-                            for party_idx in range(1, num_parties):
-                                current_count = party_role_counts[party_idx].get(role, 0)
-                                if current_count < min_count:
-                                    min_count = current_count
-                                    best_party = party_idx
-                            
-                            party_assignments[best_party].append(participant)
-                            party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
+                    for participant in role_participants:
+                        all_participants.append((participant, role))
+                
+                # First pass: Assign required roles based on configuration
+                for party_idx in range(num_parties):
+                    for required_role, required_count in role_composition.items():
+                        if required_count > 0:  # Only assign roles that have minimum requirements
+                            assigned_count = 0
+                            for participant, player_role in all_participants[:]:
+                                if assigned_count >= required_count:
+                                    break
+                                # Check if this participant can fill this role
+                                if (player_role == required_role or 
+                                    (player_role in ['defensive_tank', 'offensive_tank'] and required_role in ['defensive_tank', 'offensive_tank']) or
+                                    (player_role in ['melee_dps', 'ranged_dps'] and required_role in ['melee_dps', 'ranged_dps']) or
+                                    (player_role in ['defensive_support', 'offensive_support'] and required_role in ['defensive_support', 'offensive_support'])):
+                                    
+                                    party_assignments[party_idx].append(participant)
+                                    party_assigned_roles[party_idx].append(required_role)
+                                    party_role_counts[party_idx][required_role] += 1
+                                    all_participants.remove((participant, player_role))
+                                    assigned_count += 1
+                                    logger.info(f"  - {participant.player.in_game_name} assigned as {required_role} to Party {party_idx + 1}")
+                
+                # Second pass: Fill remaining slots with remaining participants
+                for party_idx in range(num_parties):
+                    while len(party_assignments[party_idx]) < MAX_PARTY_SIZE and all_participants:
+                        participant, player_role = all_participants.pop(0)
+                        party_assignments[party_idx].append(participant)
+                        party_assigned_roles[party_idx].append(player_role)
+                        party_role_counts[party_idx][player_role] = party_role_counts[party_idx].get(player_role, 0) + 1
+                        logger.info(f"  - {participant.player.in_game_name} assigned as {player_role} to Party {party_idx + 1} (filler)")
                 
                 # Create PartyMember objects for this guild
                 guild_members_created = 0
@@ -1484,16 +1572,21 @@ def create_parties(request, event_id):
                     logger.info(f"📋 {guild_name} Party {party.party_number}: {party_size} members")
                     for member_idx, participant in enumerate(party_assignments[party_idx]):
                         is_leader = member_idx == 0  # First member is the leader
+                        assigned_role = party_assigned_roles[party_idx][member_idx] if member_idx < len(party_assigned_roles[party_idx]) else participant.player.game_role
                         PartyMember.objects.create(
                             party=party,
                             event_participant=participant,
                             player=participant.player,
-                            assigned_role=participant.player.game_role,
+                            assigned_role=assigned_role,
                             is_leader=is_leader
                         )
                         guild_members_created += 1
                         if member_idx < 3:  # Log first 3 members of each party
-                            logger.info(f"  - {participant.player.in_game_name} ({participant.player.game_role}) {'👑' if is_leader else ''}")
+                            logger.info(f"  - {participant.player.in_game_name} ({assigned_role}) {'👑' if is_leader else ''}")
+                
+                # Balance parties for this guild
+                logger.info(f"⚖️ Balancing parties for {guild_name}...")
+                parties_balanced = balance_parties(parties)
                 
                 total_parties_created += num_parties
                 total_members_created += guild_members_created
@@ -1548,34 +1641,48 @@ def create_parties(request, event_id):
             # Distribute participants across parties
             party_assignments = [[] for _ in range(num_parties)]
             party_role_counts = [{} for _ in range(num_parties)]
+            party_assigned_roles = [[] for _ in range(num_parties)]  # Track assigned roles for each party
             
             # Initialize role counts
             for party_idx in range(num_parties):
                 for role in ROLE_REQUIREMENTS.keys():
                     party_role_counts[party_idx][role] = 0
             
-            # Distribute participants by role, trying to balance
+            # Create a list of all participants with their roles
+            all_participants = []
             for role, role_participants in participants_by_role.items():
-                if role == 'unknown':
-                    # Distribute unknown roles evenly
-                    for i, participant in enumerate(role_participants):
-                        party_idx = i % num_parties
-                        party_assignments[party_idx].append(participant)
-                else:
-                    # Distribute known roles to balance requirements
-                    for i, participant in enumerate(role_participants):
-                        # Find party with least of this role
-                        best_party = 0
-                        min_count = party_role_counts[0].get(role, 0)
-                        
-                        for party_idx in range(1, num_parties):
-                            current_count = party_role_counts[party_idx].get(role, 0)
-                            if current_count < min_count:
-                                min_count = current_count
-                                best_party = party_idx
-                        
-                        party_assignments[best_party].append(participant)
-                        party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
+                for participant in role_participants:
+                    all_participants.append((participant, role))
+            
+            # First pass: Assign required roles based on configuration
+            for party_idx in range(num_parties):
+                for required_role, required_count in role_composition.items():
+                    if required_count > 0:  # Only assign roles that have minimum requirements
+                        assigned_count = 0
+                        for participant, player_role in all_participants[:]:
+                            if assigned_count >= required_count:
+                                break
+                            # Check if this participant can fill this role
+                            if (player_role == required_role or 
+                                (player_role in ['defensive_tank', 'offensive_tank'] and required_role in ['defensive_tank', 'offensive_tank']) or
+                                (player_role in ['melee_dps', 'ranged_dps'] and required_role in ['melee_dps', 'ranged_dps']) or
+                                (player_role in ['defensive_support', 'offensive_support'] and required_role in ['defensive_support', 'offensive_support'])):
+                                
+                                party_assignments[party_idx].append(participant)
+                                party_assigned_roles[party_idx].append(required_role)
+                                party_role_counts[party_idx][required_role] += 1
+                                all_participants.remove((participant, player_role))
+                                assigned_count += 1
+                                logger.info(f"  - {participant.player.in_game_name} assigned as {required_role} to Party {party_idx + 1}")
+            
+            # Second pass: Fill remaining slots with remaining participants
+            for party_idx in range(num_parties):
+                while len(party_assignments[party_idx]) < MAX_PARTY_SIZE and all_participants:
+                    participant, player_role = all_participants.pop(0)
+                    party_assignments[party_idx].append(participant)
+                    party_assigned_roles[party_idx].append(player_role)
+                    party_role_counts[party_idx][player_role] = party_role_counts[party_idx].get(player_role, 0) + 1
+                    logger.info(f"  - {participant.player.in_game_name} assigned as {player_role} to Party {party_idx + 1} (filler)")
             
             # Create PartyMember objects
             party_members_created = 0
@@ -1584,22 +1691,28 @@ def create_parties(request, event_id):
                 logger.info(f"📋 Party {party.party_number}: {party_size} members")
                 for member_idx, participant in enumerate(party_assignments[party_idx]):
                     is_leader = member_idx == 0  # First member is the leader
+                    assigned_role = party_assigned_roles[party_idx][member_idx] if member_idx < len(party_assigned_roles[party_idx]) else participant.player.game_role
                     PartyMember.objects.create(
                         party=party,
                         event_participant=participant,
                         player=participant.player,
-                        assigned_role=participant.player.game_role,
+                        assigned_role=assigned_role,
                         is_leader=is_leader
                     )
                     party_members_created += 1
                     if member_idx < 3:  # Log first 3 members of each party
-                        logger.info(f"  - {participant.player.in_game_name} ({participant.player.game_role}) {'👑' if is_leader else ''}")
+                        logger.info(f"  - {participant.player.in_game_name} ({assigned_role}) {'👑' if is_leader else ''}")
+            
+            # Third pass: Balance parties by moving members from incomplete parties
+            logger.info("⚖️ Balancing parties...")
+            parties_balanced = balance_parties(parties)
             
             logger.info(f"🎉 Fill Party completed: {num_parties} parties with {party_members_created} participants distributed")
             return Response({
                 'message': f'Parties created successfully: {num_parties} parties with {party_members_created} participants distributed',
                 'parties_created': num_parties,
-                'members_assigned': party_members_created
+                'members_assigned': party_members_created,
+                'parties_balanced': parties_balanced
             }, status=status.HTTP_200_OK)
         
     except Exception as e:
