@@ -169,15 +169,18 @@ class CheckPartyView(View):
         """Handle the All Parties button click - generate and send party overview image"""
         try:
             from .models import Event, Party, PartyMember
-            import requests
-            from io import BytesIO
+            print(f"DEBUG: All Parties button clicked for event {self.event_id}")
             
             # Get all parties for the event
             @sync_to_async
             def get_all_parties():
                 try:
+                    print(f"DEBUG: Getting parties for event {self.event_id}")
                     event = Event.objects.get(id=self.event_id)
+                    print(f"DEBUG: Found event: {event.name}")
+                    
                     parties = Party.objects.filter(event=event, is_active=True).order_by('party_number')
+                    print(f"DEBUG: Found {parties.count()} parties")
                     
                     parties_data = []
                     for party in parties:
@@ -204,13 +207,17 @@ class CheckPartyView(View):
                                 })
                         
                         parties_data.append(party_data)
+                        print(f"DEBUG: Party {party.party_number} has {len(party_data['members'])} members")
                     
                     return parties_data
                 except Exception as e:
-                    print(f"Error getting parties data: {e}")
+                    print(f"ERROR getting parties data: {e}")
+                    import traceback
+                    traceback.print_exc()
                     return []
             
             parties_data = await get_all_parties()
+            print(f"DEBUG: Got {len(parties_data)} parties")
             
             if not parties_data:
                 await interaction.response.send_message(
@@ -219,16 +226,8 @@ class CheckPartyView(View):
                 )
                 return
             
-            # Generate HTML content for the image
-            html_content = self.generate_parties_html(parties_data)
-            
-            # Create image using HTML to image service
+            # Generate simple text overview
             try:
-                # Use htmlcsstoimage.com API (free service)
-                api_url = "https://htmlcsstoimage.com/demo"
-                
-                # For now, let's send a formatted text message
-                # In the future, we can implement actual image generation
                 party_overview = "**🎮 All Parties Overview**\n\n"
                 
                 for party in parties_data:
@@ -259,19 +258,23 @@ class CheckPartyView(View):
                     
                     party_overview += "\n"
                 
+                print(f"DEBUG: Generated overview, sending message")
                 # Send the overview
                 await interaction.response.send_message(
                     party_overview,
                     ephemeral=True  # Only visible to the user who clicked
                 )
+                print(f"DEBUG: Message sent successfully")
                 
             except Exception as e:
-                print(f"Error generating image: {e}")
-                # Fallback to text message
-                party_overview = "**🎮 All Parties Overview**\n\n"
-                for party in parties_data:
-                    party_overview += f"**{party['party_name']}** - Leader: {party['leader']} ({len(party['members'])}/15 members)\n"
-                await interaction.response.send_message(party_overview, ephemeral=True)
+                print(f"ERROR generating overview: {e}")
+                import traceback
+                traceback.print_exc()
+                # Fallback to simple message
+                await interaction.response.send_message(
+                    f"**🎮 All Parties Overview**\n\nFound {len(parties_data)} parties.\nError generating detailed view.",
+                    ephemeral=True
+                )
             
         except Exception as e:
             print(f"Error in all parties button: {e}")
