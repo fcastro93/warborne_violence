@@ -1503,68 +1503,8 @@ def create_parties(request, event_id):
                 
                 logger.info(f"🎭 Role distribution for {guild_name}: {dict((role, len(participants)) for role, participants in participants_by_role.items())}")
                 
-                # Calculate how many parties we need for this guild
-                num_parties = max(1, (len(guild_participants) + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
-                logger.info(f"📊 {guild_name} needs {num_parties} parties for {len(guild_participants)} participants")
-                
-                # Create party objects for this guild
-                parties = []
-                for i in range(num_parties):
-                    party = Party.objects.create(
-                        event=event,
-                        party_number=total_parties_created + i + 1,
-                        max_members=MAX_PARTY_SIZE
-                    )
-                    parties.append(party)
-                
-                logger.info(f"✅ Created {num_parties} party objects for {guild_name}")
-                
-                # Distribute participants across parties for this guild
-                party_assignments = [[] for _ in range(num_parties)]
-                party_role_counts = [{} for _ in range(num_parties)]
-                party_assigned_roles = [[] for _ in range(num_parties)]  # Track assigned roles for each party
-                
-                # Initialize role counts
-                for party_idx in range(num_parties):
-                    for role in ROLE_REQUIREMENTS.keys():
-                        party_role_counts[party_idx][role] = 0
-                
-                # Create a list of all participants with their roles
-                all_participants = []
-                for role, role_participants in participants_by_role.items():
-                    for participant in role_participants:
-                        all_participants.append((participant, role))
-                
                 # TODO: Implement party creation logic
                 logger.info(f"🎯 Party creation logic removed - returning test response")
-                
-                # Create PartyMember objects for this guild
-                guild_members_created = 0
-                for party_idx, party in enumerate(parties):
-                    party_size = len(party_assignments[party_idx])
-                    logger.info(f"📋 {guild_name} Party {party.party_number}: {party_size} members")
-                    for member_idx, participant in enumerate(party_assignments[party_idx]):
-                        is_leader = member_idx == 0  # First member is the leader
-                        assigned_role = party_assigned_roles[party_idx][member_idx] if member_idx < len(party_assigned_roles[party_idx]) else participant.player.game_role
-                        PartyMember.objects.create(
-                            party=party,
-                            event_participant=participant,
-                            player=participant.player,
-                            assigned_role=assigned_role,
-                            is_leader=is_leader
-                        )
-                        guild_members_created += 1
-                        if member_idx < 3:  # Log first 3 members of each party
-                            logger.info(f"  - {participant.player.in_game_name} ({assigned_role}) {'👑' if is_leader else ''}")
-                
-                # Balance parties for this guild
-                logger.info(f"⚖️ Balancing parties for {guild_name}...")
-                parties_balanced = balance_parties(parties)
-                
-                total_parties_created += num_parties
-                total_members_created += guild_members_created
-                guild_results.append(f"{guild_name}: {num_parties} parties with {guild_members_created} participants")
-                logger.info(f"✅ {guild_name} completed: {num_parties} parties with {guild_members_created} participants")
             
             # Create summary message
             result_message = f"Guild parties created successfully:\n"
@@ -1593,73 +1533,8 @@ def create_parties(request, event_id):
             
             logger.info(f"🎭 Role distribution (mixed): {dict((role, len(participants)) for role, participants in participants_by_role.items())}")
             
-            # Calculate how many parties we need
-            total_participants = len(participants)
-            num_parties = max(1, (total_participants + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
-            logger.info(f"📊 Total participants: {total_participants}, Need {num_parties} parties")
-            
-            parties = []
-            
-            # Create party objects
-            for i in range(num_parties):
-                party = Party.objects.create(
-                    event=event,
-                    party_number=i + 1,
-                    max_members=MAX_PARTY_SIZE
-                )
-                parties.append(party)
-            
-            logger.info(f"✅ Created {num_parties} party objects for mixed guild mode")
-            
-            # Distribute participants across parties
-            party_assignments = [[] for _ in range(num_parties)]
-            party_role_counts = [{} for _ in range(num_parties)]
-            party_assigned_roles = [[] for _ in range(num_parties)]  # Track assigned roles for each party
-            
-            # Initialize role counts
-            for party_idx in range(num_parties):
-                for role in ROLE_REQUIREMENTS.keys():
-                    party_role_counts[party_idx][role] = 0
-            
-            # Create a list of all participants with their roles
-            all_participants = []
-            for role, role_participants in participants_by_role.items():
-                for participant in role_participants:
-                    all_participants.append((participant, role))
-            
             # TODO: Implement party creation logic
             logger.info(f"🎯 Party creation logic removed - returning test response")
-            
-            # Create PartyMember objects
-            party_members_created = 0
-            for party_idx, party in enumerate(parties):
-                party_size = len(party_assignments[party_idx])
-                logger.info(f"📋 Party {party.party_number}: {party_size} members")
-                for member_idx, participant in enumerate(party_assignments[party_idx]):
-                    is_leader = member_idx == 0  # First member is the leader
-                    assigned_role = party_assigned_roles[party_idx][member_idx] if member_idx < len(party_assigned_roles[party_idx]) else participant.player.game_role
-                    PartyMember.objects.create(
-                        party=party,
-                        event_participant=participant,
-                        player=participant.player,
-                        assigned_role=assigned_role,
-                        is_leader=is_leader
-                    )
-                    party_members_created += 1
-                    if member_idx < 3:  # Log first 3 members of each party
-                        logger.info(f"  - {participant.player.in_game_name} ({assigned_role}) {'👑' if is_leader else ''}")
-            
-            # Third pass: Balance parties by moving members from incomplete parties
-            logger.info("⚖️ Balancing parties...")
-            parties_balanced = balance_parties(parties)
-            
-            logger.info(f"🎉 Fill Party completed: {num_parties} parties with {party_members_created} participants distributed")
-            return Response({
-                'message': f'Parties created successfully: {num_parties} parties with {party_members_created} participants distributed',
-                'parties_created': num_parties,
-                'members_assigned': party_members_created,
-                'parties_balanced': parties_balanced
-            }, status=status.HTTP_200_OK)
         
     except Exception as e:
         logger.error(f"❌ Fill Party failed with error: {str(e)}", exc_info=True)
