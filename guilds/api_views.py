@@ -1795,19 +1795,19 @@ def fill_parties(request, event_id):
         parties_created = 0
         members_assigned = 0
         
-        # Calculate how many complete parties we can make
-        max_possible_parties = float('inf')
-        for role, required_count in required_roles.items():
-            available_count = len(participants_by_role.get(role, []))
-            if available_count > 0:
-                possible_parties = available_count // required_count
-                max_possible_parties = min(max_possible_parties, possible_parties)
-            else:
-                max_possible_parties = 0
+        # Keep creating parties until we can't fill all required roles
+        while True:
+            # Check if we have enough participants for all required roles
+            can_create_party = True
+            for role, required_count in required_roles.items():
+                available_count = len(participants_by_role.get(role, []))
+                if available_count < required_count:
+                    can_create_party = False
+                    break
+            
+            if not can_create_party:
                 break
-        
-        # Create parties
-        for party_num in range(max_possible_parties):
+            
             # Create new party
             new_party = Party.objects.create(
                 event=event,
@@ -1821,7 +1821,7 @@ def fill_parties(request, event_id):
             # Assign required roles to this party
             for role, required_count in required_roles.items():
                 available_participants = participants_by_role.get(role, [])
-                for i in range(min(required_count, len(available_participants))):
+                for i in range(required_count):
                     participant = available_participants.pop(0)  # Remove from available list
                     
                     # Create party member
