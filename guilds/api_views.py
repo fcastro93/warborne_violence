@@ -1792,15 +1792,15 @@ def fill_parties(request, event_id):
                 participants_by_role[role] = []
             participants_by_role[role].append(participant)
         
-        # Filter out roles that don't have enough participants
+        # Filter out roles that don't have enough participants for at least 2 parties
         available_roles = {}
         for role, required_count in required_roles.items():
             available_count = len(participants_by_role.get(role, []))
-            if available_count >= required_count:
+            if available_count >= required_count * 2:  # Need enough for at least 2 parties
                 available_roles[role] = required_count
-                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - INCLUDED")
+                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - INCLUDED (enough for {available_count // required_count} parties)")
             else:
-                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - IGNORED (not enough)")
+                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - IGNORED (only enough for {available_count // required_count} parties)")
         
         # Calculate minimum party size (sum of available roles)
         min_party_size = sum(available_roles.values())
