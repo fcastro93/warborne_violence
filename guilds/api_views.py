@@ -1645,6 +1645,8 @@ def event_participants(request, event_id):
         for participant in participants:
             participants_data.append({
                 'id': participant.id,
+                'discord_user_id': participant.discord_user_id,
+                'discord_name': participant.discord_name,
                 'player': {
                     'id': participant.player.id,
                     'discord_name': participant.player.discord_name,
