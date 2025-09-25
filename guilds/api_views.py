@@ -1801,11 +1801,14 @@ def fill_parties(request, event_id):
             can_create_party = True
             for role, required_count in required_roles.items():
                 available_count = len(participants_by_role.get(role, []))
+                print(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count}")
                 if available_count < required_count:
                     can_create_party = False
+                    print(f"DEBUG: Cannot create party - not enough {role}")
                     break
             
             if not can_create_party:
+                print(f"DEBUG: Stopping party creation - insufficient roles")
                 break
             
             # Create new party
@@ -1817,6 +1820,7 @@ def fill_parties(request, event_id):
                 is_active=True
             )
             parties_created += 1
+            print(f"DEBUG: Created party {parties_created}")
             
             # Assign required roles to this party
             for role, required_count in required_roles.items():
@@ -1834,6 +1838,9 @@ def fill_parties(request, event_id):
                         is_leader=is_first_member
                     )
                     members_assigned += 1
+                    print(f"DEBUG: Assigned {participant.player.in_game_name} as {role}")
+            
+            print(f"DEBUG: Party {parties_created} complete. Remaining: Healers={len(participants_by_role.get('healer', []))}, DefTanks={len(participants_by_role.get('defensive_tank', []))}, OffTanks={len(participants_by_role.get('offensive_tank', []))}")
         
         return Response({
             'message': f'Created {parties_created} parties with {members_assigned} members assigned',
