@@ -1171,10 +1171,10 @@ def join_event(request, event_id):
         
         # Check if already participating (by discord_name if no discord_user_id)
         if discord_user_id:
-            existing_participant = EventParticipant.objects.filter(
-                event=event,
-                discord_user_id=discord_user_id
-            ).first()
+        existing_participant = EventParticipant.objects.filter(
+            event=event,
+            discord_user_id=discord_user_id
+        ).first()
         else:
             existing_participant = EventParticipant.objects.filter(
                 event=event,
@@ -1183,11 +1183,11 @@ def join_event(request, event_id):
         
         if existing_participant:
             # EventParticipant doesn't have is_active field, so if it exists, they're already participating
-            return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Get player if exists
             if discord_user_id:
-                player = Player.objects.filter(discord_user_id=discord_user_id).first()
+            player = Player.objects.filter(discord_user_id=discord_user_id).first()
             else:
                 player = Player.objects.filter(discord_name=discord_name).first()
             
@@ -1926,10 +1926,10 @@ def fill_parties(request, event_id):
                         for party in created_parties:
                             if party.member_count < party.max_members:
                                 # Add to this party
-                                PartyMember.objects.create(
+                PartyMember.objects.create(
                                     party=party,
-                                    event_participant=participant,
-                                    player=participant.player,
+                    event_participant=participant,
+                    player=participant.player,
                                     assigned_role=participant.player.game_role,
                                     is_leader=False
                                 )
@@ -1944,24 +1944,35 @@ def fill_parties(request, event_id):
         # Phase 4: Balance parties - consolidate incomplete parties and remove empty ones
         balance_members_moved = 0
         parties_removed = 0
-        
+
         # Get all parties ordered by creation (party_number)
         all_parties = list(Party.objects.filter(
             event=event,
             is_active=True
         ).order_by('party_number'))
-        
+
         if len(all_parties) > 1:
             logger.info(f"DEBUG: Starting party balancing with {len(all_parties)} parties")
             
-            # Find incomplete parties (not at max capacity)
-            incomplete_parties = [p for p in all_parties if p.member_count < p.max_members]
-            complete_parties = [p for p in all_parties if p.member_count >= p.max_members]
-            
-            logger.info(f"DEBUG: Found {len(complete_parties)} complete parties and {len(incomplete_parties)} incomplete parties")
-            
-            # If we have incomplete parties, try to consolidate them
-            if len(incomplete_parties) > 1:
+            # Continue balancing until we have at most 1 incomplete party
+            while True:
+                # Refresh party data to get current member counts
+                all_parties = list(Party.objects.filter(
+                    event=event,
+                    is_active=True
+                ).order_by('party_number'))
+                
+                # Find incomplete parties (not at max capacity)
+                incomplete_parties = [p for p in all_parties if p.member_count < p.max_members]
+                complete_parties = [p for p in all_parties if p.member_count >= p.max_members]
+                
+                logger.info(f"DEBUG: Found {len(complete_parties)} complete parties and {len(incomplete_parties)} incomplete parties")
+                
+                # If we have at most 1 incomplete party, we're done
+                if len(incomplete_parties) <= 1:
+                    logger.info(f"DEBUG: Balancing complete - only {len(incomplete_parties)} incomplete party(ies) remaining")
+                    break
+                
                 # Get the LAST party from ALL parties (not just incomplete ones) - highest party_number
                 last_party = all_parties[-1]  # This is the actual last party created
                 logger.info(f"DEBUG: Consolidating members from last party {last_party.party_number} (has {last_party.member_count} members)")
@@ -1976,6 +1987,7 @@ def fill_parties(request, event_id):
                 # Sort incomplete parties by party_number to fill from first to last
                 incomplete_parties_sorted = sorted([p for p in incomplete_parties if p.party_number != last_party.party_number], key=lambda p: p.party_number)
                 
+                members_moved_this_round = 0
                 for member in last_party_members:
                     moved = False
                     for party in incomplete_parties_sorted:
@@ -1986,6 +1998,7 @@ def fill_parties(request, event_id):
                             member.party = party
                             member.save()
                             balance_members_moved += 1
+                            members_moved_this_round += 1
                             logger.info(f"DEBUG: Moved {member.player.in_game_name} from Party {last_party.party_number} to Party {party.party_number} (now {current_count + 1}/15)")
                             moved = True
                             break
@@ -1998,9 +2011,11 @@ def fill_parties(request, event_id):
                 if last_party.member_count == 0:
                     logger.info(f"DEBUG: Removing empty party {last_party.party_number}")
                     last_party.delete()
-                    parties_removed = 1
-                else:
-                    logger.info(f"DEBUG: Last party {last_party.party_number} still has {last_party.member_count} members")
+                    parties_removed += 1
+                elif members_moved_this_round == 0:
+                    # No members were moved this round, break to avoid infinite loop
+                    logger.info(f"DEBUG: No members moved this round, stopping balancing")
+                    break
         
         total_members_assigned = members_assigned + filler_members_assigned + max_filler_members_assigned
         
