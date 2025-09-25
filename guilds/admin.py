@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
-from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, DiscordBotLog, Event, EventParticipant, Party, PartyMember, RecommendedBuild, LegendaryBlueprint, CraftedLegendaryItem
+from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, DiscordBotLog, Event, EventParticipant, Party, PartyMember, RecommendedBuild, LegendaryBlueprint
 
 
 @admin.register(Guild)
@@ -656,28 +656,6 @@ class LegendaryBlueprintAdmin(admin.ModelAdmin):
     status_display.short_description = 'Crafting Status'
 
 
-@admin.register(CraftedLegendaryItem)
-class CraftedLegendaryItemAdmin(admin.ModelAdmin):
-    list_display = ['player', 'item_name', 'crafted_date', 'created_at']
-    list_filter = ['item_name', 'crafted_date', 'created_at']
-    search_fields = ['player__discord_name', 'player__discord_user_id', 'item_name']
-    ordering = ['-crafted_date', 'player__discord_name', 'item_name']
-    readonly_fields = ['created_at']
-    
-    fieldsets = (
-        ('Crafted Item Information', {
-            'fields': ('player', 'item_name', 'crafted_date', 'notes')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at',),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    def save_model(self, request, obj, form, change):
-        if not change:  # If creating a new object
-            obj.created_by = request.user.username if request.user.is_authenticated else "Admin"
-        super().save_model(request, obj, form, change)
 
 
 # Customize admin title

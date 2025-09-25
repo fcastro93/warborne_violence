@@ -73,7 +73,4 @@ urlpatterns = [
     path('blueprints/', api_views.blueprints_list, name='blueprints_list'),
     path('blueprints/create/', api_views.create_blueprint, name='create_blueprint'),
     path('blueprints/<int:blueprint_id>/delete/', api_views.delete_blueprint, name='delete_blueprint'),
-    path('crafted-items/', api_views.crafted_items_list, name='crafted_items_list'),
-    path('crafted-items/create/', api_views.create_crafted_item, name='create_crafted_item'),
-    path('crafted-items/<int:crafted_item_id>/delete/', api_views.delete_crafted_item, name='delete_crafted_item'),
 ]

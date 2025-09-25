@@ -989,20 +989,3 @@ class LegendaryBlueprint(models.Model):
         else:
             return "No Blueprints"
 
-
-class CraftedLegendaryItem(models.Model):
-    """Model to track legendary items that players have crafted"""
-    
-    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='crafted_items')
-    item_name = models.CharField(max_length=50, choices=LegendaryBlueprint.LEGENDARY_ITEMS)
-    crafted_date = models.DateTimeField(default=timezone.now)
-    created_at = models.DateTimeField(auto_now_add=True)
-    notes = models.TextField(blank=True, null=True, help_text="Optional notes about the crafting")
-    
-    class Meta:
-        ordering = ['-crafted_date', 'player__discord_name', 'item_name']
-        verbose_name = "Crafted Legendary Item"
-        verbose_name_plural = "Crafted Legendary Items"
-    
-    def __str__(self):
-        return f"{self.player.discord_name} - {self.get_item_name_display()} (Crafted: {self.crafted_date.strftime('%Y-%m-%d')})"
