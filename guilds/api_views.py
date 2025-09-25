@@ -1778,16 +1778,8 @@ def fill_parties(request, event_id):
             is_active=True
         ).prefetch_related('members').order_by('party_number'))
         
-        # If no parties exist, create one automatically
-        if not existing_parties:
-            party = Party.objects.create(
-                event=event,
-                party_number=1,
-                party_name="Party 1",
-                max_members=15,
-                is_active=True
-            )
-            existing_parties = [party]
+        # TODO: Implement party creation logic
+        logger.info(f"🎯 Party creation logic removed - returning test response")
         
         # Get unassigned participants
         assigned_participant_ids = set()
@@ -1854,10 +1846,7 @@ def fill_parties(request, event_id):
                 existing_parties, unassigned_participants, role_composition
             )
         
-        return Response({
-            'message': f'Parties filled successfully: {members_assigned} participants assigned',
-            'members_assigned': members_assigned
-        })
+        return Response({'success': True}, status=status.HTTP_200_OK)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
