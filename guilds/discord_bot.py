@@ -354,8 +354,7 @@ class CreatePlayerView(discord.ui.View):
                 discord.SelectOption(label="Healer", value="healer", description="Healer role"),
                 discord.SelectOption(label="Defensive Tank", value="defensive_tank", description="Defensive tank"),
                 discord.SelectOption(label="Offensive Tank", value="offensive_tank", description="Offensive tank"),
-                discord.SelectOption(label="Offensive Support", value="offensive_support", description="Offensive support"),
-                discord.SelectOption(label="Defensive Support", value="defensive_support", description="Defensive support"),
+                discord.SelectOption(label="Support", value="support", description="Support role"),
             ]
             super().__init__(placeholder="Choose your role (optional)...", options=options, min_values=0, max_values=1)
         
@@ -558,8 +557,7 @@ class EditPlayerView(discord.ui.View):
                 discord.SelectOption(label="Healer", value="healer", description="Healer role"),
                 discord.SelectOption(label="Defensive Tank", value="defensive_tank", description="Defensive tank"),
                 discord.SelectOption(label="Offensive Tank", value="offensive_tank", description="Offensive tank"),
-                discord.SelectOption(label="Offensive Support", value="offensive_support", description="Offensive support"),
-                discord.SelectOption(label="Defensive Support", value="defensive_support", description="Defensive support"),
+                discord.SelectOption(label="Support", value="support", description="Support role"),
             ]
             # Set default value to current player's role
             for option in options:
@@ -726,8 +724,7 @@ class EditPlayerView(discord.ui.View):
                 discord.SelectOption(label="Healer", value="healer", description="Healer role"),
                 discord.SelectOption(label="Defensive Tank", value="defensive_tank", description="Defensive tank"),
                 discord.SelectOption(label="Offensive Tank", value="offensive_tank", description="Offensive tank"),
-                discord.SelectOption(label="Offensive Support", value="offensive_support", description="Offensive support"),
-                discord.SelectOption(label="Defensive Support", value="defensive_support", description="Defensive support"),
+                discord.SelectOption(label="Support", value="support", description="Support role"),
             ]
             # Set default value to current player's role
             for option in options:
