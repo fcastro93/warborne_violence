@@ -1819,6 +1819,7 @@ def event_parties(request, event_id):
                     'player': {
                         'id': member.player.id,
                         'discord_name': member.player.discord_name,
+                        'in_game_name': member.player.in_game_name,
                         'game_role': member.player.game_role
                     },
                     'event_participant': {
