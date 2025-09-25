@@ -1183,7 +1183,7 @@ def join_event(request, event_id):
         
         if existing_participant:
             # EventParticipant doesn't have is_active field, so if it exists, they're already participating
-                return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Get player if exists
             if discord_user_id:
@@ -1926,10 +1926,10 @@ def fill_parties(request, event_id):
                         for party in created_parties:
                             if party.member_count < party.max_members:
                                 # Add to this party
-                PartyMember.objects.create(
+                                PartyMember.objects.create(
                                     party=party,
-                    event_participant=participant,
-                    player=participant.player,
+                                    event_participant=participant,
+                                    player=participant.player,
                                     assigned_role=participant.player.game_role,
                                     is_leader=False
                                 )
