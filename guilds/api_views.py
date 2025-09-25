@@ -1941,17 +1941,79 @@ def fill_parties(request, event_id):
                         if not assigned:
                             logger.info(f"DEBUG: Could not assign {participant.player.in_game_name} as {role} filler - all parties at max capacity")
         
+        # Phase 4: Balance parties - consolidate incomplete parties and remove empty ones
+        balance_members_moved = 0
+        parties_removed = 0
+        
+        # Get all parties ordered by creation (party_number)
+        all_parties = list(Party.objects.filter(
+            event=event,
+            is_active=True
+        ).order_by('party_number'))
+        
+        if len(all_parties) > 1:
+            logger.info(f"DEBUG: Starting party balancing with {len(all_parties)} parties")
+            
+            # Find incomplete parties (not at max capacity)
+            incomplete_parties = [p for p in all_parties if p.member_count < p.max_members]
+            complete_parties = [p for p in all_parties if p.member_count >= p.max_members]
+            
+            logger.info(f"DEBUG: Found {len(complete_parties)} complete parties and {len(incomplete_parties)} incomplete parties")
+            
+            # If we have incomplete parties, try to consolidate them
+            if len(incomplete_parties) > 1:
+                # Get the last party (highest party_number)
+                last_party = incomplete_parties[-1]
+                logger.info(f"DEBUG: Consolidating members from last party {last_party.party_number} (has {last_party.member_count} members)")
+                
+                # Get all members from the last party
+                last_party_members = list(PartyMember.objects.filter(
+                    party=last_party,
+                    is_active=True
+                ).select_related('player'))
+                
+                # Try to move members to other incomplete parties (excluding the last one)
+                other_incomplete_parties = incomplete_parties[:-1]
+                
+                for member in last_party_members:
+                    moved = False
+                    for party in other_incomplete_parties:
+                        if party.member_count < party.max_members:
+                            # Move member to this party
+                            member.party = party
+                            member.save()
+                            balance_members_moved += 1
+                            logger.info(f"DEBUG: Moved {member.player.in_game_name} from Party {last_party.party_number} to Party {party.party_number}")
+                            moved = True
+                            break
+                    
+                    if not moved:
+                        logger.info(f"DEBUG: Could not move {member.player.in_game_name} - no space in other parties")
+                
+                # Check if the last party is now empty
+                last_party.refresh_from_db()
+                if last_party.member_count == 0:
+                    logger.info(f"DEBUG: Removing empty party {last_party.party_number}")
+                    last_party.delete()
+                    parties_removed = 1
+                else:
+                    logger.info(f"DEBUG: Last party {last_party.party_number} still has {last_party.member_count} members")
+        
         total_members_assigned = members_assigned + filler_members_assigned + max_filler_members_assigned
         
+        final_party_count = Party.objects.filter(event=event, is_active=True).count()
+        
         return Response({
-            'message': f'Created {parties_created} parties with {total_members_assigned} members assigned',
-            'parties_created': parties_created,
+            'message': f'Created {final_party_count} parties with {total_members_assigned} members assigned',
+            'parties_created': final_party_count,
             'members_assigned': total_members_assigned,
             'min_party_size': min_party_size,
             'primary_roles': primary_roles,
             'filler_roles': filler_roles,
             'config_filler_roles': list(filler_config_roles.keys()),
-            'ignored_roles': {role: count for role, count in required_roles.items() if role not in primary_roles and role not in filler_roles}
+            'ignored_roles': {role: count for role, count in required_roles.items() if role not in primary_roles and role not in filler_roles},
+            'balance_members_moved': balance_members_moved,
+            'parties_removed': parties_removed
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
