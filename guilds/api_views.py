@@ -1601,17 +1601,8 @@ def create_parties(request, event_id):
                     
                     party_idx += 1
                 
-                logger.info(f"📊 STEP 1 COMPLETE: Created {parties_created} complete parties with required roles")
-                
-                # STEP 2: Fill remaining slots with remaining participants (ignore max size for now)
-                logger.info(f"🔄 STEP 2: Filling remaining slots with {len(available_participants)} participants")
-                for party_idx in range(parties_created):
-                    while available_participants:
-                        participant, player_role = available_participants.pop(0)
-                        party_assignments[party_idx].append(participant)
-                        party_assigned_roles[party_idx].append(player_role)
-                        party_role_counts[party_idx][player_role] = party_role_counts[party_idx].get(player_role, 0) + 1
-                        logger.info(f"  - {participant.player.in_game_name} assigned as {player_role} to Party {party_idx + 1} (filler)")
+                logger.info(f"📊 STEP 1 COMPLETE: Created {parties_created} complete parties with required roles only")
+                logger.info(f"📋 Remaining participants: {len(available_participants)} (will be handled in next step)")
                 
                 # Create PartyMember objects for this guild
                 guild_members_created = 0
@@ -1768,17 +1759,8 @@ def create_parties(request, event_id):
                 
                 party_idx += 1
             
-            logger.info(f"📊 STEP 1 COMPLETE: Created {parties_created} complete parties with required roles")
-            
-            # STEP 2: Fill remaining slots with remaining participants (ignore max size for now)
-            logger.info(f"🔄 STEP 2: Filling remaining slots with {len(available_participants)} participants")
-            for party_idx in range(parties_created):
-                while available_participants:
-                    participant, player_role = available_participants.pop(0)
-                    party_assignments[party_idx].append(participant)
-                    party_assigned_roles[party_idx].append(player_role)
-                    party_role_counts[party_idx][player_role] = party_role_counts[party_idx].get(player_role, 0) + 1
-                    logger.info(f"  - {participant.player.in_game_name} assigned as {player_role} to Party {party_idx + 1} (filler)")
+            logger.info(f"📊 STEP 1 COMPLETE: Created {parties_created} complete parties with required roles only")
+            logger.info(f"📋 Remaining participants: {len(available_participants)} (will be handled in next step)")
             
             # Create PartyMember objects
             party_members_created = 0
