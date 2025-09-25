@@ -1778,20 +1778,6 @@ def fill_parties(request, event_id):
         # Filter out roles with 0 requirements
         required_roles = {role: count for role, count in role_composition.items() if count > 0}
         
-        # Filter out roles that don't have enough participants
-        available_roles = {}
-        for role, required_count in required_roles.items():
-            available_count = len(participants_by_role.get(role, []))
-            if available_count >= required_count:
-                available_roles[role] = required_count
-                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - INCLUDED")
-            else:
-                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - IGNORED (not enough)")
-        
-        # Calculate minimum party size (sum of available roles)
-        min_party_size = sum(available_roles.values())
-        logger.info(f"DEBUG: Using roles: {available_roles}, min_party_size: {min_party_size}")
-        
         # Get all event participants
         participants = list(EventParticipant.objects.filter(
             event=event,
@@ -1805,6 +1791,20 @@ def fill_parties(request, event_id):
             if role not in participants_by_role:
                 participants_by_role[role] = []
             participants_by_role[role].append(participant)
+        
+        # Filter out roles that don't have enough participants
+        available_roles = {}
+        for role, required_count in required_roles.items():
+            available_count = len(participants_by_role.get(role, []))
+            if available_count >= required_count:
+                available_roles[role] = required_count
+                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - INCLUDED")
+            else:
+                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - IGNORED (not enough)")
+        
+        # Calculate minimum party size (sum of available roles)
+        min_party_size = sum(available_roles.values())
+        logger.info(f"DEBUG: Using roles: {available_roles}, min_party_size: {min_party_size}")
         
         # Create parties with minimum required roles
         parties_created = 0
