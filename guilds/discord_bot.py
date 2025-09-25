@@ -834,12 +834,6 @@ class EditPlayerView(discord.ui.View):
         modal = LevelModal(self)
         await interaction.response.send_modal(modal)
     
-    # Edit Player Button
-    @discord.ui.button(label="📝 Edit Player Info", style=discord.ButtonStyle.primary, row=1)
-    async def edit_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        modal = EditPlayerNameModal(self)
-        await interaction.response.send_modal(modal)
-    
     async def on_timeout(self):
         # Disable all components when view times out
         for item in self.children:
