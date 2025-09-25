@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
-from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, DiscordBotLog, Event, EventParticipant, Party, PartyMember, RecommendedBuild
+from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, DiscordBotLog, Event, EventParticipant, Party, PartyMember, RecommendedBuild, LegendaryBlueprint, CraftedLegendaryItem
 
 
 @admin.register(Guild)
@@ -620,6 +620,59 @@ class RecommendedBuildAdmin(admin.ModelAdmin):
             'drifter', 'weapon', 'helmet', 'chest', 'boots', 'consumable',
             'mod1', 'mod2', 'mod3', 'mod4'
         )
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # If creating a new object
+            obj.created_by = request.user.username if request.user.is_authenticated else "Admin"
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(LegendaryBlueprint)
+class LegendaryBlueprintAdmin(admin.ModelAdmin):
+    list_display = ['player', 'item_name', 'quantity', 'status_display', 'created_at']
+    list_filter = ['item_name', 'created_at', 'updated_at']
+    search_fields = ['player__discord_name', 'player__discord_user_id', 'item_name']
+    ordering = ['player__discord_name', 'item_name']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Blueprint Information', {
+            'fields': ('player', 'item_name', 'quantity')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def status_display(self, obj):
+        """Display the crafting status with color coding"""
+        if obj.quantity >= 5:
+            return format_html('<span style="color: green; font-weight: bold;">Can Craft Free</span>')
+        elif obj.quantity > 0:
+            return format_html('<span style="color: orange;">Can Craft (Consumes Blueprint)</span>')
+        else:
+            return format_html('<span style="color: red;">No Blueprints</span>')
+    status_display.short_description = 'Crafting Status'
+
+
+@admin.register(CraftedLegendaryItem)
+class CraftedLegendaryItemAdmin(admin.ModelAdmin):
+    list_display = ['player', 'item_name', 'crafted_date', 'created_at']
+    list_filter = ['item_name', 'crafted_date', 'created_at']
+    search_fields = ['player__discord_name', 'player__discord_user_id', 'item_name']
+    ordering = ['-crafted_date', 'player__discord_name', 'item_name']
+    readonly_fields = ['created_at']
+    
+    fieldsets = (
+        ('Crafted Item Information', {
+            'fields': ('player', 'item_name', 'crafted_date', 'notes')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
     
     def save_model(self, request, obj, form, change):
         if not change:  # If creating a new object

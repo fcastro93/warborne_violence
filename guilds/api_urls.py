@@ -68,4 +68,12 @@ urlpatterns = [
     path('analytics/gear-power/', api_views.gear_power_analytics, name='gear_power_analytics'),
     path('analytics/role-distribution/', api_views.role_analytics, name='role_analytics'),
     path('analytics/event-participation/', api_views.event_participation_analytics, name='event_participation_analytics'),
+    
+    # Blueprints endpoints
+    path('blueprints/', api_views.blueprints_list, name='blueprints_list'),
+    path('blueprints/create/', api_views.create_blueprint, name='create_blueprint'),
+    path('blueprints/<int:blueprint_id>/delete/', api_views.delete_blueprint, name='delete_blueprint'),
+    path('crafted-items/', api_views.crafted_items_list, name='crafted_items_list'),
+    path('crafted-items/create/', api_views.create_crafted_item, name='create_crafted_item'),
+    path('crafted-items/<int:crafted_item_id>/delete/', api_views.delete_crafted_item, name='delete_crafted_item'),
 ]

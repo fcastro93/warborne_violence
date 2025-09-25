@@ -908,3 +908,101 @@ class RecommendedBuild(models.Model):
         if self.mod4:
             mods.append(('mod4', self.mod4))
         return mods
+
+
+class LegendaryBlueprint(models.Model):
+    """Model to track legendary blueprints owned by players"""
+    
+    # Legendary item choices
+    LEGENDARY_ITEMS = [
+        ('judicator', 'Judicator'),
+        ('sovereigns_radiance', 'Sovereigns Radiance'),
+        ('voideye', 'Voideye'),
+        ('prismcloak', 'Prismcloak'),
+        ('wreckingsaw', 'Wreckingsaw'),
+        ('wingblade', 'Wingblade'),
+        ('abyssal_conduit', 'Abyssal Conduit'),
+        ('thunderlords_wrath', 'Thunderlords Wrath'),
+        ('menders_ruin', 'Menders Ruin'),
+        ('eclypse_bow', 'Eclypse Bow'),
+        ('corrosive_piercer', 'Corrosive Piercer'),
+        ('phantom_spear', 'Phantom Spear'),
+        ('spirits_call', 'Spirits Call'),
+        ('sanctuary_of_growth', 'Sanctuary of Growth'),
+        ('bloodthirst', 'Bloodthirst'),
+        ('scarlet_hunger', 'Scarlet Hunger'),
+        ('solarflare', 'Solarflare'),
+        ('molten_mortar', 'Molten Mortar'),
+        ('glacier_spark', 'Glacier Spark'),
+        ('frosts_caller', 'Frosts Caller'),
+        ('necromist', 'Necromist'),
+        ('withermaul', 'Withermaul'),
+        ('celestial_redeemer', 'Celestial Redeemer'),
+        ('sol_protector', 'Sol Protector'),
+        ('stormveil_mask', 'Stormveil Mask'),
+        ('wardens_gaze', 'Wardens Gaze'),
+        ('ironwill_veil', 'Ironwill Veil'),
+        ('folly_helm', 'Folly Helm'),
+        ('sanctum_shroud', 'Sanctum Shroud'),
+        ('twilight_mantle', 'Twilight Mantle'),
+        ('wardens_shell', 'Wardens Shell'),
+        ('magsurge_armor', 'Magsurge Armor'),
+        ('rangers_hide', 'Rangers Hide'),
+        ('heros_embrace', 'Heros Embrace'),
+        ('warding_shroud', 'Warding Shroud'),
+        ('dreadcloak', 'Dreadcloak'),
+        ('impact_heavy_boots', 'Impact Heavy Boots'),
+        ('avalanche_boots', 'Avalanche Boots'),
+        ('evasion_striders', 'Evasion Striders'),
+        ('exodrift_slippers', 'Exodrift Slippers'),
+        ('phantomstep_boots', 'Phantomstep Boots'),
+        ('savagefoot_boots', 'Savagefoot Boots'),
+    ]
+    
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='blueprints')
+    item_name = models.CharField(max_length=50, choices=LEGENDARY_ITEMS)
+    quantity = models.PositiveIntegerField(default=1, help_text="Number of blueprints for this item")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['player', 'item_name']
+        ordering = ['player__discord_name', 'item_name']
+        verbose_name = "Legendary Blueprint"
+        verbose_name_plural = "Legendary Blueprints"
+    
+    def __str__(self):
+        return f"{self.player.discord_name} - {self.get_item_name_display()} ({self.quantity})"
+    
+    @property
+    def can_craft_free(self):
+        """Returns True if player has 5 or more blueprints (can craft for free)"""
+        return self.quantity >= 5
+    
+    @property
+    def status(self):
+        """Returns the crafting status"""
+        if self.quantity >= 5:
+            return "Can Craft Free"
+        elif self.quantity > 0:
+            return "Can Craft (Consumes Blueprint)"
+        else:
+            return "No Blueprints"
+
+
+class CraftedLegendaryItem(models.Model):
+    """Model to track legendary items that players have crafted"""
+    
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='crafted_items')
+    item_name = models.CharField(max_length=50, choices=LegendaryBlueprint.LEGENDARY_ITEMS)
+    crafted_date = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, null=True, help_text="Optional notes about the crafting")
+    
+    class Meta:
+        ordering = ['-crafted_date', 'player__discord_name', 'item_name']
+        verbose_name = "Crafted Legendary Item"
+        verbose_name_plural = "Crafted Legendary Items"
+    
+    def __str__(self):
+        return f"{self.player.discord_name} - {self.get_item_name_display()} (Crafted: {self.crafted_date.strftime('%Y-%m-%d')})"

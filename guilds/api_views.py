@@ -3419,3 +3419,209 @@ def event_participation_analytics(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ==================== BLUEPRINTS API ENDPOINTS ====================
+
+@api_view(['GET'])
+def blueprints_list(request):
+    """Get all legendary blueprints"""
+    try:
+        from .models import LegendaryBlueprint
+        
+        blueprints = LegendaryBlueprint.objects.select_related('player').all()
+        
+        blueprint_data = []
+        for blueprint in blueprints:
+            blueprint_data.append({
+                'id': blueprint.id,
+                'player_name': blueprint.player.discord_name,
+                'player_id': blueprint.player.id,
+                'item_name': blueprint.item_name,
+                'item_display': blueprint.get_item_name_display(),
+                'quantity': blueprint.quantity,
+                'can_craft_free': blueprint.can_craft_free,
+                'status': blueprint.status,
+                'created_at': blueprint.created_at,
+                'updated_at': blueprint.updated_at
+            })
+        
+        return Response({
+            'blueprints': blueprint_data,
+            'total': len(blueprint_data)
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def create_blueprint(request):
+    """Create a new legendary blueprint"""
+    try:
+        from .models import LegendaryBlueprint, Player
+        
+        data = request.data
+        player_name = data.get('player_name')
+        item_name = data.get('item_name')
+        quantity = data.get('quantity', 1)
+        
+        if not player_name or not item_name:
+            return Response({'error': 'Player name and item name are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find player by discord name
+        try:
+            player = Player.objects.get(discord_name=player_name)
+        except Player.DoesNotExist:
+            return Response({'error': f'Player "{player_name}" not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check if blueprint already exists for this player and item
+        blueprint, created = LegendaryBlueprint.objects.get_or_create(
+            player=player,
+            item_name=item_name,
+            defaults={'quantity': quantity}
+        )
+        
+        if not created:
+            # Update existing blueprint quantity
+            blueprint.quantity += quantity
+            blueprint.save()
+            message = f'Updated blueprint quantity to {blueprint.quantity}'
+        else:
+            message = f'Created blueprint with quantity {blueprint.quantity}'
+        
+        return Response({
+            'message': message,
+            'blueprint': {
+                'id': blueprint.id,
+                'player_name': blueprint.player.discord_name,
+                'item_name': blueprint.item_name,
+                'item_display': blueprint.get_item_name_display(),
+                'quantity': blueprint.quantity,
+                'can_craft_free': blueprint.can_craft_free,
+                'status': blueprint.status
+            }
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+def delete_blueprint(request, blueprint_id):
+    """Delete a legendary blueprint"""
+    try:
+        from .models import LegendaryBlueprint
+        
+        blueprint = LegendaryBlueprint.objects.get(id=blueprint_id)
+        blueprint.delete()
+        
+        return Response({
+            'message': 'Blueprint deleted successfully'
+        })
+        
+    except LegendaryBlueprint.DoesNotExist:
+        return Response({'error': 'Blueprint not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def crafted_items_list(request):
+    """Get all crafted legendary items"""
+    try:
+        from .models import CraftedLegendaryItem
+        
+        crafted_items = CraftedLegendaryItem.objects.select_related('player').all()
+        
+        crafted_data = []
+        for item in crafted_items:
+            crafted_data.append({
+                'id': item.id,
+                'player_name': item.player.discord_name,
+                'player_id': item.player.id,
+                'item_name': item.item_name,
+                'item_display': item.get_item_name_display(),
+                'crafted_date': item.crafted_date,
+                'notes': item.notes,
+                'created_at': item.created_at
+            })
+        
+        return Response({
+            'crafted_items': crafted_data,
+            'total': len(crafted_data)
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def create_crafted_item(request):
+    """Create a new crafted legendary item"""
+    try:
+        from .models import CraftedLegendaryItem, Player
+        
+        data = request.data
+        player_name = data.get('player_name')
+        item_name = data.get('item_name')
+        crafted_date = data.get('crafted_date')
+        notes = data.get('notes', '')
+        
+        if not player_name or not item_name:
+            return Response({'error': 'Player name and item name are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find player by discord name
+        try:
+            player = Player.objects.get(discord_name=player_name)
+        except Player.DoesNotExist:
+            return Response({'error': f'Player "{player_name}" not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Parse crafted date if provided
+        if crafted_date:
+            from datetime import datetime
+            try:
+                crafted_date = datetime.fromisoformat(crafted_date.replace('Z', '+00:00'))
+            except ValueError:
+                return Response({'error': 'Invalid crafted_date format'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        crafted_item = CraftedLegendaryItem.objects.create(
+            player=player,
+            item_name=item_name,
+            crafted_date=crafted_date,
+            notes=notes
+        )
+        
+        return Response({
+            'message': 'Crafted item created successfully',
+            'crafted_item': {
+                'id': crafted_item.id,
+                'player_name': crafted_item.player.discord_name,
+                'item_name': crafted_item.item_name,
+                'item_display': crafted_item.get_item_name_display(),
+                'crafted_date': crafted_item.crafted_date,
+                'notes': crafted_item.notes
+            }
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+def delete_crafted_item(request, crafted_item_id):
+    """Delete a crafted legendary item"""
+    try:
+        from .models import CraftedLegendaryItem
+        
+        crafted_item = CraftedLegendaryItem.objects.get(id=crafted_item_id)
+        crafted_item.delete()
+        
+        return Response({
+            'message': 'Crafted item deleted successfully'
+        })
+        
+    except CraftedLegendaryItem.DoesNotExist:
+        return Response({'error': 'Crafted item not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
