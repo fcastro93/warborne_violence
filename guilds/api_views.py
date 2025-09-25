@@ -1792,15 +1792,23 @@ def fill_parties(request, event_id):
                 participants_by_role[role] = []
             participants_by_role[role].append(participant)
         
-        # Filter out roles that don't have enough participants for at least 2 parties
-        available_roles = {}
+        # Separate roles into those that can fill multiple parties vs those that can only fill some parties
+        primary_roles = {}  # Roles that can fill multiple parties
+        filler_roles = {}   # Roles that can only fill some parties
+        
         for role, required_count in required_roles.items():
             available_count = len(participants_by_role.get(role, []))
             if available_count >= required_count * 2:  # Need enough for at least 2 parties
-                available_roles[role] = required_count
-                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - INCLUDED (enough for {available_count // required_count} parties)")
+                primary_roles[role] = required_count
+                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - PRIMARY (enough for {available_count // required_count} parties)")
+            elif available_count >= required_count:  # Can fill at least 1 party
+                filler_roles[role] = required_count
+                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - FILLER (only enough for {available_count // required_count} parties)")
             else:
-                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - IGNORED (only enough for {available_count // required_count} parties)")
+                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - IGNORED (not enough for any party)")
+        
+        # Use primary roles for party creation
+        available_roles = primary_roles
         
         # Calculate minimum party size (sum of available roles)
         min_party_size = sum(available_roles.values())
@@ -1857,13 +1865,54 @@ def fill_parties(request, event_id):
             
             logger.info(f"DEBUG: Party {parties_created} complete. Remaining: Healers={len(participants_by_role.get('healer', []))}, DefTanks={len(participants_by_role.get('defensive_tank', []))}, OffTanks={len(participants_by_role.get('offensive_tank', []))}")
         
+        # Now fill parties with filler roles (roles that don't have enough for multiple parties)
+        filler_members_assigned = 0
+        if filler_roles:
+            logger.info(f"DEBUG: Adding filler roles: {filler_roles}")
+            
+            # Get all created parties
+            created_parties = list(Party.objects.filter(
+                event=event,
+                is_active=True
+            ).order_by('party_number'))
+            
+            for role, required_count in filler_roles.items():
+                available_participants = participants_by_role.get(role, [])
+                logger.info(f"DEBUG: Adding {len(available_participants)} {role} players to parties")
+                
+                for participant in available_participants:
+                    # Find a party that doesn't have this role yet or has space
+                    assigned = False
+                    for party in created_parties:
+                        # Check if this party already has enough of this role
+                        current_count = party.members.filter(assigned_role=role, is_active=True).count()
+                        if current_count < required_count and party.member_count < party.max_members:
+                            # Add to this party
+                            PartyMember.objects.create(
+                                party=party,
+                                event_participant=participant,
+                                player=participant.player,
+                                assigned_role=participant.player.game_role,
+                                is_leader=False
+                            )
+                            filler_members_assigned += 1
+                            logger.info(f"DEBUG: Added {participant.player.in_game_name} as {role} to Party {party.party_number}")
+                            assigned = True
+                            break
+                    
+                    if not assigned:
+                        logger.info(f"DEBUG: Could not assign {participant.player.in_game_name} as {role} - no suitable party found")
+        
+        total_members_assigned = members_assigned + filler_members_assigned
+        
         return Response({
-            'message': f'Created {parties_created} parties with {members_assigned} members assigned',
+            'message': f'Created {parties_created} parties with {total_members_assigned} members assigned',
             'parties_created': parties_created,
-            'members_assigned': members_assigned,
+            'members_assigned': total_members_assigned,
             'min_party_size': min_party_size,
-            'available_roles': available_roles,
-            'ignored_roles': {role: count for role, count in required_roles.items() if role not in available_roles}
+            'primary_roles': primary_roles,
+            'filler_roles': filler_roles,
+            'ignored_roles': {role: count for role, count in required_roles.items() if role not in primary_roles and role not in filler_roles}
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
