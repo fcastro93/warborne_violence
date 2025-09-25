@@ -1167,10 +1167,10 @@ def join_event(request, event_id):
         
         # Check if already participating (by discord_name if no discord_user_id)
         if discord_user_id:
-            existing_participant = EventParticipant.objects.filter(
-                event=event,
-                discord_user_id=discord_user_id
-            ).first()
+        existing_participant = EventParticipant.objects.filter(
+            event=event,
+            discord_user_id=discord_user_id
+        ).first()
         else:
             existing_participant = EventParticipant.objects.filter(
                 event=event,
@@ -1178,15 +1178,8 @@ def join_event(request, event_id):
             ).first()
         
         if existing_participant:
-            if existing_participant.is_active:
-                return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # Reactivate participation
-                existing_participant.is_active = True
-                existing_participant.discord_name = discord_name
-                existing_participant.discord_user_id = discord_user_id
-                existing_participant.save()
-                participant = existing_participant
+            # EventParticipant doesn't have is_active field, so if it exists, they're already participating
+            return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Get player if exists
             if discord_user_id:
@@ -1237,13 +1230,13 @@ def leave_event(request, event_id):
         if not participant:
             return Response({'error': 'Not participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Deactivate participation
-        participant.is_active = False
-        participant.save()
+        # Remove participation (EventParticipant doesn't have is_active field)
+        participant_id = participant.id
+        participant.delete()
         
         return Response({
             'message': 'Successfully left event',
-            'participant_id': participant.id
+            'participant_id': participant_id
         })
         
     except Event.DoesNotExist:
@@ -2111,7 +2104,7 @@ def fill_parties_for_guild(parties, participants, role_composition):
                 members_assigned += 1
                 remaining_participants.remove(participant)
                 party_filled = True
-            else:
+                else:
                 break
         
         # If we couldn't fill the party with remaining participants, break
@@ -2152,14 +2145,14 @@ def fill_parties_for_guild(parties, participants, role_composition):
                     
                     # Add to the best party
                     is_first_member = best_party.member_count == 0
-                    PartyMember.objects.create(
-                        party=best_party,
-                        event_participant=participant,
-                        player=participant.player,
+                PartyMember.objects.create(
+                    party=best_party,
+                    event_participant=participant,
+                    player=participant.player,
                         assigned_role=participant.player.game_role,
                         is_leader=is_first_member
-                    )
-                    members_assigned += 1
+                )
+                members_assigned += 1
                     remaining_participants.remove(participant)
     
     return members_assigned
