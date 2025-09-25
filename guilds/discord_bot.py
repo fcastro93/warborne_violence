@@ -179,12 +179,33 @@ class CheckPartyView(View):
                     event = Event.objects.get(id=self.event_id)
                     print(f"DEBUG: Found event: {event.name}")
                     
+                    # Check all parties first, regardless of is_active status
+                    all_parties = Party.objects.filter(event=event).order_by('party_number')
+                    print(f"DEBUG: Found {all_parties.count()} total parties for event")
+                    
+                    # Check active parties
                     parties = Party.objects.filter(event=event, is_active=True).order_by('party_number')
-                    print(f"DEBUG: Found {parties.count()} parties")
+                    print(f"DEBUG: Found {parties.count()} active parties")
+                    
+                    # If no active parties, use all parties
+                    if parties.count() == 0:
+                        print(f"DEBUG: No active parties found, using all parties")
+                        parties = all_parties
                     
                     parties_data = []
                     for party in parties:
+                        # Get all members for this party, regardless of is_active status
+                        all_members = PartyMember.objects.filter(party=party).select_related('player')
+                        print(f"DEBUG: Party {party.party_number} has {all_members.count()} total members")
+                        
+                        # Try active members first
                         members = PartyMember.objects.filter(party=party, is_active=True).select_related('player')
+                        print(f"DEBUG: Party {party.party_number} has {members.count()} active members")
+                        
+                        # If no active members, use all members
+                        if members.count() == 0:
+                            print(f"DEBUG: No active members in party {party.party_number}, using all members")
+                            members = all_members
                         
                         # Find party leader
                         leader = members.filter(is_leader=True).first()
