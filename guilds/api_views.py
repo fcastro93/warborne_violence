@@ -1775,8 +1775,9 @@ def fill_parties(request, event_id):
         role_composition = request.data.get('roleComposition', {})
         guild_split = request.data.get('guildSplit', False)
         
-        # Filter out roles with 0 requirements
+        # Separate roles into required (count > 0) and filler roles (count = 0)
         required_roles = {role: count for role, count in role_composition.items() if count > 0}
+        filler_config_roles = {role: 0 for role, count in role_composition.items() if count == 0}
         
         # Get all event participants
         participants = list(EventParticipant.objects.filter(
@@ -1903,7 +1904,44 @@ def fill_parties(request, event_id):
                     if not assigned:
                         logger.info(f"DEBUG: Could not assign {participant.player.in_game_name} as {role} - no suitable party found")
         
-        total_members_assigned = members_assigned + filler_members_assigned
+        # Phase 3: Fill parties to maximum capacity using roles set to 0 in config
+        max_filler_members_assigned = 0
+        if filler_config_roles:
+            logger.info(f"DEBUG: Adding config filler roles (0 in config): {list(filler_config_roles.keys())}")
+            
+            # Get all created parties that aren't at max capacity
+            created_parties = list(Party.objects.filter(
+                event=event,
+                is_active=True
+            ).order_by('party_number'))
+            
+            for role in filler_config_roles.keys():
+                available_participants = participants_by_role.get(role, [])
+                if available_participants:
+                    logger.info(f"DEBUG: Adding {len(available_participants)} {role} players as fillers to reach max party size")
+                    
+                    for participant in available_participants:
+                        # Find a party that has space
+                        assigned = False
+                        for party in created_parties:
+                            if party.member_count < party.max_members:
+                                # Add to this party
+                                PartyMember.objects.create(
+                                    party=party,
+                                    event_participant=participant,
+                                    player=participant.player,
+                                    assigned_role=participant.player.game_role,
+                                    is_leader=False
+                                )
+                                max_filler_members_assigned += 1
+                                logger.info(f"DEBUG: Added {participant.player.in_game_name} as {role} filler to Party {party.party_number} (now {party.member_count + 1}/15)")
+                                assigned = True
+                                break
+                        
+                        if not assigned:
+                            logger.info(f"DEBUG: Could not assign {participant.player.in_game_name} as {role} filler - all parties at max capacity")
+        
+        total_members_assigned = members_assigned + filler_members_assigned + max_filler_members_assigned
         
         return Response({
             'message': f'Created {parties_created} parties with {total_members_assigned} members assigned',
@@ -1912,6 +1950,7 @@ def fill_parties(request, event_id):
             'min_party_size': min_party_size,
             'primary_roles': primary_roles,
             'filler_roles': filler_roles,
+            'config_filler_roles': list(filler_config_roles.keys()),
             'ignored_roles': {role: count for role, count in required_roles.items() if role not in primary_roles and role not in filler_roles}
         }, status=status.HTTP_200_OK)
         
