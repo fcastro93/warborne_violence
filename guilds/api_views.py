@@ -1536,30 +1536,64 @@ def create_parties(request, event_id):
                         all_participants.append((participant, role))
                 
                 # First pass: Assign required roles based on configuration
-                for party_idx in range(num_parties):
-                    for required_role, required_count in role_composition.items():
-                        if required_count > 0:  # Only assign roles that have minimum requirements
-                            assigned_count = 0
-                            for participant, player_role in all_participants[:]:
-                                if assigned_count >= required_count:
+                # Create a copy of participants to work with
+                available_participants = all_participants[:]
+                
+                # For each required role, distribute participants across all parties
+                for required_role, required_count in role_composition.items():
+                    if required_count > 0:  # Only assign roles that have minimum requirements
+                        logger.info(f"🎯 Assigning {required_count} {required_role} roles across {num_parties} parties")
+                        
+                        # Find all participants who can fill this role
+                        eligible_participants = []
+                        for participant, player_role in available_participants[:]:
+                            # Check if this participant can fill this role
+                            if (player_role == required_role or 
+                                (player_role in ['defensive_tank', 'offensive_tank'] and required_role in ['defensive_tank', 'offensive_tank']) or
+                                (player_role in ['melee_dps', 'ranged_dps'] and required_role in ['melee_dps', 'ranged_dps']) or
+                                (player_role in ['defensive_support', 'offensive_support'] and required_role in ['defensive_support', 'offensive_support'])):
+                                eligible_participants.append((participant, player_role))
+                        
+                        logger.info(f"  Found {len(eligible_participants)} eligible participants for {required_role}")
+                        
+                        # Distribute eligible participants across parties, respecting the required count per party
+                        assigned_total = 0
+                        party_idx = 0
+                        
+                        for participant, player_role in eligible_participants:
+                            if assigned_total >= required_count * num_parties:
+                                break  # We've assigned enough for all parties
+                            
+                            # Find the next party that needs this role
+                            while party_idx < num_parties:
+                                current_count = party_role_counts[party_idx].get(required_role, 0)
+                                if current_count < required_count and len(party_assignments[party_idx]) < MAX_PARTY_SIZE:
                                     break
-                                # Check if this participant can fill this role
-                                if (player_role == required_role or 
-                                    (player_role in ['defensive_tank', 'offensive_tank'] and required_role in ['defensive_tank', 'offensive_tank']) or
-                                    (player_role in ['melee_dps', 'ranged_dps'] and required_role in ['melee_dps', 'ranged_dps']) or
-                                    (player_role in ['defensive_support', 'offensive_support'] and required_role in ['defensive_support', 'offensive_support'])):
-                                    
-                                    party_assignments[party_idx].append(participant)
-                                    party_assigned_roles[party_idx].append(required_role)
-                                    party_role_counts[party_idx][required_role] += 1
-                                    all_participants.remove((participant, player_role))
-                                    assigned_count += 1
-                                    logger.info(f"  - {participant.player.in_game_name} assigned as {required_role} to Party {party_idx + 1}")
+                                party_idx += 1
+                            
+                            if party_idx >= num_parties:
+                                party_idx = 0  # Reset to start from beginning
+                                continue
+                            
+                            # Assign to this party
+                            party_assignments[party_idx].append(participant)
+                            party_assigned_roles[party_idx].append(required_role)
+                            party_role_counts[party_idx][required_role] += 1
+                            available_participants.remove((participant, player_role))
+                            assigned_total += 1
+                            
+                            logger.info(f"  - {participant.player.in_game_name} assigned as {required_role} to Party {party_idx + 1}")
+                            
+                            # Move to next party for next assignment
+                            party_idx += 1
+                            if party_idx >= num_parties:
+                                party_idx = 0
                 
                 # Second pass: Fill remaining slots with remaining participants
+                logger.info(f"🔄 Filling remaining slots with {len(available_participants)} participants")
                 for party_idx in range(num_parties):
-                    while len(party_assignments[party_idx]) < MAX_PARTY_SIZE and all_participants:
-                        participant, player_role = all_participants.pop(0)
+                    while len(party_assignments[party_idx]) < MAX_PARTY_SIZE and available_participants:
+                        participant, player_role = available_participants.pop(0)
                         party_assignments[party_idx].append(participant)
                         party_assigned_roles[party_idx].append(player_role)
                         party_role_counts[party_idx][player_role] = party_role_counts[party_idx].get(player_role, 0) + 1
@@ -1655,30 +1689,64 @@ def create_parties(request, event_id):
                     all_participants.append((participant, role))
             
             # First pass: Assign required roles based on configuration
-            for party_idx in range(num_parties):
-                for required_role, required_count in role_composition.items():
-                    if required_count > 0:  # Only assign roles that have minimum requirements
-                        assigned_count = 0
-                        for participant, player_role in all_participants[:]:
-                            if assigned_count >= required_count:
+            # Create a copy of participants to work with
+            available_participants = all_participants[:]
+            
+            # For each required role, distribute participants across all parties
+            for required_role, required_count in role_composition.items():
+                if required_count > 0:  # Only assign roles that have minimum requirements
+                    logger.info(f"🎯 Assigning {required_count} {required_role} roles across {num_parties} parties")
+                    
+                    # Find all participants who can fill this role
+                    eligible_participants = []
+                    for participant, player_role in available_participants[:]:
+                        # Check if this participant can fill this role
+                        if (player_role == required_role or 
+                            (player_role in ['defensive_tank', 'offensive_tank'] and required_role in ['defensive_tank', 'offensive_tank']) or
+                            (player_role in ['melee_dps', 'ranged_dps'] and required_role in ['melee_dps', 'ranged_dps']) or
+                            (player_role in ['defensive_support', 'offensive_support'] and required_role in ['defensive_support', 'offensive_support'])):
+                            eligible_participants.append((participant, player_role))
+                    
+                    logger.info(f"  Found {len(eligible_participants)} eligible participants for {required_role}")
+                    
+                    # Distribute eligible participants across parties, respecting the required count per party
+                    assigned_total = 0
+                    party_idx = 0
+                    
+                    for participant, player_role in eligible_participants:
+                        if assigned_total >= required_count * num_parties:
+                            break  # We've assigned enough for all parties
+                        
+                        # Find the next party that needs this role
+                        while party_idx < num_parties:
+                            current_count = party_role_counts[party_idx].get(required_role, 0)
+                            if current_count < required_count and len(party_assignments[party_idx]) < MAX_PARTY_SIZE:
                                 break
-                            # Check if this participant can fill this role
-                            if (player_role == required_role or 
-                                (player_role in ['defensive_tank', 'offensive_tank'] and required_role in ['defensive_tank', 'offensive_tank']) or
-                                (player_role in ['melee_dps', 'ranged_dps'] and required_role in ['melee_dps', 'ranged_dps']) or
-                                (player_role in ['defensive_support', 'offensive_support'] and required_role in ['defensive_support', 'offensive_support'])):
-                                
-                                party_assignments[party_idx].append(participant)
-                                party_assigned_roles[party_idx].append(required_role)
-                                party_role_counts[party_idx][required_role] += 1
-                                all_participants.remove((participant, player_role))
-                                assigned_count += 1
-                                logger.info(f"  - {participant.player.in_game_name} assigned as {required_role} to Party {party_idx + 1}")
+                            party_idx += 1
+                        
+                        if party_idx >= num_parties:
+                            party_idx = 0  # Reset to start from beginning
+                            continue
+                        
+                        # Assign to this party
+                        party_assignments[party_idx].append(participant)
+                        party_assigned_roles[party_idx].append(required_role)
+                        party_role_counts[party_idx][required_role] += 1
+                        available_participants.remove((participant, player_role))
+                        assigned_total += 1
+                        
+                        logger.info(f"  - {participant.player.in_game_name} assigned as {required_role} to Party {party_idx + 1}")
+                        
+                        # Move to next party for next assignment
+                        party_idx += 1
+                        if party_idx >= num_parties:
+                            party_idx = 0
             
             # Second pass: Fill remaining slots with remaining participants
+            logger.info(f"🔄 Filling remaining slots with {len(available_participants)} participants")
             for party_idx in range(num_parties):
-                while len(party_assignments[party_idx]) < MAX_PARTY_SIZE and all_participants:
-                    participant, player_role = all_participants.pop(0)
+                while len(party_assignments[party_idx]) < MAX_PARTY_SIZE and available_participants:
+                    participant, player_role = available_participants.pop(0)
                     party_assignments[party_idx].append(participant)
                     party_assigned_roles[party_idx].append(player_role)
                     party_role_counts[party_idx][player_role] = party_role_counts[party_idx].get(player_role, 0) + 1
