@@ -1187,7 +1187,7 @@ def join_event(request, event_id):
         else:
             # Get player if exists
             if discord_user_id:
-            player = Player.objects.filter(discord_user_id=discord_user_id).first()
+                player = Player.objects.filter(discord_user_id=discord_user_id).first()
             else:
                 player = Player.objects.filter(discord_name=discord_name).first()
             
