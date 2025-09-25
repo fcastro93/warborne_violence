@@ -1329,11 +1329,17 @@ def create_parties(request, event_id):
     """Create balanced parties for an event (migrated from Discord bot logic)"""
     try:
         from .models import Event, Party, PartyMember, EventParticipant
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        logger.info(f"🎯 Starting Fill Party process for event {event_id}")
         
         # Get the event
         try:
             event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+            logger.info(f"✅ Event found: {event.name} (ID: {event.id})")
         except Event.DoesNotExist:
+            logger.error(f"❌ Event not found or not active: {event_id}")
             return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
         
         # Get all participants with their players
@@ -1342,15 +1348,21 @@ def create_parties(request, event_id):
             player__isnull=False
         ).select_related('player', 'player__guild'))
         
+        logger.info(f"👥 Total participants found: {len(participants)}")
+        
         if len(participants) < 2:
+            logger.warning(f"⚠️ Not enough participants: {len(participants)} (minimum 2 needed)")
             return Response({'error': 'At least 2 participants needed to create parties'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Clear existing parties for this event
+        existing_parties_count = Party.objects.filter(event=event).count()
+        logger.info(f"🗑️ Clearing {existing_parties_count} existing parties for this event")
         Party.objects.filter(event=event).delete()
         
         # Get party configuration from database or request
         from .models import EventPartyConfiguration
         config = EventPartyConfiguration.get_or_create_default(event)
+        logger.info(f"⚙️ Party configuration loaded: Guild Split = {config.guild_split}")
         
         # Use saved configuration or fallback to request data
         party_config = request.data.get('partyConfig', {})
@@ -1383,9 +1395,12 @@ def create_parties(request, event_id):
             'defensive_support': role_composition.get('defensive_support', 0),
         }
         
+        logger.info(f"🎭 Role requirements: {ROLE_REQUIREMENTS}")
         MAX_PARTY_SIZE = 15
+        logger.info(f"📊 Max party size: {MAX_PARTY_SIZE}")
         
         if guild_split:
+            logger.info("🏰 Using guild split mode - grouping participants by guild")
             # Group participants by guild first
             participants_by_guild = {}
             for participant in participants:
@@ -1395,13 +1410,19 @@ def create_parties(request, event_id):
                     participants_by_guild[guild_name] = []
                 participants_by_guild[guild_name].append(participant)
             
+            logger.info(f"🏰 Guilds found: {list(participants_by_guild.keys())}")
+            for guild_name, guild_participants in participants_by_guild.items():
+                logger.info(f"  - {guild_name}: {len(guild_participants)} participants")
+            
             total_parties_created = 0
             total_members_created = 0
             guild_results = []
             
             # Process each guild separately
             for guild_name, guild_participants in participants_by_guild.items():
+                logger.info(f"🔄 Processing guild: {guild_name} with {len(guild_participants)} participants")
                 if len(guild_participants) < 2:
+                    logger.warning(f"⚠️ Guild {guild_name} has insufficient participants: {len(guild_participants)} (minimum 2 needed)")
                     guild_results.append(f"{guild_name}: {len(guild_participants)} participants (minimum 2 needed)")
                     continue
                 
@@ -1413,8 +1434,11 @@ def create_parties(request, event_id):
                         participants_by_role[role] = []
                     participants_by_role[role].append(participant)
                 
+                logger.info(f"🎭 Role distribution for {guild_name}: {dict((role, len(participants)) for role, participants in participants_by_role.items())}")
+                
                 # Calculate how many parties we need for this guild
                 num_parties = max(1, (len(guild_participants) + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
+                logger.info(f"📊 {guild_name} needs {num_parties} parties for {len(guild_participants)} participants")
                 
                 # Create party objects for this guild
                 parties = []
@@ -1425,6 +1449,8 @@ def create_parties(request, event_id):
                         max_members=MAX_PARTY_SIZE
                     )
                     parties.append(party)
+                
+                logger.info(f"✅ Created {num_parties} party objects for {guild_name}")
                 
                 # Distribute participants across parties for this guild
                 party_assignments = [[] for _ in range(num_parties)]
@@ -1461,6 +1487,8 @@ def create_parties(request, event_id):
                 # Create PartyMember objects for this guild
                 guild_members_created = 0
                 for party_idx, party in enumerate(parties):
+                    party_size = len(party_assignments[party_idx])
+                    logger.info(f"📋 {guild_name} Party {party.party_number}: {party_size} members")
                     for member_idx, participant in enumerate(party_assignments[party_idx]):
                         is_leader = member_idx == 0  # First member is the leader
                         PartyMember.objects.create(
@@ -1471,10 +1499,13 @@ def create_parties(request, event_id):
                             is_leader=is_leader
                         )
                         guild_members_created += 1
+                        if member_idx < 3:  # Log first 3 members of each party
+                            logger.info(f"  - {participant.player.in_game_name} ({participant.player.game_role}) {'👑' if is_leader else ''}")
                 
                 total_parties_created += num_parties
                 total_members_created += guild_members_created
                 guild_results.append(f"{guild_name}: {num_parties} parties with {guild_members_created} participants")
+                logger.info(f"✅ {guild_name} completed: {num_parties} parties with {guild_members_created} participants")
             
             # Create summary message
             result_message = f"Guild parties created successfully:\n"
@@ -1483,6 +1514,7 @@ def create_parties(request, event_id):
             for result in guild_results:
                 result_message += f"• {result}\n"
             
+            logger.info(f"🎉 Guild Fill Party completed: {total_parties_created} parties with {total_members_created} participants distributed")
             return Response({
                 'message': result_message,
                 'parties_created': total_parties_created,
@@ -1490,6 +1522,7 @@ def create_parties(request, event_id):
                 'guild_breakdown': guild_results
             }, status=status.HTTP_200_OK)
         else:
+            logger.info("🌍 Using mixed guild mode - all participants together")
             # Original logic for non-guild split
             # Group participants by role
             participants_by_role = {}
@@ -1499,9 +1532,12 @@ def create_parties(request, event_id):
                     participants_by_role[role] = []
                 participants_by_role[role].append(participant)
             
+            logger.info(f"🎭 Role distribution (mixed): {dict((role, len(participants)) for role, participants in participants_by_role.items())}")
+            
             # Calculate how many parties we need
             total_participants = len(participants)
             num_parties = max(1, (total_participants + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
+            logger.info(f"📊 Total participants: {total_participants}, Need {num_parties} parties")
             
             parties = []
             
@@ -1513,6 +1549,8 @@ def create_parties(request, event_id):
                     max_members=MAX_PARTY_SIZE
                 )
                 parties.append(party)
+            
+            logger.info(f"✅ Created {num_parties} party objects for mixed guild mode")
             
             # Distribute participants across parties
             party_assignments = [[] for _ in range(num_parties)]
@@ -1549,6 +1587,8 @@ def create_parties(request, event_id):
             # Create PartyMember objects
             party_members_created = 0
             for party_idx, party in enumerate(parties):
+                party_size = len(party_assignments[party_idx])
+                logger.info(f"📋 Party {party.party_number}: {party_size} members")
                 for member_idx, participant in enumerate(party_assignments[party_idx]):
                     is_leader = member_idx == 0  # First member is the leader
                     PartyMember.objects.create(
@@ -1559,7 +1599,10 @@ def create_parties(request, event_id):
                         is_leader=is_leader
                     )
                     party_members_created += 1
+                    if member_idx < 3:  # Log first 3 members of each party
+                        logger.info(f"  - {participant.player.in_game_name} ({participant.player.game_role}) {'👑' if is_leader else ''}")
             
+            logger.info(f"🎉 Fill Party completed: {num_parties} parties with {party_members_created} participants distributed")
             return Response({
                 'message': f'Parties created successfully: {num_parties} parties with {party_members_created} participants distributed',
                 'parties_created': num_parties,
@@ -1567,6 +1610,7 @@ def create_parties(request, event_id):
             }, status=status.HTTP_200_OK)
         
     except Exception as e:
+        logger.error(f"❌ Fill Party failed with error: {str(e)}", exc_info=True)
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
