@@ -1778,8 +1778,19 @@ def fill_parties(request, event_id):
         # Filter out roles with 0 requirements
         required_roles = {role: count for role, count in role_composition.items() if count > 0}
         
-        # Calculate minimum party size (sum of required roles)
-        min_party_size = sum(required_roles.values())
+        # Filter out roles that don't have enough participants
+        available_roles = {}
+        for role, required_count in required_roles.items():
+            available_count = len(participants_by_role.get(role, []))
+            if available_count >= required_count:
+                available_roles[role] = required_count
+                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - INCLUDED")
+            else:
+                logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count} - IGNORED (not enough)")
+        
+        # Calculate minimum party size (sum of available roles)
+        min_party_size = sum(available_roles.values())
+        logger.info(f"DEBUG: Using roles: {available_roles}, min_party_size: {min_party_size}")
         
         # Get all event participants
         participants = list(EventParticipant.objects.filter(
@@ -1799,11 +1810,11 @@ def fill_parties(request, event_id):
         parties_created = 0
         members_assigned = 0
         
-        # Keep creating parties until we can't fill all required roles
+        # Keep creating parties until we can't fill all available roles
         while True:
-            # Check if we have enough participants for all required roles
+            # Check if we have enough participants for all available roles
             can_create_party = True
-            for role, required_count in required_roles.items():
+            for role, required_count in available_roles.items():
                 available_count = len(participants_by_role.get(role, []))
                 logger.info(f"DEBUG: Role {role} - Available: {available_count}, Required: {required_count}")
                 if available_count < required_count:
@@ -1826,8 +1837,8 @@ def fill_parties(request, event_id):
             parties_created += 1
             logger.info(f"DEBUG: Created party {parties_created}")
             
-            # Assign required roles to this party
-            for role, required_count in required_roles.items():
+            # Assign available roles to this party
+            for role, required_count in available_roles.items():
                 available_participants = participants_by_role.get(role, [])
                 for i in range(required_count):
                     participant = available_participants.pop(0)  # Remove from available list
@@ -1851,7 +1862,8 @@ def fill_parties(request, event_id):
             'parties_created': parties_created,
             'members_assigned': members_assigned,
             'min_party_size': min_party_size,
-            'required_roles': required_roles
+            'available_roles': available_roles,
+            'ignored_roles': {role: count for role, count in required_roles.items() if role not in available_roles}
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
