@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
-from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, DiscordBotLog, Event, EventParticipant, Party, PartyMember, RecommendedBuild, LegendaryBlueprint
+from .models import Guild, Player, Drifter, GearType, GearItem, PlayerGear, GearMod, DiscordBotConfig, DiscordBotLog, Event, EventParticipant, Party, PartyMember, RecommendedBuild, LegendaryBlueprint, Crafter
 
 
 @admin.register(Guild)
