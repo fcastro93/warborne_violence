@@ -1979,12 +1979,14 @@ def fill_parties(request, event_id):
                 for member in last_party_members:
                     moved = False
                     for party in incomplete_parties_sorted:
+                        # Refresh party member count from database
+                        party.refresh_from_db()
                         if party.member_count < party.max_members:
                             # Move member to this party
                             member.party = party
                             member.save()
                             balance_members_moved += 1
-                            logger.info(f"DEBUG: Moved {member.player.in_game_name} from Party {last_party.party_number} to Party {party.party_number}")
+                            logger.info(f"DEBUG: Moved {member.player.in_game_name} from Party {last_party.party_number} to Party {party.party_number} (now {party.member_count + 1}/15)")
                             moved = True
                             break
                     
@@ -2002,7 +2004,13 @@ def fill_parties(request, event_id):
         
         total_members_assigned = members_assigned + filler_members_assigned + max_filler_members_assigned
         
-        final_party_count = Party.objects.filter(event=event, is_active=True).count()
+        # Final refresh of all parties to ensure accurate member counts
+        final_parties = Party.objects.filter(event=event, is_active=True).order_by('party_number')
+        for party in final_parties:
+            party.refresh_from_db()
+            logger.info(f"DEBUG: Final party {party.party_number} has {party.member_count} members")
+        
+        final_party_count = final_parties.count()
         
         return Response({
             'message': f'Created {final_party_count} parties with {total_members_assigned} members assigned',
