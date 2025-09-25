@@ -351,7 +351,6 @@ class CreatePlayerView(discord.ui.View):
             options = [
                 discord.SelectOption(label="Ranged DPS", value="ranged_dps", description="Ranged damage dealer"),
                 discord.SelectOption(label="Melee DPS", value="melee_dps", description="Melee damage dealer"),
-                discord.SelectOption(label="Tank", value="tank", description="Tank role"),
                 discord.SelectOption(label="Healer", value="healer", description="Healer role"),
                 discord.SelectOption(label="Defensive Tank", value="defensive_tank", description="Defensive tank"),
                 discord.SelectOption(label="Offensive Tank", value="offensive_tank", description="Offensive tank"),
@@ -556,7 +555,6 @@ class EditPlayerView(discord.ui.View):
             options = [
                 discord.SelectOption(label="Ranged DPS", value="ranged_dps", description="Ranged damage dealer"),
                 discord.SelectOption(label="Melee DPS", value="melee_dps", description="Melee damage dealer"),
-                discord.SelectOption(label="Tank", value="tank", description="Tank role"),
                 discord.SelectOption(label="Healer", value="healer", description="Healer role"),
                 discord.SelectOption(label="Defensive Tank", value="defensive_tank", description="Defensive tank"),
                 discord.SelectOption(label="Offensive Tank", value="offensive_tank", description="Offensive tank"),
@@ -725,7 +723,6 @@ class EditPlayerView(discord.ui.View):
             options = [
                 discord.SelectOption(label="Ranged DPS", value="ranged_dps", description="Ranged damage dealer"),
                 discord.SelectOption(label="Melee DPS", value="melee_dps", description="Melee damage dealer"),
-                discord.SelectOption(label="Tank", value="tank", description="Tank role"),
                 discord.SelectOption(label="Healer", value="healer", description="Healer role"),
                 discord.SelectOption(label="Defensive Tank", value="defensive_tank", description="Defensive tank"),
                 discord.SelectOption(label="Offensive Tank", value="offensive_tank", description="Offensive tank"),
