@@ -1122,18 +1122,17 @@ def update_event(request, event_id):
 
 @api_view(['DELETE'])
 def delete_event(request, event_id):
-    """Delete/cancel an event"""
+    """Delete/cancel an event - performs hard delete"""
     try:
         event = Event.objects.get(id=event_id)
+        event_title = event.title  # Store title for success message
         
-        # Instead of deleting, mark as cancelled
-        event.is_cancelled = True
-        event.is_active = False
-        event.save()
+        # Perform hard delete - this will cascade delete related objects
+        event.delete()
         
         return Response({
-            'message': 'Event cancelled successfully',
-            'event_id': event.id
+            'message': f'Event "{event_title}" deleted successfully',
+            'event_id': event_id
         })
         
     except Event.DoesNotExist:
