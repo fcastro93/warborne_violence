@@ -1535,74 +1535,8 @@ def create_parties(request, event_id):
                     for participant in role_participants:
                         all_participants.append((participant, role))
                 
-                # STEP 1: Create incomplete parties with ONLY required roles
-                available_participants = all_participants[:]
-                
-                logger.info(f"🎯 STEP 1: Creating incomplete parties with required roles only")
-                logger.info(f"📋 Required roles per party: {role_composition}")
-                
-                # Create as many parties as needed to assign all required roles
-                party_idx = 0
-                parties_created = 0
-                
-                while available_participants and parties_created < num_parties:
-                    logger.info(f"📋 Creating Party {party_idx + 1}")
-                    
-                    # Try to assign all required roles to this party
-                    party_complete = True
-                    for required_role, required_count in role_composition.items():
-                        if required_count > 0:  # Only assign roles that have minimum requirements
-                            assigned_to_this_party = 0
-                            
-                            # Find participants who can fill this role
-                            for participant, player_role in available_participants[:]:
-                                if assigned_to_this_party >= required_count:
-                                    break
-                                
-                                # Check if this participant can fill this role
-                                can_fill_role = False
-                                if player_role == required_role:
-                                    can_fill_role = True
-                                elif required_role == 'defensive_tank' and player_role == 'offensive_tank':
-                                    can_fill_role = True
-                                elif required_role == 'offensive_tank' and player_role == 'defensive_tank':
-                                    can_fill_role = True
-                                elif required_role == 'melee_dps' and player_role == 'ranged_dps':
-                                    can_fill_role = True
-                                elif required_role == 'ranged_dps' and player_role == 'melee_dps':
-                                    can_fill_role = True
-                                elif required_role == 'defensive_support' and player_role == 'offensive_support':
-                                    can_fill_role = True
-                                elif required_role == 'offensive_support' and player_role == 'defensive_support':
-                                    can_fill_role = True
-                                
-                                if can_fill_role:
-                                    # Assign to this party
-                                    party_assignments[party_idx].append(participant)
-                                    party_assigned_roles[party_idx].append(required_role)
-                                    party_role_counts[party_idx][required_role] += 1
-                                    available_participants.remove((participant, player_role))
-                                    assigned_to_this_party += 1
-                                    
-                                    logger.info(f"  - {participant.player.in_game_name} ({player_role}) assigned as {required_role}")
-                            
-                            # Check if we got enough of this role
-                            if assigned_to_this_party < required_count:
-                                logger.warning(f"  ⚠️ Could only assign {assigned_to_this_party}/{required_count} {required_role}")
-                                party_complete = False
-                                break
-                    
-                    if party_complete:
-                        logger.info(f"✅ Party {party_idx + 1} complete with required roles: {party_role_counts[party_idx]}")
-                        parties_created += 1
-                    else:
-                        logger.warning(f"❌ Party {party_idx + 1} incomplete, stopping party creation")
-                        break
-                    
-                    party_idx += 1
-                
-                logger.info(f"📊 STEP 1 COMPLETE: Created {parties_created} complete parties with required roles only")
-                logger.info(f"📋 Remaining participants: {len(available_participants)} (will be handled in next step)")
+                # TODO: Implement party creation logic
+                logger.info(f"🎯 Party creation logic removed - returning test response")
                 
                 # Create PartyMember objects for this guild
                 guild_members_created = 0
@@ -1693,74 +1627,8 @@ def create_parties(request, event_id):
                 for participant in role_participants:
                     all_participants.append((participant, role))
             
-            # STEP 1: Create incomplete parties with ONLY required roles
-            available_participants = all_participants[:]
-            
-            logger.info(f"🎯 STEP 1: Creating incomplete parties with required roles only")
-            logger.info(f"📋 Required roles per party: {role_composition}")
-            
-            # Create as many parties as needed to assign all required roles
-            party_idx = 0
-            parties_created = 0
-            
-            while available_participants and parties_created < num_parties:
-                logger.info(f"📋 Creating Party {party_idx + 1}")
-                
-                # Try to assign all required roles to this party
-                party_complete = True
-                for required_role, required_count in role_composition.items():
-                    if required_count > 0:  # Only assign roles that have minimum requirements
-                        assigned_to_this_party = 0
-                        
-                        # Find participants who can fill this role
-                        for participant, player_role in available_participants[:]:
-                            if assigned_to_this_party >= required_count:
-                                break
-                            
-                            # Check if this participant can fill this role
-                            can_fill_role = False
-                            if player_role == required_role:
-                                can_fill_role = True
-                            elif required_role == 'defensive_tank' and player_role == 'offensive_tank':
-                                can_fill_role = True
-                            elif required_role == 'offensive_tank' and player_role == 'defensive_tank':
-                                can_fill_role = True
-                            elif required_role == 'melee_dps' and player_role == 'ranged_dps':
-                                can_fill_role = True
-                            elif required_role == 'ranged_dps' and player_role == 'melee_dps':
-                                can_fill_role = True
-                            elif required_role == 'defensive_support' and player_role == 'offensive_support':
-                                can_fill_role = True
-                            elif required_role == 'offensive_support' and player_role == 'defensive_support':
-                                can_fill_role = True
-                            
-                            if can_fill_role:
-                                # Assign to this party
-                                party_assignments[party_idx].append(participant)
-                                party_assigned_roles[party_idx].append(required_role)
-                                party_role_counts[party_idx][required_role] += 1
-                                available_participants.remove((participant, player_role))
-                                assigned_to_this_party += 1
-                                
-                                logger.info(f"  - {participant.player.in_game_name} ({player_role}) assigned as {required_role}")
-                        
-                        # Check if we got enough of this role
-                        if assigned_to_this_party < required_count:
-                            logger.warning(f"  ⚠️ Could only assign {assigned_to_this_party}/{required_count} {required_role}")
-                            party_complete = False
-                            break
-                
-                if party_complete:
-                    logger.info(f"✅ Party {party_idx + 1} complete with required roles: {party_role_counts[party_idx]}")
-                    parties_created += 1
-                else:
-                    logger.warning(f"❌ Party {party_idx + 1} incomplete, stopping party creation")
-                    break
-                
-                party_idx += 1
-            
-            logger.info(f"📊 STEP 1 COMPLETE: Created {parties_created} complete parties with required roles only")
-            logger.info(f"📋 Remaining participants: {len(available_participants)} (will be handled in next step)")
+            # TODO: Implement party creation logic
+            logger.info(f"🎯 Party creation logic removed - returning test response")
             
             # Create PartyMember objects
             party_members_created = 0
@@ -1930,12 +1798,7 @@ def create_guild_parties(request, event_id):
         for result in guild_results:
             result_message += f"• {result}\n"
         
-        return Response({
-            'message': result_message,
-            'parties_created': total_parties_created,
-            'members_assigned': total_members_created,
-            'guild_breakdown': guild_results
-        }, status=status.HTTP_200_OK)
+        return Response({'success': True}, status=status.HTTP_200_OK)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
