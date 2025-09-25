@@ -1759,7 +1759,15 @@ def remove_participant(request, event_id):
 def fill_parties(request, event_id):
     """Fill existing parties with remaining participants"""
     try:
-        return Response({'success': True}, status=status.HTTP_200_OK)
+        # Get party configuration from request
+        party_config = request.data.get('partyConfig', {})
+        role_composition = party_config.get('roleComposition', {})
+        guild_split = party_config.get('guildSplit', False)
+        
+        return Response({
+            'roleComposition': role_composition,
+            'guildSplit': guild_split
+        }, status=status.HTTP_200_OK)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
