@@ -676,6 +676,85 @@ class EditPlayerNameModal(discord.ui.Modal, title="Edit Player Name"):
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
+class LevelModal(discord.ui.Modal, title="Edit Level"):
+    """Modal for editing player level only"""
+    
+    def __init__(self, parent_view):
+        super().__init__()
+        self.parent_view = parent_view
+        
+        # Create text input with default value
+        self.level = discord.ui.TextInput(
+            label="Level",
+            placeholder="Enter your character level",
+            default=str(parent_view.player.character_level),
+            max_length=3,
+            required=True
+        )
+        
+        # Add input to modal
+        self.add_item(self.level)
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        # Validate level
+        try:
+            level_value = int(self.level.value)
+            if level_value < 1 or level_value > 100:
+                raise ValueError("Level must be between 1 and 100")
+        except ValueError:
+            await interaction.response.send_message(
+                "❌ Invalid level. Please enter a number between 1 and 100.",
+                ephemeral=True
+            )
+            return
+        
+        # Update player level
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def update_level():
+            try:
+                player = self.parent_view.player
+                player.character_level = level_value
+                player.faction = self.parent_view.selected_faction
+                player.game_role = self.parent_view.selected_role
+                player.save()
+                return player, None
+            except Exception as e:
+                return None, str(e)
+        
+        updated_player, error = await update_level()
+        
+        if error:
+            await interaction.response.send_message(
+                f"❌ Error updating player: {error}",
+                ephemeral=True
+            )
+        else:
+            # Show updated player info
+            guild_info = f"**Guild:** {updated_player.guild.name}" if updated_player.guild else "**Guild:** Sin guild"
+            role_info = f"**Rol:** {updated_player.get_game_role_display()}" if updated_player.game_role else "**Rol:** No asignado"
+            
+            loadout_url = f"https://violenceguild.duckdns.org/player/{updated_player.id}/loadout"
+            
+            embed = discord.Embed(
+                title="✅ Player Updated Successfully",
+                color=0x4caf50
+            )
+            embed.add_field(
+                name="📊 Updated Player Information",
+                value=f"**Name:** {updated_player.in_game_name}\n"
+                      f"**Level:** {updated_player.character_level}\n"
+                      f"**Faction:** {updated_player.get_faction_display()}\n"
+                      f"{guild_info}\n"
+                      f"{role_info}\n"
+                      f"**Loadouts:** [View Loadouts]({loadout_url})",
+                inline=False
+            )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 class EditPlayerView(discord.ui.View):
     """View for editing player information with dropdowns"""
     
@@ -742,78 +821,6 @@ class EditPlayerView(discord.ui.View):
                 self.parent_view.selected_role = None
                 await interaction.response.send_message("✅ No role selected", ephemeral=True)
     
-    # Level Input Modal
-    class LevelModal(discord.ui.Modal, title="Edit Level"):
-        def __init__(self, parent_view):
-            super().__init__()
-            self.parent_view = parent_view
-        
-        level = discord.ui.TextInput(
-            label="Level",
-            placeholder="Enter your character level",
-            default=str(parent_view.player.character_level),
-            max_length=3,
-            required=True
-        )
-        
-        async def on_submit(self, interaction: discord.Interaction):
-            # Validate level
-            try:
-                level_value = int(self.level.value)
-                if level_value < 1 or level_value > 100:
-                    raise ValueError("Level must be between 1 and 100")
-            except ValueError:
-                await interaction.response.send_message(
-                    "❌ Invalid level. Please enter a number between 1 and 100.",
-                    ephemeral=True
-                )
-                return
-            
-            # Update player level
-            from asgiref.sync import sync_to_async
-            
-            @sync_to_async
-            def update_level():
-                try:
-                    player = self.parent_view.player
-                    player.character_level = level_value
-                    player.faction = self.parent_view.selected_faction
-                    player.game_role = self.parent_view.selected_role
-                    player.save()
-                    return player, None
-                except Exception as e:
-                    return None, str(e)
-            
-            updated_player, error = await update_level()
-            
-            if error:
-                await interaction.response.send_message(
-                    f"❌ Error updating player: {error}",
-                    ephemeral=True
-                )
-            else:
-                # Show updated player info
-                guild_info = f"**Guild:** {updated_player.guild.name}" if updated_player.guild else "**Guild:** Sin guild"
-                role_info = f"**Rol:** {updated_player.get_game_role_display()}" if updated_player.game_role else "**Rol:** No asignado"
-                
-                loadout_url = f"https://violenceguild.duckdns.org/player/{updated_player.id}/loadout"
-                
-                embed = discord.Embed(
-                    title="✅ Player Updated Successfully",
-                    color=0x4caf50
-                )
-                embed.add_field(
-                    name="📊 Updated Player Information",
-                    value=f"**Name:** {updated_player.in_game_name}\n"
-                          f"**Level:** {updated_player.character_level}\n"
-                          f"**Faction:** {updated_player.get_faction_display()}\n"
-                          f"{guild_info}\n"
-                          f"{role_info}\n"
-                          f"**Loadouts:** [View Loadouts]({loadout_url})",
-                    inline=False
-                )
-                
-                await interaction.response.send_message(embed=embed, ephemeral=True)
 
     # Edit Player Button
     @discord.ui.button(label="📝 Edit Player Info", style=discord.ButtonStyle.primary, row=0)
@@ -824,13 +831,13 @@ class EditPlayerView(discord.ui.View):
     # Edit Level Button
     @discord.ui.button(label="📊 Edit Level", style=discord.ButtonStyle.secondary, row=0)
     async def edit_level_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        modal = self.LevelModal(self)
+        modal = LevelModal(self)
         await interaction.response.send_modal(modal)
     
     # Edit Player Button
-    @discord.ui.button(label="📝 Edit Player Info", style=discord.ButtonStyle.primary, row=0)
+    @discord.ui.button(label="📝 Edit Player Info", style=discord.ButtonStyle.primary, row=1)
     async def edit_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        modal = self.PlayerNameModal(self)
+        modal = EditPlayerNameModal(self)
         await interaction.response.send_modal(modal)
     
     async def on_timeout(self):
