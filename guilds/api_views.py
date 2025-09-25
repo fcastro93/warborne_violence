@@ -1779,7 +1779,7 @@ def fill_parties(request, event_id):
         ).prefetch_related('members').order_by('party_number'))
         
         # TODO: Implement party creation logic
-        logger.info(f"🎯 Party creation logic removed - returning test response")
+        print(f"🎯 Party creation logic removed - returning test response")
         
         # Get unassigned participants
         assigned_participant_ids = set()
