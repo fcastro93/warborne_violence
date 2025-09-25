@@ -656,6 +656,30 @@ class LegendaryBlueprintAdmin(admin.ModelAdmin):
     status_display.short_description = 'Crafting Status'
 
 
+@admin.register(Crafter)
+class CrafterAdmin(admin.ModelAdmin):
+    list_display = ['player', 'item_name', 'created_at', 'created_by']
+    list_filter = ['item_name', 'created_at', 'created_by']
+    search_fields = ['player__discord_name', 'item_name']
+    ordering = ['item_name', 'player__discord_name']
+    readonly_fields = ['created_at']
+    
+    fieldsets = (
+        ('Crafter Information', {
+            'fields': ('player', 'item_name', 'created_by')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not change:  # Only set created_by for new objects
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
 
 
 # Customize admin title

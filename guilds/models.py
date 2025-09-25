@@ -989,3 +989,27 @@ class LegendaryBlueprint(models.Model):
         else:
             return "No Blueprints"
 
+
+class Crafter(models.Model):
+    """Model to track players who can craft specific legendary items"""
+    
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='crafters')
+    item_name = models.CharField(max_length=50, choices=LegendaryBlueprint.LEGENDARY_ITEMS)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, 
+                                  help_text="Admin who added this crafter")
+    
+    class Meta:
+        unique_together = ['player', 'item_name']
+        ordering = ['item_name', 'player__discord_name']
+        verbose_name = "Crafter"
+        verbose_name_plural = "Crafters"
+    
+    def __str__(self):
+        return f"{self.player.discord_name} - {self.get_item_name_display()}"
+    
+    def get_item_name_display(self):
+        """Get the display name for the item"""
+        item_dict = dict(LegendaryBlueprint.LEGENDARY_ITEMS)
+        return item_dict.get(self.item_name, self.item_name)
+

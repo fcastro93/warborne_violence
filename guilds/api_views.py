@@ -3522,6 +3522,106 @@ def delete_blueprint(request, blueprint_id):
         
     except LegendaryBlueprint.DoesNotExist:
         return Response({'error': 'Blueprint not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# ==================== CRAFTERS API ENDPOINTS ====================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def crafters_list(request):
+    """Get all crafters"""
+    try:
+        from .models import Crafter
+        
+        crafters = Crafter.objects.select_related('player', 'created_by').all()
+        
+        crafter_data = []
+        for crafter in crafters:
+            crafter_data.append({
+                'id': crafter.id,
+                'player_name': crafter.player.discord_name,
+                'player_id': crafter.player.id,
+                'item_name': crafter.item_name,
+                'item_display': crafter.get_item_name_display(),
+                'created_at': crafter.created_at,
+                'created_by': crafter.created_by.username if crafter.created_by else 'System'
+            })
+        
+        return Response({
+            'crafters': crafter_data,
+            'total': len(crafter_data)
+        })
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_crafter(request):
+    """Create a new crafter"""
+    try:
+        from .models import Crafter, Player
+        
+        data = request.data
+        player_name = data.get('player_name')
+        item_name = data.get('item_name')
+        
+        if not player_name or not item_name:
+            return Response({'error': 'Player name and item name are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find player by discord name
+        try:
+            player = Player.objects.get(discord_name=player_name)
+        except Player.DoesNotExist:
+            return Response({'error': f'Player "{player_name}" not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check if crafter already exists for this player and item
+        crafter, created = Crafter.objects.get_or_create(
+            player=player,
+            item_name=item_name,
+            defaults={'created_by': request.user}
+        )
+        
+        if created:
+            message = f'{player.discord_name} is now a crafter for {item_name}'
+        else:
+            message = f'{player.discord_name} is already a crafter for {item_name}'
+        
+        return Response({
+            'message': message,
+            'crafter': {
+                'id': crafter.id,
+                'player_name': crafter.player.discord_name,
+                'item_name': crafter.item_name,
+                'item_display': crafter.get_item_name_display(),
+                'created_at': crafter.created_at,
+                'created_by': crafter.created_by.username if crafter.created_by else 'System'
+            }
+        })
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_crafter(request, crafter_id):
+    """Delete a crafter"""
+    try:
+        from .models import Crafter
+        
+        crafter = Crafter.objects.get(id=crafter_id)
+        player_name = crafter.player.discord_name
+        item_name = crafter.get_item_name_display()
+        crafter.delete()
+        
+        return Response({
+            'message': f'{player_name} is no longer a crafter for {item_name}'
+        })
+    
+    except Crafter.DoesNotExist:
+        return Response({'error': 'Crafter not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
