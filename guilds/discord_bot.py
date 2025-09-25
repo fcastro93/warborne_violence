@@ -742,11 +742,19 @@ class EditPlayerView(discord.ui.View):
                 self.parent_view.selected_role = None
                 await interaction.response.send_message("✅ No role selected", ephemeral=True)
     
-    # Edit Player Button
-    @discord.ui.button(label="📝 Edit Player Info", style=discord.ButtonStyle.primary, row=0)
-    async def edit_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        modal = EditPlayerNameModal(self)
-        await interaction.response.send_modal(modal)
+    # Level Input Modal
+    class LevelModal(discord.ui.Modal, title="Edit Level"):
+        def __init__(self, parent_view):
+            super().__init__()
+            self.parent_view = parent_view
+        
+        level = discord.ui.TextInput(
+            label="Level",
+            placeholder="Enter your character level",
+            default=str(parent_view.player.character_level),
+            max_length=3,
+            required=True
+        )
         
         async def on_submit(self, interaction: discord.Interaction):
             # Validate level
@@ -761,14 +769,13 @@ class EditPlayerView(discord.ui.View):
                 )
                 return
             
-            # Update player
+            # Update player level
             from asgiref.sync import sync_to_async
             
             @sync_to_async
-            def update_player():
+            def update_level():
                 try:
                     player = self.parent_view.player
-                    player.in_game_name = self.player_name.value
                     player.character_level = level_value
                     player.faction = self.parent_view.selected_faction
                     player.game_role = self.parent_view.selected_role
@@ -777,7 +784,7 @@ class EditPlayerView(discord.ui.View):
                 except Exception as e:
                     return None, str(e)
             
-            updated_player, error = await update_player()
+            updated_player, error = await update_level()
             
             if error:
                 await interaction.response.send_message(
@@ -807,6 +814,18 @@ class EditPlayerView(discord.ui.View):
                 )
                 
                 await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    # Edit Player Button
+    @discord.ui.button(label="📝 Edit Player Info", style=discord.ButtonStyle.primary, row=0)
+    async def edit_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        modal = EditPlayerNameModal(self)
+        await interaction.response.send_modal(modal)
+    
+    # Edit Level Button
+    @discord.ui.button(label="📊 Edit Level", style=discord.ButtonStyle.secondary, row=0)
+    async def edit_level_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        modal = self.LevelModal(self)
+        await interaction.response.send_modal(modal)
     
     # Edit Player Button
     @discord.ui.button(label="📝 Edit Player Info", style=discord.ButtonStyle.primary, row=0)
@@ -1052,7 +1071,7 @@ class CommandMenuView(discord.ui.View):
                 )
                 embed.add_field(
                     name="📝 Steps",
-                    value="1. Select your faction from the dropdown\n2. Select your role from the dropdown\n3. Click 'Edit Player Info' to change name and level",
+                    value="1. Select your faction from the dropdown\n2. Select your role from the dropdown\n3. Click 'Edit Player Info' to change name\n4. Click 'Edit Level' to change level",
                     inline=False
                 )
                 await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
