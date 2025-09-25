@@ -1832,8 +1832,17 @@ def fill_parties(request, event_id):
                     break
             
             if not can_create_party:
-                logger.info(f"DEBUG: Stopping party creation - insufficient roles")
-                break
+                # Try to create parties with available roles (even if not complete)
+                logger.info(f"DEBUG: Cannot create complete party, trying to create incomplete parties with available roles")
+                
+                # Check if we have any participants left in any role
+                total_remaining = sum(len(participants_by_role.get(role, [])) for role in available_roles.keys())
+                if total_remaining >= 4:  # Minimum party size
+                    logger.info(f"DEBUG: Creating incomplete parties with {total_remaining} remaining participants")
+                    # Continue with incomplete party creation
+                else:
+                    logger.info(f"DEBUG: Stopping party creation - insufficient participants for even incomplete parties")
+                    break
             
             # Create new party
             new_party = Party.objects.create(
@@ -1849,7 +1858,9 @@ def fill_parties(request, event_id):
             # Assign available roles to this party
             for role, required_count in available_roles.items():
                 available_participants = participants_by_role.get(role, [])
-                for i in range(required_count):
+                # For incomplete parties, assign what's available instead of requiring exact count
+                assign_count = min(required_count, len(available_participants))
+                for i in range(assign_count):
                     participant = available_participants.pop(0)  # Remove from available list
                     
                     # Create party member
@@ -1863,6 +1874,9 @@ def fill_parties(request, event_id):
                     )
                     members_assigned += 1
                     logger.info(f"DEBUG: Assigned {participant.player.in_game_name} as {role}")
+                
+                if assign_count < required_count:
+                    logger.info(f"DEBUG: Party {parties_created} incomplete - only {assign_count}/{required_count} {role} assigned")
             
             logger.info(f"DEBUG: Party {parties_created} complete. Remaining: Healers={len(participants_by_role.get('healer', []))}, DefTanks={len(participants_by_role.get('defensive_tank', []))}, OffTanks={len(participants_by_role.get('offensive_tank', []))}")
         
