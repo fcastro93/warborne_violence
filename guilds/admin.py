@@ -239,7 +239,7 @@ class GearModAdmin(admin.ModelAdmin):
 # Discord Bot Configuration Admin
 @admin.register(DiscordBotConfig)
 class DiscordBotConfigAdmin(admin.ModelAdmin):
-    list_display = ['name', 'is_active', 'get_status_display', 'is_online', 'last_heartbeat', 'created_at']
+    list_display = ['name', 'is_active', 'is_online', 'last_heartbeat', 'created_at']
     list_filter = ['is_active', 'is_online', 'created_at']
     search_fields = ['name', 'error_message']
     readonly_fields = ['is_online', 'last_heartbeat', 'error_message', 'created_at', 'updated_at']
@@ -272,9 +272,6 @@ class DiscordBotConfigAdmin(admin.ModelAdmin):
         }),
     )
     
-    def get_status_display(self, obj):
-        return obj.get_status_display()
-    get_status_display.short_description = 'Status'
     
     def start_bot(self, request, queryset):
         for config in queryset:
