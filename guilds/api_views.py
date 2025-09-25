@@ -1962,8 +1962,8 @@ def fill_parties(request, event_id):
             
             # If we have incomplete parties, try to consolidate them
             if len(incomplete_parties) > 1:
-                # Get the last party (highest party_number)
-                last_party = incomplete_parties[-1]
+                # Get the LAST party from ALL parties (not just incomplete ones) - highest party_number
+                last_party = all_parties[-1]  # This is the actual last party created
                 logger.info(f"DEBUG: Consolidating members from last party {last_party.party_number} (has {last_party.member_count} members)")
                 
                 # Get all members from the last party
@@ -1972,12 +1972,13 @@ def fill_parties(request, event_id):
                     is_active=True
                 ).select_related('player'))
                 
-                # Try to move members to other incomplete parties (excluding the last one)
-                other_incomplete_parties = incomplete_parties[:-1]
+                # Try to move members to incomplete parties (excluding the last one)
+                # Sort incomplete parties by party_number to fill from first to last
+                incomplete_parties_sorted = sorted([p for p in incomplete_parties if p.party_number != last_party.party_number], key=lambda p: p.party_number)
                 
                 for member in last_party_members:
                     moved = False
-                    for party in other_incomplete_parties:
+                    for party in incomplete_parties_sorted:
                         if party.member_count < party.max_members:
                             # Move member to this party
                             member.party = party
