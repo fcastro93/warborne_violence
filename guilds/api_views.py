@@ -1759,13 +1759,88 @@ def remove_participant(request, event_id):
 def fill_parties(request, event_id):
     """Fill existing parties with remaining participants"""
     try:
-        # Get party configuration from request (data is sent directly, not nested under partyConfig)
+        from .models import Event, Party, PartyMember, EventParticipant
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get party configuration from request
         role_composition = request.data.get('roleComposition', {})
         guild_split = request.data.get('guildSplit', False)
         
+        # Filter out roles with 0 requirements
+        required_roles = {role: count for role, count in role_composition.items() if count > 0}
+        
+        # Calculate minimum party size (sum of required roles)
+        min_party_size = sum(required_roles.values())
+        
+        # Get all event participants
+        participants = list(EventParticipant.objects.filter(
+            event=event,
+            player__isnull=False
+        ).select_related('player', 'player__guild'))
+        
+        # Group participants by role
+        participants_by_role = {}
+        for participant in participants:
+            role = participant.player.game_role or 'unknown'
+            if role not in participants_by_role:
+                participants_by_role[role] = []
+            participants_by_role[role].append(participant)
+        
+        # Create parties with minimum required roles
+        parties_created = 0
+        members_assigned = 0
+        
+        # Calculate how many complete parties we can make
+        max_possible_parties = float('inf')
+        for role, required_count in required_roles.items():
+            available_count = len(participants_by_role.get(role, []))
+            if available_count > 0:
+                possible_parties = available_count // required_count
+                max_possible_parties = min(max_possible_parties, possible_parties)
+            else:
+                max_possible_parties = 0
+                break
+        
+        # Create parties
+        for party_num in range(max_possible_parties):
+            # Create new party
+            new_party = Party.objects.create(
+                event=event,
+                party_number=Party.objects.filter(event=event, is_active=True).count() + 1,
+                party_name=f"Party {Party.objects.filter(event=event, is_active=True).count() + 1}",
+                max_members=15,  # Keep max at 15, but fill only with required roles
+                is_active=True
+            )
+            parties_created += 1
+            
+            # Assign required roles to this party
+            for role, required_count in required_roles.items():
+                available_participants = participants_by_role.get(role, [])
+                for i in range(min(required_count, len(available_participants))):
+                    participant = available_participants.pop(0)  # Remove from available list
+                    
+                    # Create party member
+                    is_first_member = new_party.member_count == 0
+                    PartyMember.objects.create(
+                        party=new_party,
+                        event_participant=participant,
+                        player=participant.player,
+                        assigned_role=participant.player.game_role,
+                        is_leader=is_first_member
+                    )
+                    members_assigned += 1
+        
         return Response({
-            'roleComposition': role_composition,
-            'guildSplit': guild_split
+            'message': f'Created {parties_created} parties with {members_assigned} members assigned',
+            'parties_created': parties_created,
+            'members_assigned': members_assigned,
+            'min_party_size': min_party_size,
+            'required_roles': required_roles
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
