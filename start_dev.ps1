@@ -17,6 +17,12 @@ Get-Process | Where-Object {$_.ProcessName -like "*python*" -and $_.CommandLine 
 # Set Django settings module for development
 $env:DJANGO_SETTINGS_MODULE = "warborne_tools.settings_dev"
 
+# Copy frontend environment file if it doesn't exist
+if (-not (Test-Path "frontend/warborne_frontend/.env")) {
+    Write-Host "📝 Creating frontend environment file..." -ForegroundColor Blue
+    Copy-Item "frontend-dev.env" "frontend/warborne_frontend/.env"
+}
+
 # Start Django development server
 Write-Host "🏃 Starting Django development server..." -ForegroundColor Blue
 Start-Process python -ArgumentList "manage.py", "runserver", "127.0.0.1:8000" -WindowStyle Hidden -RedirectStandardOutput "django.log" -RedirectStandardError "django_error.log"

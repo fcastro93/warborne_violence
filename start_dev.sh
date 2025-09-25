@@ -19,6 +19,12 @@ pkill -f runserver
 # Set Django settings module for development
 export DJANGO_SETTINGS_MODULE=warborne_tools.settings_dev
 
+# Copy frontend environment file if it doesn't exist
+if [ ! -f "frontend/warborne_frontend/.env" ]; then
+    echo "📝 Creating frontend environment file..."
+    cp frontend-dev.env frontend/warborne_frontend/.env
+fi
+
 # Start Django development server
 echo "🏃 Starting Django development server..."
 nohup python manage.py runserver 127.0.0.1:8000 > django.log 2>&1 &
