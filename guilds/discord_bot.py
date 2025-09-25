@@ -33,10 +33,20 @@ class CheckPartyView(View):
                     event = Event.objects.get(id=self.event_id)
                     
                     # Check if user is participating in this event
+                    # First try to find by discord_user_id
                     participant = EventParticipant.objects.filter(
                         event=event,
                         discord_user_id=user_id
                     ).first()
+                    
+                    # If not found by discord_user_id, try to find by discord_name as fallback
+                    if not participant:
+                        # Get the user's discord name to search by
+                        discord_name = f"{interaction.user.name}#{interaction.user.discriminator}"
+                        participant = EventParticipant.objects.filter(
+                            event=event,
+                            discord_name=discord_name
+                        ).first()
                     
                     if not participant:
                         return "No Party Assign"

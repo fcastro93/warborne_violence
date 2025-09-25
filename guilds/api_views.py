@@ -1192,9 +1192,14 @@ def join_event(request, event_id):
                 player = Player.objects.filter(discord_name=discord_name).first()
             
             # Create new participant
+            # Use discord_user_id from request, or fall back to player's discord_user_id
+            final_discord_user_id = discord_user_id
+            if not final_discord_user_id and player and player.discord_user_id:
+                final_discord_user_id = player.discord_user_id
+            
             participant = EventParticipant.objects.create(
                 event=event,
-                discord_user_id=discord_user_id,
+                discord_user_id=final_discord_user_id,
                 discord_name=discord_name,
                 player=player
             )
