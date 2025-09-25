@@ -579,13 +579,27 @@ class EditPlayerView(discord.ui.View):
                 self.parent_view.selected_role = None
                 await interaction.response.send_message("✅ No role selected", ephemeral=True)
     
-    # Player Name Input Modal
-    class PlayerNameModal(discord.ui.Modal, title="Edit Player Name"):
-        def __init__(self, parent_view):
-            super().__init__()
-            self.parent_view = parent_view
+    # Edit Player Button
+    @discord.ui.button(label="📝 Edit Player Info", style=discord.ButtonStyle.primary, row=0)
+    async def edit_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        modal = self.PlayerNameModal(self)
+        await interaction.response.send_modal(modal)
+    
+    async def on_timeout(self):
+        # Disable all components when view times out
+        for item in self.children:
+            item.disabled = True
+
+
+class EditPlayerNameModal(discord.ui.Modal, title="Edit Player Name"):
+    """Modal for editing player name and level"""
+    
+    def __init__(self, parent_view):
+        super().__init__()
+        self.parent_view = parent_view
         
-        player_name = discord.ui.TextInput(
+        # Create text inputs with default values
+        self.player_name = discord.ui.TextInput(
             label="Player Name",
             placeholder="Enter your in-game name",
             default=parent_view.player.in_game_name,
@@ -593,13 +607,152 @@ class EditPlayerView(discord.ui.View):
             required=True
         )
         
-        level = discord.ui.TextInput(
+        self.level = discord.ui.TextInput(
             label="Level",
             placeholder="Enter your character level",
             default=str(parent_view.player.character_level),
             max_length=3,
             required=True
         )
+        
+        # Add inputs to modal
+        self.add_item(self.player_name)
+        self.add_item(self.level)
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        # Validate level
+        try:
+            level_value = int(self.level.value)
+            if level_value < 1 or level_value > 100:
+                raise ValueError("Level must be between 1 and 100")
+        except ValueError:
+            await interaction.response.send_message(
+                "❌ Invalid level. Please enter a number between 1 and 100.",
+                ephemeral=True
+            )
+            return
+        
+        # Update player
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def update_player():
+            try:
+                player = self.parent_view.player
+                player.in_game_name = self.player_name.value
+                player.character_level = level_value
+                player.faction = self.parent_view.selected_faction
+                player.game_role = self.parent_view.selected_role
+                player.save()
+                return player, None
+            except Exception as e:
+                return None, str(e)
+        
+        updated_player, error = await update_player()
+        
+        if error:
+            await interaction.response.send_message(
+                f"❌ Error updating player: {error}",
+                ephemeral=True
+            )
+        else:
+            # Show updated player info
+            guild_info = f"**Guild:** {updated_player.guild.name}" if updated_player.guild else "**Guild:** Sin guild"
+            role_info = f"**Rol:** {updated_player.get_game_role_display()}" if updated_player.game_role else "**Rol:** No asignado"
+            
+            loadout_url = f"https://violenceguild.duckdns.org/player/{updated_player.id}/loadout"
+            
+            embed = discord.Embed(
+                title="✅ Player Updated Successfully",
+                color=0x4caf50
+            )
+            embed.add_field(
+                name="📊 Updated Player Information",
+                value=f"**Name:** {updated_player.in_game_name}\n"
+                      f"**Level:** {updated_player.character_level}\n"
+                      f"**Faction:** {updated_player.get_faction_display()}\n"
+                      f"{guild_info}\n"
+                      f"{role_info}\n"
+                      f"**Loadouts:** [View Loadouts]({loadout_url})",
+                inline=False
+            )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+class EditPlayerView(discord.ui.View):
+    """View for editing player information with dropdowns"""
+    
+    def __init__(self, player):
+        super().__init__(timeout=300)
+        self.player = player
+        self.selected_faction = player.faction
+        self.selected_role = player.game_role
+        
+        # Add dropdowns to the view
+        self.add_item(self.FactionSelect(self))
+        self.add_item(self.RoleSelect(self))
+    
+    # Faction Select
+    class FactionSelect(discord.ui.Select):
+        def __init__(self, parent_view):
+            self.parent_view = parent_view
+            options = [
+                discord.SelectOption(label="No Faction", value="none", description="No faction selected"),
+                discord.SelectOption(label="Emberwild", value="emberwild", description="Emberwild faction"),
+                discord.SelectOption(label="Magnates", value="magnates", description="Magnates faction"),
+                discord.SelectOption(label="Ashen", value="ashen", description="Ashen faction"),
+                discord.SelectOption(label="Ironcreed", value="ironcreed", description="Ironcreed faction"),
+                discord.SelectOption(label="Sirius", value="sirius", description="Sirius faction"),
+                discord.SelectOption(label="Shroud", value="shroud", description="Shroud faction"),
+            ]
+            # Set default value to current player's faction
+            for option in options:
+                if option.value == parent_view.player.faction:
+                    option.default = True
+                    break
+            
+            super().__init__(placeholder="Choose your faction...", options=options, min_values=1, max_values=1)
+        
+        async def callback(self, interaction: discord.Interaction):
+            self.parent_view.selected_faction = self.values[0]
+            await interaction.response.send_message(f"✅ Faction selected: {self.values[0]}", ephemeral=True)
+    
+    # Role Select
+    class RoleSelect(discord.ui.Select):
+        def __init__(self, parent_view):
+            self.parent_view = parent_view
+            options = [
+                discord.SelectOption(label="Ranged DPS", value="ranged_dps", description="Ranged damage dealer"),
+                discord.SelectOption(label="Melee DPS", value="melee_dps", description="Melee damage dealer"),
+                discord.SelectOption(label="Tank", value="tank", description="Tank role"),
+                discord.SelectOption(label="Healer", value="healer", description="Healer role"),
+                discord.SelectOption(label="Defensive Tank", value="defensive_tank", description="Defensive tank"),
+                discord.SelectOption(label="Offensive Tank", value="offensive_tank", description="Offensive tank"),
+                discord.SelectOption(label="Offensive Support", value="offensive_support", description="Offensive support"),
+                discord.SelectOption(label="Defensive Support", value="defensive_support", description="Defensive support"),
+            ]
+            # Set default value to current player's role
+            for option in options:
+                if option.value == parent_view.player.game_role:
+                    option.default = True
+                    break
+            
+            super().__init__(placeholder="Choose your role (optional)...", options=options, min_values=0, max_values=1)
+        
+        async def callback(self, interaction: discord.Interaction):
+            if self.values:
+                self.parent_view.selected_role = self.values[0]
+                await interaction.response.send_message(f"✅ Role selected: {self.values[0]}", ephemeral=True)
+            else:
+                self.parent_view.selected_role = None
+                await interaction.response.send_message("✅ No role selected", ephemeral=True)
+    
+    # Edit Player Button
+    @discord.ui.button(label="📝 Edit Player Info", style=discord.ButtonStyle.primary, row=0)
+    async def edit_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        modal = EditPlayerNameModal(self)
+        await interaction.response.send_modal(modal)
         
         async def on_submit(self, interaction: discord.Interaction):
             # Validate level
