@@ -971,6 +971,66 @@ class EditPlayerModal(discord.ui.Modal, title="Edit Player Information"):
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
+class SimpleMenuView(discord.ui.View):
+    """Simple menu view with Player Options button"""
+    
+    def __init__(self, bot_instance):
+        super().__init__(timeout=300)
+        self.bot_instance = bot_instance
+    
+    @discord.ui.button(label="👤 Player Options", style=discord.ButtonStyle.primary, emoji="👤")
+    async def player_options_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Button to show player options based on user status"""
+        from asgiref.sync import sync_to_async
+        
+        @sync_to_async
+        def _get_player_by_discord_user(discord_user_id):
+            from .models import Player
+            try:
+                return Player.objects.select_related('guild').get(discord_user_id=discord_user_id)
+            except Player.DoesNotExist:
+                return None
+        
+        # Check if user has a player
+        player = await _get_player_by_discord_user(interaction.user.id)
+        user_has_player = player is not None
+        
+        embed = discord.Embed(
+            title="👤 Player Options",
+            description="Select an option from the menu below:",
+            color=0x4a9eff,
+            timestamp=datetime.now(timezone.utc)
+        )
+        
+        if user_has_player:
+            embed.add_field(
+                name="📋 Available Options",
+                value="• 📊 Player Details\n• ✏️ Edit Player",
+                inline=False
+            )
+            embed.add_field(
+                name="ℹ️ How to Use",
+                value="Click the buttons below to view or edit your player information!",
+                inline=False
+            )
+        else:
+            embed.add_field(
+                name="📋 Available Options",
+                value="• 👤 Create Player",
+                inline=False
+            )
+            embed.add_field(
+                name="ℹ️ How to Use",
+                value="Click the button below to create your first player!",
+                inline=False
+            )
+        
+        embed.set_footer(text="Warborne Above Ashes - Guild Tools")
+        
+        view = CommandMenuView(self.bot_instance, user_has_player, player)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
 class CommandMenuView(discord.ui.View):
     """Interactive menu view with command buttons"""
     
@@ -1437,43 +1497,28 @@ class WarborneBot(commands.Bot):
         @self.command(name="menu")
         async def menu(ctx):
             """Show interactive menu with all available commands"""
-            # Check if user has a player
-            player = await _get_player_by_discord_user(ctx.author.id)
-            user_has_player = player is not None
-            
             embed = discord.Embed(
                 title="🎮 Warborne Bot - Command Menu",
-                description="Select a command from the menu below:",
+                description="Select an option from the menu below:",
                 color=0x4a9eff,
                 timestamp=datetime.now(timezone.utc)
             )
             
-            if user_has_player:
-                embed.add_field(
-                    name="📋 Available Commands",
-                    value="• 📊 Player Details\n• ✏️ Edit Player",
-                    inline=False
-                )
-                embed.add_field(
-                    name="ℹ️ How to Use",
-                    value="Click the buttons below to view or edit your player information!",
-                    inline=False
-                )
-            else:
-                embed.add_field(
-                    name="📋 Available Commands",
-                    value="• 👤 Create Player",
-                    inline=False
-                )
-                embed.add_field(
-                    name="ℹ️ How to Use",
-                    value="Click the button below to create your first player!",
-                    inline=False
-                )
+            embed.add_field(
+                name="📋 Available Options",
+                value="• 👤 Player Options",
+                inline=False
+            )
+            
+            embed.add_field(
+                name="ℹ️ How to Use",
+                value="Click the button below to access player management options!",
+                inline=False
+            )
             
             embed.set_footer(text="Warborne Above Ashes - Guild Tools")
             
-            view = CommandMenuView(self, user_has_player, player)
+            view = SimpleMenuView(self)
             await ctx.send(embed=embed, view=view)
     
     async def setup_hook(self):
