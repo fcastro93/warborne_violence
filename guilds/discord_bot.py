@@ -515,7 +515,7 @@ class PlayerInfoView(discord.ui.View):
         )
         embed.add_field(
             name="📋 Steps",
-            value="1. Select your faction\n2. Choose your role\n3. Pick your level\n4. Enter your name",
+            value="1. Select your faction\n2. Choose your role\n3. Select your guild\n4. Edit your name\n5. Edit your level\n6. Submit changes",
             inline=False
         )
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
@@ -531,6 +531,7 @@ class EditPlayerView(discord.ui.View):
         self.level = player.character_level
         self.faction = player.faction
         self.role = player.game_role
+        self.guild_id = player.guild.id if player.guild else None
         
         # Add select components
         self.add_item(self.FactionSelect(self))
@@ -542,6 +543,74 @@ class EditPlayerView(discord.ui.View):
         
         # Add submit button
         self.add_item(self.SubmitButton(self))
+        
+        # Load guilds asynchronously
+        self._load_guilds()
+    
+    async def _load_guilds(self):
+        """Load guilds from database and add guild select dropdown"""
+        try:
+            from .models import Guild
+            from asgiref.sync import sync_to_async
+            
+            @sync_to_async
+            def get_guilds_data():
+                guilds = Guild.objects.filter(is_active=True)
+                guild_count = guilds.count()
+                
+                # If no active guilds found, try to get all guilds (fallback)
+                if guild_count == 0:
+                    guilds = Guild.objects.all()
+                
+                guilds_list = []
+                for guild in guilds:
+                    member_count = guild.players.count()
+                    guilds_list.append({
+                        'id': guild.id,
+                        'name': guild.name,
+                        'member_count': member_count
+                    })
+                
+                return guilds_list
+            
+            guilds_data = await get_guilds_data()
+            
+            # Create guild options
+            guild_options = [
+                discord.SelectOption(label="No Guild", value="none", description="No guild affiliation")
+            ]
+            
+            for guild_data in guilds_data:
+                label = f"{guild_data['name']} ({guild_data['member_count']} members)"
+                value = str(guild_data['id'])
+                guild_options.append(
+                    discord.SelectOption(label=label, value=value, description=f"Join {guild_data['name']}")
+                )
+            
+            # Add guild select dropdown
+            guild_select = self.GuildSelect(self)
+            guild_select.options = guild_options
+            
+            # Set default selection
+            if self.guild_id:
+                for option in guild_select.options:
+                    if option.value == str(self.guild_id):
+                        option.default = True
+                        break
+            else:
+                # Set "No Guild" as default
+                for option in guild_select.options:
+                    if option.value == "none":
+                        option.default = True
+                        break
+            
+            self.add_item(guild_select)
+            
+        except Exception as e:
+            print(f"Error loading guilds: {e}")
+            # Add a fallback guild select with no options
+            guild_select = self.GuildSelect(self)
+            self.add_item(guild_select)
     
     class FactionSelect(discord.ui.Select):
         def __init__(self, parent_view):
@@ -585,6 +654,19 @@ class EditPlayerView(discord.ui.View):
         async def callback(self, interaction: discord.Interaction):
             self.parent_view.role = self.values[0] if self.values else None
             await interaction.response.defer()
+    
+    class GuildSelect(discord.ui.Select):
+        def __init__(self, parent_view):
+            self.parent_view = parent_view
+            super().__init__(placeholder="Choose your guild...", options=[], min_values=0, max_values=1)
+        
+        async def callback(self, interaction: discord.Interaction):
+            if self.values and self.values[0] != "none":
+                self.parent_view.guild_id = int(self.values[0])
+                await interaction.response.send_message(f"✅ Guild selected: {self.values[0]}", ephemeral=True)
+            else:
+                self.parent_view.guild_id = None
+                await interaction.response.send_message("✅ No guild selected", ephemeral=True)
     
     class NameButton(discord.ui.Button):
         def __init__(self, parent_view):
@@ -663,11 +745,23 @@ class EditPlayerView(discord.ui.View):
         @sync_to_async
         def update_player():
             try:
+                from .models import Guild
                 player = Player.objects.get(id=self.player.id)
                 player.in_game_name = self.name
                 player.character_level = self.level
                 player.faction = self.faction
                 player.game_role = self.role
+                
+                # Handle guild assignment
+                if self.guild_id:
+                    try:
+                        guild = Guild.objects.get(id=self.guild_id)
+                        player.guild = guild
+                    except Guild.DoesNotExist:
+                        player.guild = None
+                else:
+                    player.guild = None
+                
                 player.save()
                 return player, None
             except Exception as e:
