@@ -21,8 +21,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--email',
             type=str,
-            default='admin@violenceguild.com',
-            help='Email for the admin user (default: admin@violenceguild.com)'
+            default='admin@weareviolence.com',
+            help='Email for the admin user (default: admin@weareviolence.com)'
         )
 
     def handle(self, *args, **options):

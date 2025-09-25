@@ -138,14 +138,14 @@ SECURE_SSL_REDIRECT = False  # Let nginx handle redirects
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
-    'https://violenceguild.duckdns.org',
+    'https://weareviolence.com',
     'https://13.58.1.161',
 ]
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React dev server
-    "https://violenceguild.duckdns.org",  # Production frontend
+    "https://weareviolence.com",  # Production frontend
 ]
 
 CORS_ALLOW_CREDENTIALS = True

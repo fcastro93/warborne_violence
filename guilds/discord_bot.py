@@ -492,7 +492,7 @@ class CreatePlayerView(discord.ui.View):
             )
             embed.add_field(
                 name="🔗 Loadout Link",
-                value=f"https://violenceguild.duckdns.org/player/{player.id}/loadout",
+                value=f"https://weareviolence.com/player/{player.id}/loadout",
                 inline=False
             )
             
@@ -666,7 +666,7 @@ class EditPlayerNameModal(discord.ui.Modal, title="Edit Player Name"):
             guild_info = f"**Guild:** {updated_player.guild.name}" if updated_player.guild else "**Guild:** Sin guild"
             role_info = f"**Rol:** {updated_player.get_game_role_display()}" if updated_player.game_role else "**Rol:** No asignado"
             
-            loadout_url = f"https://violenceguild.duckdns.org/player/{updated_player.id}/loadout"
+            loadout_url = f"https://weareviolence.com/player/{updated_player.id}/loadout"
             
             embed = discord.Embed(
                 title="✅ Player Updated Successfully",
@@ -745,7 +745,7 @@ class LevelModal(discord.ui.Modal, title="Edit Level"):
             guild_info = f"**Guild:** {updated_player.guild.name}" if updated_player.guild else "**Guild:** Sin guild"
             role_info = f"**Rol:** {updated_player.get_game_role_display()}" if updated_player.game_role else "**Rol:** No asignado"
             
-            loadout_url = f"https://violenceguild.duckdns.org/player/{updated_player.id}/loadout"
+            loadout_url = f"https://weareviolence.com/player/{updated_player.id}/loadout"
             
             embed = discord.Embed(
                 title="✅ Player Updated Successfully",
@@ -955,7 +955,7 @@ class EditPlayerModal(discord.ui.Modal, title="Edit Player Information"):
             guild_info = f"**Guild:** {updated_player.guild.name}" if updated_player.guild else "**Guild:** Sin guild"
             role_info = f"**Rol:** {updated_player.get_game_role_display()}" if updated_player.game_role else "**Rol:** No asignado"
             
-            loadout_url = f"https://violenceguild.duckdns.org/player/{updated_player.id}/loadout"
+            loadout_url = f"https://weareviolence.com/player/{updated_player.id}/loadout"
             
             embed = discord.Embed(
                 title="✅ Player Updated Successfully",
@@ -1088,7 +1088,7 @@ class CommandMenuView(discord.ui.View):
                 guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
                 role_info = f"**Rol:** {player.get_game_role_display()}" if player.game_role else "**Rol:** No asignado"
                 
-                loadout_url = f"https://violenceguild.duckdns.org/player/{player.id}/loadout"
+                loadout_url = f"https://weareviolence.com/player/{player.id}/loadout"
                 
                 embed = discord.Embed(
                     title="📊 Player Information",
@@ -1471,7 +1471,7 @@ class WarborneBot(commands.Bot):
                 player_info = await _get_player_info_for_command(player)
                 
                 if player_info:
-                    base_url = self.config.get('base_url', 'https://violenceguild.duckdns.org')
+                    base_url = self.config.get('base_url', 'https://weareviolence.com')
                     loadout_url = f"{base_url}/player/{player_info['player_id']}/loadout"
                     
                     embed = discord.Embed(
