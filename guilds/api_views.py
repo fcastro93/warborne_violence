@@ -1603,68 +1603,9 @@ def create_guild_parties(request, event_id):
                     participants_by_role[role] = []
                 participants_by_role[role].append(participant)
             
-            # Calculate how many parties we need for this guild
-            num_parties = max(1, (len(guild_participants) + MAX_PARTY_SIZE - 1) // MAX_PARTY_SIZE)
+            # TODO: Implement party creation logic
+            logger.info(f"🎯 Party creation logic removed - returning test response")
             
-            # Create party objects for this guild
-            parties = []
-            for i in range(num_parties):
-                party = Party.objects.create(
-                    event=event,
-                    party_number=total_parties_created + i + 1,
-                    max_members=MAX_PARTY_SIZE
-                )
-                parties.append(party)
-            
-            # Distribute participants across parties for this guild
-            party_assignments = [[] for _ in range(num_parties)]
-            party_role_counts = [{} for _ in range(num_parties)]
-            
-            # Initialize role counts
-            for party_idx in range(num_parties):
-                for role in ROLE_REQUIREMENTS.keys():
-                    party_role_counts[party_idx][role] = 0
-            
-            # Distribute participants by role, trying to balance within guild
-            for role, role_participants in participants_by_role.items():
-                if role == 'unknown':
-                    # Distribute unknown roles evenly
-                    for i, participant in enumerate(role_participants):
-                        party_idx = i % num_parties
-                        party_assignments[party_idx].append(participant)
-                else:
-                    # Distribute known roles to balance requirements
-                    for i, participant in enumerate(role_participants):
-                        # Find party with least of this role
-                        best_party = 0
-                        min_count = party_role_counts[0].get(role, 0)
-                        
-                        for party_idx in range(1, num_parties):
-                            current_count = party_role_counts[party_idx].get(role, 0)
-                            if current_count < min_count:
-                                min_count = current_count
-                                best_party = party_idx
-                        
-                        party_assignments[best_party].append(participant)
-                        party_role_counts[best_party][role] = party_role_counts[best_party].get(role, 0) + 1
-            
-            # Create PartyMember objects for this guild
-            guild_members_created = 0
-            for party_idx, party in enumerate(parties):
-                for member_idx, participant in enumerate(party_assignments[party_idx]):
-                    is_leader = member_idx == 0  # First member is the leader
-                    PartyMember.objects.create(
-                        party=party,
-                        event_participant=participant,
-                        player=participant.player,
-                        assigned_role=participant.player.game_role,
-                        is_leader=is_leader
-                    )
-                    guild_members_created += 1
-            
-            total_parties_created += num_parties
-            total_members_created += guild_members_created
-            guild_results.append(f"{guild_name}: {num_parties} parties with {guild_members_created} participants")
         
         # Create summary message
         result_message = f"Guild parties created successfully:\n"
