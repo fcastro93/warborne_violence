@@ -639,90 +639,101 @@ class EditPlayerModal(discord.ui.Modal, title="Edit Player Information"):
 class CommandMenuView(discord.ui.View):
     """Interactive menu view with command buttons"""
     
-    def __init__(self, bot_instance):
+    def __init__(self, bot_instance, user_has_player=False, player=None):
         super().__init__(timeout=300)  # 5 minutes timeout
         self.bot_instance = bot_instance
+        self.user_has_player = user_has_player
+        self.player = player
+        
+        # Add buttons based on whether user has a player
+        if not user_has_player:
+            # User doesn't have a player - show Create Player button
+            self.add_item(self.CreatePlayerButton())
+        else:
+            # User has a player - show Player Details and Edit Player buttons
+            self.add_item(self.PlayerDetailsButton())
+            self.add_item(self.EditPlayerButton())
     
-    
-    @discord.ui.button(label="👤 Create Player", style=discord.ButtonStyle.secondary, emoji="👤")
-    async def create_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        """Button to create a new player"""
-        # Create a view with dropdowns instead of modal
-        view = CreatePlayerView(self.bot_instance)
-        embed = discord.Embed(
-            title="👤 Create Player",
-            description="Use the dropdowns below to create your player:",
-            color=0x4a9eff
-        )
-        embed.add_field(
-            name="📋 Steps",
-            value="1. Enter your player name\n2. Select your faction\n3. Choose your guild (optional)\n4. Pick your role (optional)",
-            inline=False
-        )
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
-    
-    @discord.ui.button(label="👨‍💼 My Player", style=discord.ButtonStyle.secondary, emoji="👨‍💼")
-    async def my_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        """Button to show current player info"""
-        from asgiref.sync import sync_to_async
+    class CreatePlayerButton(discord.ui.Button):
+        def __init__(self):
+            super().__init__(label="👤 Create Player", style=discord.ButtonStyle.secondary, emoji="👤")
         
-        @sync_to_async
-        def _get_player_by_discord_user(discord_user_id):
-            from .models import Player
-            try:
-                return Player.objects.select_related('guild').get(discord_user_id=discord_user_id)
-            except Player.DoesNotExist:
-                return None
-        
-        @sync_to_async
-        def _get_player_info(player):
-            if not player:
-                return None
-            
-            guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
-            role_info = f"**Rol:** {player.get_game_role_display()}" if player.game_role else "**Rol:** No asignado"
-            
-            return {
-                'guild_info': guild_info,
-                'role_info': role_info,
-                'in_game_name': player.in_game_name,
-                'character_level': player.character_level,
-                'faction': player.get_faction_display(),
-                'player_id': player.id
-            }
-        
-        player = await _get_player_by_discord_user(interaction.user.id)
-        player_info = await _get_player_info(player)
-        
-        if player_info:
-            guild_info = player_info['guild_info']
-            role_info = player_info['role_info']
-            
-            loadout_url = f"https://violenceguild.duckdns.org/player/{player_info['player_id']}/loadout"
-            
+        async def callback(self, interaction: discord.Interaction):
+            """Button to create a new player"""
+            # Get the parent view to access bot_instance
+            parent_view = self.view
+            view = CreatePlayerView(parent_view.bot_instance)
             embed = discord.Embed(
-                title="📊 Player Information",
+                title="👤 Create Player",
+                description="Use the dropdowns below to create your player:",
                 color=0x4a9eff
             )
             embed.add_field(
-                name="👤 Player Details",
-                value=f"**Name:** {player_info['in_game_name']}\n"
-                      f"**Level:** {player_info['character_level']}\n"
-                      f"**Faction:** {player_info['faction']}\n"
-                      f"{guild_info}\n"
-                      f"{role_info}\n"
-                      f"**Loadouts:** [View Loadouts]({loadout_url})",
+                name="📋 Steps",
+                value="1. Enter your player name\n2. Select your faction\n3. Choose your guild (optional)\n4. Pick your role (optional)",
                 inline=False
             )
-            
-            # Create view with edit button
-            view = PlayerInfoView(player)
             await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
-        else:
-            await interaction.response.send_message(
-                "❌ No tienes un jugador registrado. Usa el botón 'Create Player' para crear uno.",
-                ephemeral=True
-            )
+    
+    class PlayerDetailsButton(discord.ui.Button):
+        def __init__(self):
+            super().__init__(label="📊 Player Details", style=discord.ButtonStyle.secondary, emoji="📊")
+        
+        async def callback(self, interaction: discord.Interaction):
+            """Button to show current player info"""
+            # Get the parent view to access the player data
+            parent_view = self.view
+            player = parent_view.player
+            
+            if player:
+                guild_info = f"**Guild:** {player.guild.name}" if player.guild else "**Guild:** Sin guild"
+                role_info = f"**Rol:** {player.get_game_role_display()}" if player.game_role else "**Rol:** No asignado"
+                
+                loadout_url = f"https://violenceguild.duckdns.org/player/{player.id}/loadout"
+                
+                embed = discord.Embed(
+                    title="📊 Player Information",
+                    color=0x4a9eff
+                )
+                embed.add_field(
+                    name="👤 Player Details",
+                    value=f"**Name:** {player.in_game_name}\n"
+                          f"**Level:** {player.character_level}\n"
+                          f"**Faction:** {player.get_faction_display()}\n"
+                          f"{guild_info}\n"
+                          f"{role_info}\n"
+                          f"**Loadouts:** [View Loadouts]({loadout_url})",
+                    inline=False
+                )
+                
+                # Create view with edit button
+                view = PlayerInfoView(player)
+                await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+            else:
+                await interaction.response.send_message(
+                    "❌ No tienes un jugador registrado. Usa el botón 'Create Player' para crear uno.",
+                    ephemeral=True
+                )
+    
+    class EditPlayerButton(discord.ui.Button):
+        def __init__(self):
+            super().__init__(label="✏️ Edit Player", style=discord.ButtonStyle.primary, emoji="✏️")
+        
+        async def callback(self, interaction: discord.Interaction):
+            """Button to edit player information"""
+            # Get the parent view to access the player data
+            parent_view = self.view
+            player = parent_view.player
+            
+            if player:
+                # Create and show the edit player modal
+                modal = EditPlayerModal(player)
+                await interaction.response.send_modal(modal)
+            else:
+                await interaction.response.send_message(
+                    "❌ No tienes un jugador registrado. Usa el botón 'Create Player' para crear uno.",
+                    ephemeral=True
+                )
     
     
     
@@ -1073,6 +1084,10 @@ class WarborneBot(commands.Bot):
         @self.command(name="menu")
         async def menu(ctx):
             """Show interactive menu with all available commands"""
+            # Check if user has a player
+            player = await _get_player_by_discord_user(ctx.author.id)
+            user_has_player = player is not None
+            
             embed = discord.Embed(
                 title="🎮 Warborne Bot - Command Menu",
                 description="Select a command from the menu below:",
@@ -1080,21 +1095,32 @@ class WarborneBot(commands.Bot):
                 timestamp=datetime.now(timezone.utc)
             )
             
-            embed.add_field(
-                name="📋 Available Commands",
-                value="• 👤 Create Player\n• 👨‍💼 My Player",
-                inline=False
-            )
-            
-            embed.add_field(
-                name="ℹ️ How to Use",
-                value="Click the buttons below to access each command directly!",
-                inline=False
-            )
+            if user_has_player:
+                embed.add_field(
+                    name="📋 Available Commands",
+                    value="• 📊 Player Details\n• ✏️ Edit Player",
+                    inline=False
+                )
+                embed.add_field(
+                    name="ℹ️ How to Use",
+                    value="Click the buttons below to view or edit your player information!",
+                    inline=False
+                )
+            else:
+                embed.add_field(
+                    name="📋 Available Commands",
+                    value="• 👤 Create Player",
+                    inline=False
+                )
+                embed.add_field(
+                    name="ℹ️ How to Use",
+                    value="Click the button below to create your first player!",
+                    inline=False
+                )
             
             embed.set_footer(text="Warborne Above Ashes - Guild Tools")
             
-            view = CommandMenuView(self)
+            view = CommandMenuView(self, user_has_player, player)
             await ctx.send(embed=embed, view=view)
     
     async def setup_hook(self):
