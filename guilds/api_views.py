@@ -2145,14 +2145,14 @@ def fill_parties_for_guild(parties, participants, role_composition):
                     
                     # Add to the best party
                     is_first_member = best_party.member_count == 0
-                PartyMember.objects.create(
-                    party=best_party,
-                    event_participant=participant,
-                    player=participant.player,
+                    PartyMember.objects.create(
+                        party=best_party,
+                        event_participant=participant,
+                        player=participant.player,
                         assigned_role=participant.player.game_role,
                         is_leader=is_first_member
-                )
-                members_assigned += 1
+                    )
+                    members_assigned += 1
                     remaining_participants.remove(participant)
     
     return members_assigned
