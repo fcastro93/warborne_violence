@@ -1759,10 +1759,9 @@ def remove_participant(request, event_id):
 def fill_parties(request, event_id):
     """Fill existing parties with remaining participants"""
     try:
-        # Get party configuration from request
-        party_config = request.data.get('partyConfig', {})
-        role_composition = party_config.get('roleComposition', {})
-        guild_split = party_config.get('guildSplit', False)
+        # Get party configuration from request (data is sent directly, not nested under partyConfig)
+        role_composition = request.data.get('roleComposition', {})
+        guild_split = request.data.get('guildSplit', False)
         
         return Response({
             'roleComposition': role_composition,
