@@ -1774,6 +1774,7 @@ def event_participants(request, event_id):
                 'player': {
                     'id': participant.player.id,
                     'discord_name': participant.player.discord_name,
+                    'in_game_name': participant.player.in_game_name,
                     'game_role': participant.player.game_role,
                     'guild': {
                         'id': participant.player.guild.id if participant.player.guild else None,
