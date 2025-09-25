@@ -1866,7 +1866,43 @@ def fill_parties(request, event_id):
             
             logger.info(f"DEBUG: Party {parties_created} complete. Remaining: Healers={len(participants_by_role.get('healer', []))}, DefTanks={len(participants_by_role.get('defensive_tank', []))}, OffTanks={len(participants_by_role.get('offensive_tank', []))}")
         
-        # Now fill parties with filler roles (roles that don't have enough for multiple parties)
+        # Phase 2: Add remaining participants from primary roles as fillers
+        remaining_primary_members_assigned = 0
+        if primary_roles:
+            logger.info(f"DEBUG: Adding remaining participants from primary roles as fillers: {primary_roles}")
+            
+            # Get all created parties
+            created_parties = list(Party.objects.filter(
+                event=event,
+                is_active=True
+            ).order_by('party_number'))
+            
+            for role, required_count in primary_roles.items():
+                available_participants = participants_by_role.get(role, [])
+                logger.info(f"DEBUG: Adding remaining {len(available_participants)} {role} players as fillers to parties")
+                
+                for participant in available_participants:
+                    # Find a party that has space
+                    assigned = False
+                    for party in created_parties:
+                        if party.member_count < party.max_members:
+                            # Add to this party as filler
+                            PartyMember.objects.create(
+                                party=party,
+                                event_participant=participant,
+                                player=participant.player,
+                                assigned_role=participant.player.game_role,
+                                is_leader=False
+                            )
+                            remaining_primary_members_assigned += 1
+                            logger.info(f"DEBUG: Added {participant.player.in_game_name} as {role} filler to Party {party.party_number} (now {party.member_count + 1}/15)")
+                            assigned = True
+                            break
+                    
+                    if not assigned:
+                        logger.info(f"DEBUG: Could not assign {participant.player.in_game_name} as {role} filler - all parties at max capacity")
+
+        # Phase 3: Add filler roles (roles that don't have enough for multiple parties)
         filler_members_assigned = 0
         if filler_roles:
             logger.info(f"DEBUG: Adding filler roles: {filler_roles}")
@@ -2017,7 +2053,7 @@ def fill_parties(request, event_id):
                     logger.info(f"DEBUG: No members moved this round, stopping balancing")
                     break
         
-        total_members_assigned = members_assigned + filler_members_assigned + max_filler_members_assigned
+        total_members_assigned = members_assigned + remaining_primary_members_assigned + filler_members_assigned + max_filler_members_assigned
         
         # Final refresh of all parties to ensure accurate member counts
         final_parties = Party.objects.filter(event=event, is_active=True).order_by('party_number')
