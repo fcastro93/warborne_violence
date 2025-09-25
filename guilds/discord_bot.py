@@ -506,259 +506,135 @@ class PlayerInfoView(discord.ui.View):
     @discord.ui.button(label="✏️ Edit Player", style=discord.ButtonStyle.primary, emoji="✏️")
     async def edit_player_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Button to edit player information"""
-        # Create and show the edit player view
-        view = EditPlayerView(self.player)
-        embed = discord.Embed(
-            title="✏️ Edit Player Information",
-            description="Use the dropdowns below to edit your player information:",
-            color=0x4a9eff
-        )
-        embed.add_field(
-            name="📋 Steps",
-            value="1. Select your faction\n2. Choose your role\n3. Select your guild\n4. Edit your name\n5. Edit your level\n6. Submit changes",
-            inline=False
-        )
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        # Create and show the edit player modal
+        modal = EditPlayerModal(self.player)
+        await interaction.response.send_modal(modal)
 
 
-class EditPlayerView(discord.ui.View):
-    """View with dropdowns for editing player information"""
+class EditPlayerModal(discord.ui.Modal, title="Edit Player Information"):
+    """Modal for editing player information with all fields"""
     
     def __init__(self, player):
-        super().__init__(timeout=300)
+        super().__init__()
         self.player = player
-        self.name = player.in_game_name
-        self.level = player.character_level
-        self.faction = player.faction
-        self.role = player.game_role
-        self.guild_id = player.guild.id if player.guild else None
         
-        # Add select components
-        self.add_item(self.FactionSelect(self))
-        self.add_item(self.RoleSelect(self))
+        # Name input
+        self.name_input = discord.ui.TextInput(
+            label="Player Name",
+            placeholder="Enter your in-game name",
+            default=player.in_game_name,
+            max_length=50,
+            required=True
+        )
         
-        # Add buttons for name and level input
-        self.add_item(self.NameButton(self))
-        self.add_item(self.LevelButton(self))
+        # Level input
+        self.level_input = discord.ui.TextInput(
+            label="Level",
+            placeholder="Enter your character level (1-100)",
+            default=str(player.character_level),
+            max_length=3,
+            required=True
+        )
         
-        # Add submit button
-        self.add_item(self.SubmitButton(self))
+        # Faction input
+        self.faction_input = discord.ui.TextInput(
+            label="Faction",
+            placeholder="Sirius, Empire, Federation",
+            default=player.get_faction_display(),
+            max_length=20,
+            required=True
+        )
         
-        # Load guilds asynchronously
-        self._load_guilds()
+        # Role input
+        self.role_input = discord.ui.TextInput(
+            label="Role",
+            placeholder="Ranged DPS, Melee DPS, Tank, Healer, Defensive Tank, Offensive Tank, Offensive Support, Defensive Support",
+            default=player.get_game_role_display() if player.game_role else "",
+            max_length=30,
+            required=False
+        )
+        
+        # Guild input
+        guild_name = player.guild.name if player.guild else "No Guild"
+        self.guild_input = discord.ui.TextInput(
+            label="Guild",
+            placeholder="Enter guild name (or 'No Guild' for none)",
+            default=guild_name,
+            max_length=50,
+            required=False
+        )
+        
+        # Add inputs to modal
+        self.add_item(self.name_input)
+        self.add_item(self.level_input)
+        self.add_item(self.faction_input)
+        self.add_item(self.role_input)
+        self.add_item(self.guild_input)
     
-    async def _load_guilds(self):
-        """Load guilds from database and add guild select dropdown"""
-        try:
-            from .models import Guild
-            from asgiref.sync import sync_to_async
-            
-            @sync_to_async
-            def get_guilds_data():
-                guilds = Guild.objects.filter(is_active=True)
-                guild_count = guilds.count()
-                
-                # If no active guilds found, try to get all guilds (fallback)
-                if guild_count == 0:
-                    guilds = Guild.objects.all()
-                
-                guilds_list = []
-                for guild in guilds:
-                    member_count = guild.players.count()
-                    guilds_list.append({
-                        'id': guild.id,
-                        'name': guild.name,
-                        'member_count': member_count
-                    })
-                
-                return guilds_list
-            
-            guilds_data = await get_guilds_data()
-            
-            # Create guild options
-            guild_options = [
-                discord.SelectOption(label="No Guild", value="none", description="No guild affiliation")
-            ]
-            
-            for guild_data in guilds_data:
-                label = f"{guild_data['name']} ({guild_data['member_count']} members)"
-                value = str(guild_data['id'])
-                guild_options.append(
-                    discord.SelectOption(label=label, value=value, description=f"Join {guild_data['name']}")
-                )
-            
-            # Add guild select dropdown
-            guild_select = self.GuildSelect(self)
-            guild_select.options = guild_options
-            
-            # Set default selection
-            if self.guild_id:
-                for option in guild_select.options:
-                    if option.value == str(self.guild_id):
-                        option.default = True
-                        break
-            else:
-                # Set "No Guild" as default
-                for option in guild_select.options:
-                    if option.value == "none":
-                        option.default = True
-                        break
-            
-            self.add_item(guild_select)
-            
-        except Exception as e:
-            print(f"Error loading guilds: {e}")
-            # Add a fallback guild select with no options
-            guild_select = self.GuildSelect(self)
-            self.add_item(guild_select)
-    
-    class FactionSelect(discord.ui.Select):
-        def __init__(self, parent_view):
-            self.parent_view = parent_view
-            options = [
-                discord.SelectOption(label="Sirius", value="sirius", description="Sirius faction"),
-                discord.SelectOption(label="Empire", value="empire", description="Empire faction"),
-                discord.SelectOption(label="Federation", value="federation", description="Federation faction"),
-            ]
-            # Set default selection
-            for option in options:
-                if option.value == parent_view.faction:
-                    option.default = True
-                    break
-            super().__init__(placeholder="Choose your faction...", options=options, min_values=1, max_values=1)
-        
-        async def callback(self, interaction: discord.Interaction):
-            self.parent_view.faction = self.values[0]
-            await interaction.response.defer()
-    
-    class RoleSelect(discord.ui.Select):
-        def __init__(self, parent_view):
-            self.parent_view = parent_view
-            options = [
-                discord.SelectOption(label="Ranged DPS", value="ranged_dps", description="Ranged damage dealer"),
-                discord.SelectOption(label="Melee DPS", value="melee_dps", description="Melee damage dealer"),
-                discord.SelectOption(label="Tank", value="tank", description="Tank role"),
-                discord.SelectOption(label="Healer", value="healer", description="Healer role"),
-                discord.SelectOption(label="Defensive Tank", value="defensive_tank", description="Defensive tank"),
-                discord.SelectOption(label="Offensive Tank", value="offensive_tank", description="Offensive tank"),
-                discord.SelectOption(label="Offensive Support", value="offensive_support", description="Offensive support"),
-                discord.SelectOption(label="Defensive Support", value="defensive_support", description="Defensive support"),
-            ]
-            # Set default selection
-            for option in options:
-                if option.value == parent_view.role:
-                    option.default = True
-                    break
-            super().__init__(placeholder="Choose your role...", options=options, min_values=0, max_values=1)
-        
-        async def callback(self, interaction: discord.Interaction):
-            self.parent_view.role = self.values[0] if self.values else None
-            await interaction.response.defer()
-    
-    class GuildSelect(discord.ui.Select):
-        def __init__(self, parent_view):
-            self.parent_view = parent_view
-            super().__init__(placeholder="Choose your guild...", options=[], min_values=0, max_values=1)
-        
-        async def callback(self, interaction: discord.Interaction):
-            if self.values and self.values[0] != "none":
-                self.parent_view.guild_id = int(self.values[0])
-                await interaction.response.send_message(f"✅ Guild selected: {self.values[0]}", ephemeral=True)
-            else:
-                self.parent_view.guild_id = None
-                await interaction.response.send_message("✅ No guild selected", ephemeral=True)
-    
-    class NameButton(discord.ui.Button):
-        def __init__(self, parent_view):
-            self.parent_view = parent_view
-            super().__init__(label="Edit Name", style=discord.ButtonStyle.secondary, emoji="📝")
-        
-        async def callback(self, interaction: discord.Interaction):
-            modal = self.NameModal(self.parent_view)
-            await interaction.response.send_modal(modal)
-    
-    class LevelButton(discord.ui.Button):
-        def __init__(self, parent_view):
-            self.parent_view = parent_view
-            super().__init__(label="Edit Level", style=discord.ButtonStyle.secondary, emoji="📊")
-        
-        async def callback(self, interaction: discord.Interaction):
-            modal = self.LevelModal(self.parent_view)
-            await interaction.response.send_modal(modal)
-    
-    class NameModal(discord.ui.Modal):
-        def __init__(self, parent_view):
-            super().__init__(title="Enter Player Name")
-            self.parent_view = parent_view
-            
-            self.name_input = discord.ui.TextInput(
-                label="Player Name",
-                placeholder="Enter your in-game name",
-                default=parent_view.name,
-                max_length=50,
-                required=True
-            )
-            self.add_item(self.name_input)
-        
-        async def on_submit(self, interaction: discord.Interaction):
-            self.parent_view.name = self.name_input.value
-            await interaction.response.send_message(f"✅ Name updated to: {self.name_input.value}", ephemeral=True)
-    
-    class LevelModal(discord.ui.Modal):
-        def __init__(self, parent_view):
-            super().__init__(title="Enter Player Level")
-            self.parent_view = parent_view
-            
-            self.level_input = discord.ui.TextInput(
-                label="Level",
-                placeholder="Enter your character level (1-100)",
-                default=str(parent_view.level),
-                max_length=3,
-                required=True
-            )
-            self.add_item(self.level_input)
-        
-        async def on_submit(self, interaction: discord.Interaction):
-            try:
-                level = int(self.level_input.value)
-                if level < 1 or level > 100:
-                    await interaction.response.send_message("❌ Level must be between 1 and 100.", ephemeral=True)
-                    return
-                self.parent_view.level = level
-                await interaction.response.send_message(f"✅ Level updated to: {level}", ephemeral=True)
-            except ValueError:
-                await interaction.response.send_message("❌ Please enter a valid number.", ephemeral=True)
-    
-    class SubmitButton(discord.ui.Button):
-        def __init__(self, parent_view):
-            self.parent_view = parent_view
-            super().__init__(label="Submit Changes", style=discord.ButtonStyle.success, emoji="✅")
-        
-        async def callback(self, interaction: discord.Interaction):
-            await self.parent_view.submit_changes(interaction)
-    
-    async def submit_changes(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         """Handle form submission"""
         from asgiref.sync import sync_to_async
-        from .models import Player
+        from .models import Player, Guild
+        
+        # Validate inputs
+        try:
+            level = int(self.level_input.value)
+            if level < 1 or level > 100:
+                await interaction.response.send_message(
+                    "❌ Invalid level. Please enter a number between 1 and 100.",
+                    ephemeral=True
+                )
+                return
+        except ValueError:
+            await interaction.response.send_message(
+                "❌ Invalid level. Please enter a valid number.",
+                ephemeral=True
+            )
+            return
+        
+        # Map faction names to choices
+        faction_mapping = {
+            'sirius': 'sirius',
+            'empire': 'empire', 
+            'federation': 'federation'
+        }
+        faction = faction_mapping.get(self.faction_input.value.lower(), 'sirius')
+        
+        # Map role names to choices
+        role_mapping = {
+            'ranged dps': 'ranged_dps',
+            'melee dps': 'melee_dps',
+            'tank': 'tank',
+            'healer': 'healer',
+            'defensive tank': 'defensive_tank',
+            'offensive tank': 'offensive_tank',
+            'offensive support': 'offensive_support',
+            'defensive support': 'defensive_support'
+        }
+        role = role_mapping.get(self.role_input.value.lower().strip(), None)
         
         @sync_to_async
         def update_player():
             try:
-                from .models import Guild
                 player = Player.objects.get(id=self.player.id)
-                player.in_game_name = self.name
-                player.character_level = self.level
-                player.faction = self.faction
-                player.game_role = self.role
+                player.in_game_name = self.name_input.value
+                player.character_level = level
+                player.faction = faction
+                player.game_role = role
                 
                 # Handle guild assignment
-                if self.guild_id:
+                guild_name = self.guild_input.value.strip()
+                if guild_name and guild_name.lower() not in ['no guild', 'none', '']:
                     try:
-                        guild = Guild.objects.get(id=self.guild_id)
+                        guild = Guild.objects.get(name__iexact=guild_name)
                         player.guild = guild
                     except Guild.DoesNotExist:
-                        player.guild = None
+                        # Try to find guild by partial name match
+                        guilds = Guild.objects.filter(name__icontains=guild_name)
+                        if guilds.exists():
+                            player.guild = guilds.first()
+                        else:
+                            player.guild = None
                 else:
                     player.guild = None
                 
