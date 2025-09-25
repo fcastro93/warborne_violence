@@ -2104,7 +2104,7 @@ def fill_parties_for_guild(parties, participants, role_composition):
                 members_assigned += 1
                 remaining_participants.remove(participant)
                 party_filled = True
-                else:
+            else:
                 break
         
         # If we couldn't fill the party with remaining participants, break
