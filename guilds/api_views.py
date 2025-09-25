@@ -1535,16 +1535,21 @@ def create_parties(request, event_id):
                     for participant in role_participants:
                         all_participants.append((participant, role))
                 
-                # Simplified party assignment algorithm
+                # STEP 1: Create incomplete parties with ONLY required roles
                 available_participants = all_participants[:]
                 
-                # First pass: Assign required roles to each party one by one
-                logger.info(f"🎯 Starting role assignment for {num_parties} parties")
+                logger.info(f"🎯 STEP 1: Creating incomplete parties with required roles only")
+                logger.info(f"📋 Required roles per party: {role_composition}")
                 
-                for party_idx in range(num_parties):
-                    logger.info(f"📋 Assigning roles for Party {party_idx + 1}")
+                # Create as many parties as needed to assign all required roles
+                party_idx = 0
+                parties_created = 0
+                
+                while available_participants and parties_created < num_parties:
+                    logger.info(f"📋 Creating Party {party_idx + 1}")
                     
-                    # Assign required roles to this party
+                    # Try to assign all required roles to this party
+                    party_complete = True
                     for required_role, required_count in role_composition.items():
                         if required_count > 0:  # Only assign roles that have minimum requirements
                             assigned_to_this_party = 0
@@ -1580,11 +1585,28 @@ def create_parties(request, event_id):
                                     assigned_to_this_party += 1
                                     
                                     logger.info(f"  - {participant.player.in_game_name} ({player_role}) assigned as {required_role}")
+                            
+                            # Check if we got enough of this role
+                            if assigned_to_this_party < required_count:
+                                logger.warning(f"  ⚠️ Could only assign {assigned_to_this_party}/{required_count} {required_role}")
+                                party_complete = False
+                                break
+                    
+                    if party_complete:
+                        logger.info(f"✅ Party {party_idx + 1} complete with required roles: {party_role_counts[party_idx]}")
+                        parties_created += 1
+                    else:
+                        logger.warning(f"❌ Party {party_idx + 1} incomplete, stopping party creation")
+                        break
+                    
+                    party_idx += 1
                 
-                # Second pass: Fill remaining slots with remaining participants
-                logger.info(f"🔄 Filling remaining slots with {len(available_participants)} participants")
-                for party_idx in range(num_parties):
-                    while len(party_assignments[party_idx]) < MAX_PARTY_SIZE and available_participants:
+                logger.info(f"📊 STEP 1 COMPLETE: Created {parties_created} complete parties with required roles")
+                
+                # STEP 2: Fill remaining slots with remaining participants (ignore max size for now)
+                logger.info(f"🔄 STEP 2: Filling remaining slots with {len(available_participants)} participants")
+                for party_idx in range(parties_created):
+                    while available_participants:
                         participant, player_role = available_participants.pop(0)
                         party_assignments[party_idx].append(participant)
                         party_assigned_roles[party_idx].append(player_role)
@@ -1680,16 +1702,21 @@ def create_parties(request, event_id):
                 for participant in role_participants:
                     all_participants.append((participant, role))
             
-            # Simplified party assignment algorithm
+            # STEP 1: Create incomplete parties with ONLY required roles
             available_participants = all_participants[:]
             
-            # First pass: Assign required roles to each party one by one
-            logger.info(f"🎯 Starting role assignment for {num_parties} parties")
+            logger.info(f"🎯 STEP 1: Creating incomplete parties with required roles only")
+            logger.info(f"📋 Required roles per party: {role_composition}")
             
-            for party_idx in range(num_parties):
-                logger.info(f"📋 Assigning roles for Party {party_idx + 1}")
+            # Create as many parties as needed to assign all required roles
+            party_idx = 0
+            parties_created = 0
+            
+            while available_participants and parties_created < num_parties:
+                logger.info(f"📋 Creating Party {party_idx + 1}")
                 
-                # Assign required roles to this party
+                # Try to assign all required roles to this party
+                party_complete = True
                 for required_role, required_count in role_composition.items():
                     if required_count > 0:  # Only assign roles that have minimum requirements
                         assigned_to_this_party = 0
@@ -1725,11 +1752,28 @@ def create_parties(request, event_id):
                                 assigned_to_this_party += 1
                                 
                                 logger.info(f"  - {participant.player.in_game_name} ({player_role}) assigned as {required_role}")
+                        
+                        # Check if we got enough of this role
+                        if assigned_to_this_party < required_count:
+                            logger.warning(f"  ⚠️ Could only assign {assigned_to_this_party}/{required_count} {required_role}")
+                            party_complete = False
+                            break
+                
+                if party_complete:
+                    logger.info(f"✅ Party {party_idx + 1} complete with required roles: {party_role_counts[party_idx]}")
+                    parties_created += 1
+                else:
+                    logger.warning(f"❌ Party {party_idx + 1} incomplete, stopping party creation")
+                    break
+                
+                party_idx += 1
             
-            # Second pass: Fill remaining slots with remaining participants
-            logger.info(f"🔄 Filling remaining slots with {len(available_participants)} participants")
-            for party_idx in range(num_parties):
-                while len(party_assignments[party_idx]) < MAX_PARTY_SIZE and available_participants:
+            logger.info(f"📊 STEP 1 COMPLETE: Created {parties_created} complete parties with required roles")
+            
+            # STEP 2: Fill remaining slots with remaining participants (ignore max size for now)
+            logger.info(f"🔄 STEP 2: Filling remaining slots with {len(available_participants)} participants")
+            for party_idx in range(parties_created):
+                while available_participants:
                     participant, player_role = available_participants.pop(0)
                     party_assignments[party_idx].append(participant)
                     party_assigned_roles[party_idx].append(player_role)
