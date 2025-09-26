@@ -1226,15 +1226,15 @@ def join_event(request, event_id):
         
         # Check if already participating (by discord_name if no discord_user_id)
         if discord_user_id:
-        existing_participant = EventParticipant.objects.filter(
-            event=event,
-            discord_user_id=discord_user_id
-        ).first()
+            existing_participant = EventParticipant.objects.filter(
+                event=event,
+                discord_user_id=discord_user_id
+            ).first()
         else:
             existing_participant = EventParticipant.objects.filter(
                 event=event,
                 discord_name=discord_name
-            ).first()
+        ).first()
         
         if existing_participant:
             # EventParticipant doesn't have is_active field, so if it exists, they're already participating
