@@ -1210,15 +1210,7 @@ def join_event(request, event_id):
             if discord_user_id:
                 player = Player.objects.filter(discord_user_id=discord_user_id).first()
             else:
-                # Try exact match first
                 player = Player.objects.filter(discord_name=discord_name).first()
-                # If no exact match, try case-insensitive match
-                if not player:
-                    player = Player.objects.filter(discord_name__iexact=discord_name).first()
-                # If still no match, try without #0 suffix
-                if not player and discord_name.endswith('#0'):
-                    name_without_suffix = discord_name[:-3]  # Remove #0
-                    player = Player.objects.filter(discord_name__iexact=name_without_suffix).first()
             
             # Create new participant
             # Use discord_user_id from request, or fall back to player's discord_user_id
@@ -1312,15 +1304,7 @@ def bulk_join_event(request, event_id):
                 if discord_user_id:
                     player = Player.objects.filter(discord_user_id=discord_user_id).first()
                 else:
-                    # Try exact match first
                     player = Player.objects.filter(discord_name=discord_name).first()
-                    # If no exact match, try case-insensitive match
-                    if not player:
-                        player = Player.objects.filter(discord_name__iexact=discord_name).first()
-                    # If still no match, try without #0 suffix
-                    if not player and discord_name.endswith('#0'):
-                        name_without_suffix = discord_name[:-3]  # Remove #0
-                        player = Player.objects.filter(discord_name__iexact=name_without_suffix).first()
                 
                 # Create new participant
                 final_discord_user_id = discord_user_id
