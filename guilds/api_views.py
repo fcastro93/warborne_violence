@@ -971,6 +971,7 @@ def event_detail(request, event_id):
             'event_datetime': event.event_datetime.isoformat(),
             'timezone': event.timezone,
             'max_participants': event.max_participants,
+            'points_per_participant': event.points_per_participant,
             'participant_count': len(participants_data),
             'participants': participants_data,
             'parties': parties_data,
