@@ -1855,11 +1855,15 @@ def fill_parties(request, event_id):
                     logger.info(f"DEBUG: Stopping party creation - insufficient participants for even incomplete parties")
                     break
             
-            # Create new party
+            # Create new party with correct party number
+            from django.db import models
+            max_party_number = Party.objects.filter(event=event).aggregate(max_num=models.Max('party_number'))['max_num']
+            next_party_number = (max_party_number or 0) + 1
+            
             new_party = Party.objects.create(
                 event=event,
-                party_number=Party.objects.filter(event=event, is_active=True).count() + 1,
-                party_name=f"Party {Party.objects.filter(event=event, is_active=True).count() + 1}",
+                party_number=next_party_number,
+                party_name=f"Party {next_party_number}",
                 max_members=15,  # Keep max at 15, but fill only with required roles
                 is_active=True
             )
@@ -3731,10 +3735,14 @@ def _create_parties_for_guild(event, guild_participants, participants_by_role, r
                 logger.info(f"DEBUG: Guild {guild_name} - Stopping party creation - insufficient participants for even incomplete parties")
                 break
         
-        # Create new party
+        # Create new party with correct party number
+        from django.db import models
+        max_party_number = Party.objects.filter(event=event).aggregate(max_num=models.Max('party_number'))['max_num']
+        next_party_number = (max_party_number or 0) + 1
+        
         new_party = Party.objects.create(
             event=event,
-            party_number=Party.objects.filter(event=event, is_active=True).count() + 1,
+            party_number=next_party_number,
             party_name=f"{guild_name} Party {parties_created + 1}",
             max_members=15,
             is_active=True
