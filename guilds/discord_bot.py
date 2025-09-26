@@ -1651,13 +1651,9 @@ class WarborneBot(commands.Bot):
                 )
             
             # Add participant info
-            participants_text = f"{event_data['participant_count']} participants"
-            if event_data['max_participants']:
-                participants_text += f" / {event_data['max_participants']} max"
-            
             embed.add_field(
                 name="👥 Participants",
-                value=participants_text,
+                value=f"{event_data['participant_count']} participants",
                 inline=True
             )
             
