@@ -1402,6 +1402,64 @@ def balance_parties(parties):
     return parties_moved
 
 @api_view(['POST'])
+def give_rewards(request, event_id):
+    """Give CryptoTommys rewards to all event participants"""
+    try:
+        from .models import Event, EventParticipant, Player
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Get the event
+        try:
+            event = Event.objects.get(id=event_id, is_active=True, is_cancelled=False)
+            logger.info(f"🎁 Give rewards for event: {event.title} (ID: {event.id})")
+        except Event.DoesNotExist:
+            logger.error(f"❌ Event not found or not active: {event_id}")
+            return Response({'error': 'Event not found or not active'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check if event has points configured
+        if not event.points_per_participant or event.points_per_participant <= 0:
+            logger.warning(f"⚠️ Event has no points configured: {event.points_per_participant}")
+            return Response({'error': 'Event has no points configured for participants'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get all participants with players
+        participants = EventParticipant.objects.filter(
+            event=event,
+            player__isnull=False
+        ).select_related('player')
+        
+        if not participants.exists():
+            logger.warning(f"⚠️ No participants with players found for event {event_id}")
+            return Response({'error': 'No participants with players found'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Give points to all participants
+        points_given = 0
+        participants_updated = 0
+        
+        for participant in participants:
+            if participant.player:
+                # Add points to player
+                participant.player.crypto_tommys += event.points_per_participant
+                participant.player.save()
+                points_given += event.points_per_participant
+                participants_updated += 1
+                logger.info(f"💰 Added {event.points_per_participant} points to {participant.player.in_game_name} (Total: {participant.player.crypto_tommys})")
+        
+        logger.info(f"✅ Rewards distributed: {participants_updated} participants, {points_given} total points")
+        
+        return Response({
+            'success': True,
+            'message': f'Successfully gave {event.points_per_participant} CryptoTommys to {participants_updated} participants',
+            'participants_updated': participants_updated,
+            'points_per_participant': event.points_per_participant,
+            'total_points_given': points_given
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error giving rewards: {str(e)}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
 def create_parties(request, event_id):
     """Create balanced parties for an event (migrated from Discord bot logic)"""
     try:
