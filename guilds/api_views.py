@@ -1235,7 +1235,7 @@ def join_event(request, event_id):
                 event=event,
                 discord_name=discord_name
             ).first()
-        
+
         if existing_participant:
             # EventParticipant doesn't have is_active field, so if it exists, they're already participating
             return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
