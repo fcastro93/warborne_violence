@@ -149,7 +149,7 @@ def guild_members(request):
     """Get guild members list"""
     try:
         members = []
-        for player in Player.objects.select_related('guild').all():
+        for player in Player.objects.select_related('guild').order_by('-created_at'):
             # Get drifters from the three drifter fields
             drifters = []
             if player.drifter_1:
@@ -171,6 +171,7 @@ def guild_members(request):
                 'status': 'Online' if player.is_active else 'Offline',
                 'avatar': player.in_game_name[:2].upper() if player.in_game_name else 'XX',
                 'drifters': drifters,
+                'joinDate': player.created_at.strftime('%Y-%m-%d') if player.created_at else 'Unknown',
                 'guild': {
                     'id': player.guild.id if player.guild else None,
                     'name': player.guild.name if player.guild else None
