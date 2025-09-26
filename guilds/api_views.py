@@ -1796,24 +1796,10 @@ def fill_parties(request, event_id):
             logger.info("🏰 Using guild split mode - creating parties separately per guild")
             return _create_guild_split_parties(event, participants, required_roles, filler_config_roles)
         
-        # Group participants by role (non-guild split mode) with role mapping
+        # Group participants by role (non-guild split mode)
         participants_by_role = {}
-        
-        # Role mapping for common role variations
-        ROLE_MAPPING = {
-            'tank': 'defensive_tank',
-            'dps': 'ranged_dps',
-            'support': 'offensive_support'
-        }
-        
         for participant in participants:
             role = participant.player.game_role or 'unknown'
-            
-            # Apply role mapping if needed
-            if role in ROLE_MAPPING:
-                role = ROLE_MAPPING[role]
-                logger.info(f"DEBUG: Mapped role '{participant.player.game_role}' to '{role}' for {participant.player.in_game_name}")
-            
             if role not in participants_by_role:
                 participants_by_role[role] = []
             participants_by_role[role].append(participant)
@@ -3652,24 +3638,10 @@ def _create_guild_split_parties(event, participants, required_roles, filler_conf
     for guild_name, guild_participants in participants_by_guild.items():
         logger.info(f"🏰 Processing guild: {guild_name}")
         
-        # Group participants by role for this guild with role mapping
+        # Group participants by role for this guild
         participants_by_role = {}
-        
-        # Role mapping for common role variations
-        ROLE_MAPPING = {
-            'tank': 'defensive_tank',
-            'dps': 'ranged_dps',
-            'support': 'offensive_support'
-        }
-        
         for participant in guild_participants:
             role = participant.player.game_role or 'unknown'
-            
-            # Apply role mapping if needed
-            if role in ROLE_MAPPING:
-                role = ROLE_MAPPING[role]
-                logger.info(f"DEBUG: Guild {guild_name} - Mapped role '{participant.player.game_role}' to '{role}' for {participant.player.in_game_name}")
-            
             if role not in participants_by_role:
                 participants_by_role[role] = []
             participants_by_role[role].append(participant)
