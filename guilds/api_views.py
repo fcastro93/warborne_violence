@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.db import models
 from datetime import datetime
 import pytz
 from .models import Guild, Player, Drifter, Event, EventParticipant, Party, PartyMember, GearItem, GearType, RecommendedBuild, PlayerGear
@@ -1183,7 +1184,7 @@ def join_event(request, event_id):
         
         if existing_participant:
             # EventParticipant doesn't have is_active field, so if it exists, they're already participating
-                return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Get player if exists
             if discord_user_id:
@@ -1856,7 +1857,6 @@ def fill_parties(request, event_id):
                     break
             
             # Create new party with correct party number
-            from django.db import models
             max_party_number = Party.objects.filter(event=event).aggregate(max_num=models.Max('party_number'))['max_num']
             next_party_number = (max_party_number or 0) + 1
             
@@ -1954,10 +1954,10 @@ def fill_parties(request, event_id):
                         current_count = party.members.filter(assigned_role=role, is_active=True).count()
                         if current_count < required_count and party.member_count < party.max_members:
                             # Add to this party
-                            PartyMember.objects.create(
+                PartyMember.objects.create(
                                 party=party,
-                                event_participant=participant,
-                                player=participant.player,
+                    event_participant=participant,
+                    player=participant.player,
                                 assigned_role=participant.player.game_role,
                                 is_leader=False
                             )
@@ -3736,7 +3736,6 @@ def _create_parties_for_guild(event, guild_participants, participants_by_role, r
                 break
         
         # Create new party with correct party number
-        from django.db import models
         max_party_number = Party.objects.filter(event=event).aggregate(max_num=models.Max('party_number'))['max_num']
         next_party_number = (max_party_number or 0) + 1
         

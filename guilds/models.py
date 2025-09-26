@@ -131,6 +131,9 @@ class Player(models.Model):
     # Additional information
     notes = models.TextField(blank=True, null=True, help_text="Notes about the player")
     
+    # CryptoTommys points system
+    crypto_tommys = models.PositiveIntegerField(default=0, help_text="CryptoTommys points earned by the player")
+    
     class Meta:
         ordering = ['in_game_name']
         verbose_name = "Player"
