@@ -1026,7 +1026,7 @@ class SimpleMenuView(discord.ui.View):
         if user_has_player:
             embed.add_field(
                 name="📋 Available Options",
-                value="• 📊 Player Details\n• ✏️ Edit Player",
+                value="• 📊 Player Details\n• ✏️ Edit Player\n• 🌐 My Profile",
                 inline=False
             )
             embed.add_field(
@@ -1066,9 +1066,10 @@ class CommandMenuView(discord.ui.View):
             # User doesn't have a player - show Create Player button
             self.add_item(self.CreatePlayerButton())
         else:
-            # User has a player - show Player Details and Edit Player buttons
+            # User has a player - show Player Details, Edit Player, and My Profile buttons
             self.add_item(self.PlayerDetailsButton())
             self.add_item(self.EditPlayerButton())
+            self.add_item(self.MyProfileButton())
     
     class CreatePlayerButton(discord.ui.Button):
         def __init__(self):
@@ -1169,13 +1170,91 @@ class CommandMenuView(discord.ui.View):
                     ephemeral=True
                 )
     
-    
-    
-    
-    
-    
-    
-    
+    class MyProfileButton(discord.ui.Button):
+        def __init__(self):
+            super().__init__(label="🌐 My Profile", style=discord.ButtonStyle.success, emoji="🌐")
+        
+        async def callback(self, interaction: discord.Interaction):
+            """Button to generate profile access token and redirect to profile page"""
+            from asgiref.sync import sync_to_async
+            import jwt
+            from datetime import datetime, timedelta
+            from django.conf import settings
+            
+            @sync_to_async
+            def generate_profile_token(player, discord_user_id):
+                """Generate JWT token for profile access"""
+                try:
+                    # Token payload
+                    payload = {
+                        'player_id': player.id,
+                        'discord_user_id': discord_user_id,
+                        'purpose': 'profile_access',
+                        'exp': datetime.utcnow() + timedelta(hours=1),  # 1 hour expiration
+                        'iat': datetime.utcnow(),
+                        'iss': 'warborne-discord-bot'
+                    }
+                    
+                    # Generate token using Django's SECRET_KEY
+                    token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+                    return token
+                except Exception as e:
+                    print(f"Error generating profile token: {e}")
+                    return None
+            
+            # Get the parent view to access the player data
+            parent_view = self.view
+            player = parent_view.player
+            
+            if player:
+                # Generate profile access token
+                token = await generate_profile_token(player, interaction.user.id)
+                
+                if token:
+                    # Create profile URL with token
+                    base_url = "https://weareviolence.com"
+                    profile_url = f"{base_url}/player/{player.id}/profile?token={token}"
+                    
+                    embed = discord.Embed(
+                        title="🌐 My Profile",
+                        description="Your personal profile page is ready!",
+                        color=0x4a9eff
+                    )
+                    embed.add_field(
+                        name="📋 Profile Information",
+                        value=f"**Name:** {player.in_game_name}\n"
+                              f"**Level:** {player.character_level}\n"
+                              f"**Faction:** {player.get_faction_display()}\n"
+                              f"**Role:** {player.get_game_role_display() if player.game_role else 'No role'}",
+                        inline=False
+                    )
+                    embed.add_field(
+                        name="🔗 Access Your Profile",
+                        value=f"[Click here to open your profile]({profile_url})\n\n"
+                              f"⏰ **Token expires in 1 hour**\n"
+                              f"🔒 **Only you can access this link**",
+                        inline=False
+                    )
+                    embed.add_field(
+                        name="ℹ️ What's Available",
+                        value="• View your complete player information\n"
+                              "• Access your loadouts and gear\n"
+                              "• View your event participation history\n"
+                              "• Check your CryptoTommys points",
+                        inline=False
+                    )
+                    
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                else:
+                    await interaction.response.send_message(
+                        "❌ Error generating profile access token. Please try again later.",
+                        ephemeral=True
+                    )
+            else:
+                await interaction.response.send_message(
+                    "❌ No tienes un jugador registrado. Usa el botón 'Create Player' para crear uno.",
+                    ephemeral=True
+                )
 
 
 # CreateEventModal removed - event creation moved to web interface

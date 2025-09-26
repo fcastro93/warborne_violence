@@ -2235,6 +2235,102 @@ def fill_parties(request, event_id):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
+def validate_profile_token(request, player_id):
+    """Validate JWT token for player profile access"""
+    try:
+        import jwt
+        from django.conf import settings
+        from datetime import datetime
+        
+        # Get token from query parameters
+        token = request.GET.get('token')
+        if not token:
+            return Response({
+                'success': False,
+                'error': 'Token is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Decode and validate token
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            
+            # Check token purpose
+            if payload.get('purpose') != 'profile_access':
+                return Response({
+                    'success': False,
+                    'error': 'Invalid token purpose'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if token is for the correct player
+            if payload.get('player_id') != player_id:
+                return Response({
+                    'success': False,
+                    'error': 'Token does not match player'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if player exists
+            try:
+                player = Player.objects.select_related('guild').get(id=player_id)
+            except Player.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'error': 'Player not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Check if Discord user ID matches
+            if payload.get('discord_user_id') != player.discord_user_id:
+                return Response({
+                    'success': False,
+                    'error': 'Token does not match player owner'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
+            # Token is valid, return player data
+            return Response({
+                'success': True,
+                'player': {
+                    'id': player.id,
+                    'in_game_name': player.in_game_name,
+                    'discord_name': player.discord_name,
+                    'discord_user_id': player.discord_user_id,
+                    'character_level': player.character_level,
+                    'total_gear_power': player.total_gear_power,
+                    'faction': player.faction,
+                    'game_role': player.game_role,
+                    'role': player.role,
+                    'crypto_tommys': player.crypto_tommys,
+                    'is_active': player.is_active,
+                    'created_at': player.created_at.isoformat(),
+                    'guild': {
+                        'id': player.guild.id if player.guild else None,
+                        'name': player.guild.name if player.guild else None
+                    } if player.guild else None,
+                    'drifter_1': player.drifter_1.name if player.drifter_1 else None,
+                    'drifter_2': player.drifter_2.name if player.drifter_2 else None,
+                    'drifter_3': player.drifter_3.name if player.drifter_3 else None,
+                },
+                'token_expires_at': datetime.fromtimestamp(payload.get('exp')).isoformat()
+            })
+            
+        except jwt.ExpiredSignatureError:
+            return Response({
+                'success': False,
+                'error': 'Token has expired'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        except jwt.InvalidTokenError:
+            return Response({
+                'success': False,
+                'error': 'Invalid token'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+            
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
 def discord_bot_config(request):
     """Get Discord bot configuration"""
     try:
