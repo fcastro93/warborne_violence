@@ -886,6 +886,7 @@ def events_list(request):
                 'event_datetime': event.event_datetime.isoformat(),
                 'timezone': event.timezone,
                 'max_participants': event.max_participants,
+                'points_per_participant': event.points_per_participant,
                 'participant_count': participant_count,
                 'created_by_discord_name': event.created_by_discord_name,
                 'created_at': event.created_at.isoformat(),
