@@ -1192,10 +1192,10 @@ def join_event(request, event_id):
         
         # Check if already participating (by discord_name if no discord_user_id)
         if discord_user_id:
-            existing_participant = EventParticipant.objects.filter(
-                event=event,
-                discord_user_id=discord_user_id
-            ).first()
+        existing_participant = EventParticipant.objects.filter(
+            event=event,
+            discord_user_id=discord_user_id
+        ).first()
         else:
             existing_participant = EventParticipant.objects.filter(
                 event=event,
@@ -1204,11 +1204,11 @@ def join_event(request, event_id):
         
         if existing_participant:
             # EventParticipant doesn't have is_active field, so if it exists, they're already participating
-            return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Get player if exists
             if discord_user_id:
-                player = Player.objects.filter(discord_user_id=discord_user_id).first()
+            player = Player.objects.filter(discord_user_id=discord_user_id).first()
             else:
                 player = Player.objects.filter(discord_name=discord_name).first()
             
@@ -1906,12 +1906,23 @@ def fill_parties(request, event_id):
         min_party_size = sum(available_roles.values())
         logger.info(f"DEBUG: Using roles: {available_roles}, min_party_size: {min_party_size}")
         
+        # Check if we have enough participants for minimum party requirements
+        total_participants = len(participants)
+        if total_participants < min_party_size:
+            return Response({
+                'error': f'Need more participants to fill parties. Required: {min_party_size}, Available: {total_participants}',
+                'required_participants': min_party_size,
+                'available_participants': total_participants,
+                'role_requirements': available_roles
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
         # Create parties with minimum required roles
         parties_created = 0
         members_assigned = 0
+        max_parties = 50  # Safety limit to prevent infinite loops
         
         # Keep creating parties until we can't fill all available roles
-        while True:
+        while parties_created < max_parties:
             # Check if we have enough participants for all available roles
             can_create_party = True
             for role, required_count in available_roles.items():
@@ -1931,7 +1942,7 @@ def fill_parties(request, event_id):
                 if total_remaining >= 4:  # Minimum party size
                     logger.info(f"DEBUG: Creating incomplete parties with {total_remaining} remaining participants")
                     # Continue with incomplete party creation
-                else:
+        else:
                     logger.info(f"DEBUG: Stopping party creation - insufficient participants for even incomplete parties")
                     break
             
@@ -2033,10 +2044,10 @@ def fill_parties(request, event_id):
                         current_count = party.members.filter(assigned_role=role, is_active=True).count()
                         if current_count < required_count and party.member_count < party.max_members:
                             # Add to this party
-                            PartyMember.objects.create(
+                PartyMember.objects.create(
                                 party=party,
-                                event_participant=participant,
-                                player=participant.player,
+                    event_participant=participant,
+                    player=participant.player,
                                 assigned_role=participant.player.game_role,
                                 is_leader=False
                             )
@@ -3786,11 +3797,21 @@ def _create_parties_for_guild(event, guild_participants, participants_by_role, r
         logger.info(f"DEBUG: Guild {guild_name} - No primary roles available, skipping party creation")
         return 0, 0
     
+    # Calculate minimum party size for this guild
+    min_party_size = sum(primary_roles.values())
+    total_guild_participants = len(guild_participants)
+    
+    # Check if this guild has enough participants for minimum party requirements
+    if total_guild_participants < min_party_size:
+        logger.info(f"DEBUG: Guild {guild_name} - Insufficient participants. Required: {min_party_size}, Available: {total_guild_participants}")
+        return 0, 0
+    
     parties_created = 0
     members_assigned = 0
+    max_parties = 50  # Safety limit to prevent infinite loops
     
     # Phase 1: Create base parties with primary roles (same logic as main fill_parties)
-    while True:
+    while parties_created < max_parties:
         # Check if we have enough participants for all primary roles
         can_create_party = True
         for role, required_count in primary_roles.items():
