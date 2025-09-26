@@ -1323,6 +1323,7 @@ def publish_event(request, event_id):
             'timezone': event.timezone,
             'participant_count': participant_count,
             'max_participants': event.max_participants,
+            'points_per_participant': event.points_per_participant,
             'created_by_discord_name': event.created_by_discord_name,
             'discord_epoch': event.discord_epoch,
             'discord_timestamp': event.discord_timestamp,

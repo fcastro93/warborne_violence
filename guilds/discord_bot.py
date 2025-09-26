@@ -1661,6 +1661,14 @@ class WarborneBot(commands.Bot):
                 inline=True
             )
             
+            # Add CryptoTommys points if configured
+            if event_data.get('points_per_participant', 0) > 0:
+                embed.add_field(
+                    name="💰 CryptoTommys",
+                    value=f"{event_data['points_per_participant']} points per participant",
+                    inline=True
+                )
+            
             # Add footer with instructions
             embed.set_footer(
                 text="React with ✅ to join this event! Use !menu to see all available commands."
