@@ -29,7 +29,6 @@ urlpatterns = [
     path('events/<int:event_id>/update/', api_views.update_event, name='update_event'),
     path('events/<int:event_id>/delete/', api_views.delete_event, name='delete_event'),
     path('events/<int:event_id>/join/', api_views.join_event, name='join_event'),
-    path('events/<int:event_id>/bulk-join/', api_views.bulk_join_event, name='bulk_join_event'),
     path('events/<int:event_id>/leave/', api_views.leave_event, name='leave_event'),
     path('events/<int:event_id>/publish/', api_views.publish_event, name='publish_event'),
     path('events/<int:event_id>/give-rewards/', api_views.give_rewards, name='give_rewards'),
