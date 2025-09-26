@@ -1212,7 +1212,7 @@ class CommandMenuView(discord.ui.View):
                 
                 if token:
                     # Create profile URL with token
-                    base_url = parent_view.config.get('base_url', 'https://weareviolence.com')
+                    base_url = parent_view.bot_instance.config.get('base_url', 'https://weareviolence.com')
                     profile_url = f"{base_url}/player/{player.id}/profile?token={token}"
                     
                     embed = discord.Embed(
