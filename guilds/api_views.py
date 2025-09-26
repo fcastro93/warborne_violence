@@ -1103,6 +1103,14 @@ def update_event(request, event_id):
                 except ValueError:
                     return Response({'error': 'Max participants must be a positive number'}, status=status.HTTP_400_BAD_REQUEST)
         
+        if 'points_per_participant' in data:
+            try:
+                event.points_per_participant = int(data['points_per_participant'])
+                if event.points_per_participant < 0:
+                    raise ValueError()
+            except ValueError:
+                return Response({'error': 'Points per participant must be a non-negative number'}, status=status.HTTP_400_BAD_REQUEST)
+        
         event.save()
         
         return Response({
