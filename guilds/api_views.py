@@ -120,6 +120,9 @@ def all_drifters(request):
 def guild_stats(request):
     """Get guild statistics"""
     try:
+        from django.utils import timezone
+        from datetime import timedelta
+        
         guild = Guild.objects.first()
         if not guild:
             return Response({'error': 'No guild found'}, status=status.HTTP_404_NOT_FOUND)
@@ -127,6 +130,25 @@ def guild_stats(request):
         total_members = Player.objects.count()
         active_events = Event.objects.filter(is_active=True, is_cancelled=False).count()
         total_gear = GearItem.objects.count()
+        
+        # Calculate weekly growth for members
+        one_week_ago = timezone.now() - timedelta(days=7)
+        members_last_week = Player.objects.filter(created_at__lt=one_week_ago).count()
+        members_this_week = total_members - members_last_week
+        
+        # Calculate percentage change
+        if members_last_week > 0:
+            member_growth_percentage = ((total_members - members_last_week) / members_last_week) * 100
+        else:
+            # New guild or all members added this week
+            member_growth_percentage = 100.0 if total_members > 0 else 0.0
+        
+        # Calculate weekly growth for events
+        events_last_week = Event.objects.filter(created_at__lt=one_week_ago).count()
+        if events_last_week > 0:
+            event_growth_percentage = ((active_events - events_last_week) / events_last_week) * 100
+        else:
+            event_growth_percentage = 100.0 if active_events > 0 else 0.0
         
         # Faction distribution
         faction_counts = {}
@@ -139,7 +161,18 @@ def guild_stats(request):
             'active_events': active_events,
             'total_gear': total_gear,
             'faction_distribution': faction_counts,
-            'guild_name': guild.name if guild else 'Unknown Guild'
+            'guild_name': guild.name if guild else 'Unknown Guild',
+            'member_growth': {
+                'current': total_members,
+                'last_week': members_last_week,
+                'added_this_week': members_this_week,
+                'percentage_change': round(member_growth_percentage, 1)
+            },
+            'event_growth': {
+                'current': active_events,
+                'last_week': events_last_week,
+                'percentage_change': round(event_growth_percentage, 1)
+            }
         })
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
