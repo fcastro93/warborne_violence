@@ -1036,6 +1036,16 @@ def create_event(request):
             except ValueError:
                 return Response({'error': 'Max participants must be a positive number'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Validate points per participant
+        points_per_participant = 0
+        if data.get('points_per_participant'):
+            try:
+                points_per_participant = int(data['points_per_participant'])
+                if points_per_participant < 0:
+                    raise ValueError()
+            except ValueError:
+                return Response({'error': 'Points per participant must be a non-negative number'}, status=status.HTTP_400_BAD_REQUEST)
+        
         # Create event
         event = Event.objects.create(
             title=data['title'],
@@ -1044,6 +1054,7 @@ def create_event(request):
             event_datetime=utc_dt,
             timezone=timezone_str,
             max_participants=max_participants,
+            points_per_participant=points_per_participant,
             created_by_discord_id=data.get('created_by_discord_id', 0),
             created_by_discord_name=data.get('created_by_discord_name', 'Web User')
         )
@@ -1059,6 +1070,7 @@ def create_event(request):
                 'event_datetime': event.event_datetime.isoformat(),
                 'timezone': event.timezone,
                 'max_participants': event.max_participants,
+                'points_per_participant': event.points_per_participant,
                 'created_by_discord_name': event.created_by_discord_name,
                 'created_at': event.created_at.isoformat(),
                 'discord_epoch': event.discord_epoch,
@@ -1123,6 +1135,7 @@ def update_event(request, event_id):
                 'event_datetime': event.event_datetime.isoformat(),
                 'timezone': event.timezone,
                 'max_participants': event.max_participants,
+                'points_per_participant': event.points_per_participant,
                 'updated_at': event.updated_at.isoformat()
             }
         })
