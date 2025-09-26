@@ -1204,11 +1204,11 @@ def join_event(request, event_id):
         
         if existing_participant:
             # EventParticipant doesn't have is_active field, so if it exists, they're already participating
-                return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Already participating in this event'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Get player if exists
             if discord_user_id:
-            player = Player.objects.filter(discord_user_id=discord_user_id).first()
+                player = Player.objects.filter(discord_user_id=discord_user_id).first()
             else:
                 player = Player.objects.filter(discord_name=discord_name).first()
             
