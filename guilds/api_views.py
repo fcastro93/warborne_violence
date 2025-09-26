@@ -1273,62 +1273,72 @@ def bulk_join_event(request, event_id):
             'already_participating': []
         }
         
-        # Process each participant using individual join logic
+        # Process each participant using the same logic as individual join
         for participant_data in participants:
             try:
-                # Create a mock request for individual join
-                from django.test import RequestFactory
-                from django.http import JsonResponse
-                import json
+                discord_user_id = participant_data.get('discord_user_id')
+                discord_name = participant_data.get('discord_name')
+                assigned_role = participant_data.get('assigned_role')
                 
-                # Prepare data for individual join
-                join_data = {
-                    'discord_name': participant_data.get('discord_name'),
-                    'discord_user_id': participant_data.get('discord_user_id'),
-                    'assigned_role': participant_data.get('assigned_role')
-                }
-                
-                if not join_data['discord_name']:
+                if not discord_name:
                     results['failed'].append({
                         'discord_name': 'Unknown',
                         'error': 'Discord name is required'
                     })
                     continue
                 
-                # Create a mock request object
-                factory = RequestFactory()
-                mock_request = factory.post(
-                    f'/api/events/{event_id}/join/',
-                    json.dumps(join_data),
-                    content_type='application/json'
-                )
-                mock_request.user = request.user
-                mock_request.data = join_data
-                
-                # Call the individual join function
-                response = join_event(mock_request, event_id)
-                
-                if response.status_code == 200:
-                    # Success
-                    response_data = response.data
-                    results['successful'].append({
-                        'discord_name': join_data['discord_name'],
-                        'discord_user_id': join_data.get('discord_user_id'),
-                        'participant_id': response_data.get('participant', {}).get('id')
-                    })
-                elif response.status_code == 400 and 'Already participating' in str(response.data):
-                    # Already participating
-                    results['already_participating'].append({
-                        'discord_name': join_data['discord_name'],
-                        'discord_user_id': join_data.get('discord_user_id')
-                    })
+                # Check if already participating (same logic as join_event)
+                if discord_user_id:
+                    existing_participant = EventParticipant.objects.filter(
+                        event=event,
+                        discord_user_id=discord_user_id
+                    ).first()
                 else:
-                    # Failed
-                    results['failed'].append({
-                        'discord_name': join_data['discord_name'],
-                        'error': str(response.data)
+                    existing_participant = EventParticipant.objects.filter(
+                        event=event,
+                        discord_name=discord_name
+                    ).first()
+                
+                if existing_participant:
+                    results['already_participating'].append({
+                        'discord_name': discord_name,
+                        'discord_user_id': discord_user_id
                     })
-                    
+                    continue
+                
+                # Get player if exists (same enhanced logic as join_event)
+                if discord_user_id:
+                    player = Player.objects.filter(discord_user_id=discord_user_id).first()
+                else:
+                    # Try exact match first
+                    player = Player.objects.filter(discord_name=discord_name).first()
+                    # If no exact match, try case-insensitive match
+                    if not player:
+                        player = Player.objects.filter(discord_name__iexact=discord_name).first()
+                    # If still no match, try without #0 suffix
+                    if not player and discord_name.endswith('#0'):
+                        name_without_suffix = discord_name[:-3]  # Remove #0
+                        player = Player.objects.filter(discord_name__iexact=name_without_suffix).first()
+                
+                # Create new participant (same logic as join_event)
+                final_discord_user_id = discord_user_id
+                if not final_discord_user_id and player and player.discord_user_id:
+                    final_discord_user_id = player.discord_user_id
+                
+                participant = EventParticipant.objects.create(
+                    event=event,
+                    discord_user_id=final_discord_user_id,
+                    discord_name=discord_name,
+                    player=player
+                )
+                
+                results['successful'].append({
+                    'id': participant.id,
+                    'discord_name': participant.discord_name,
+                    'discord_user_id': participant.discord_user_id,
+                    'joined_at': participant.joined_at.isoformat()
+                })
+                
             except Exception as e:
                 results['failed'].append({
                     'discord_name': participant_data.get('discord_name', 'Unknown'),
