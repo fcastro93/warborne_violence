@@ -1792,7 +1792,11 @@ def fill_parties(request, event_id):
             player__isnull=False
         ).select_related('player', 'player__guild'))
         
-        # Group participants by role
+        if guild_split:
+            logger.info("🏰 Using guild split mode - creating parties separately per guild")
+            return _create_guild_split_parties(event, participants, required_roles, filler_config_roles)
+        
+        # Group participants by role (non-guild split mode)
         participants_by_role = {}
         for participant in participants:
             role = participant.player.game_role or 'unknown'
@@ -3606,5 +3610,211 @@ def delete_crafter(request, crafter_id):
         return Response({'error': 'Crafter not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def _create_guild_split_parties(event, participants, required_roles, filler_config_roles):
+    """Create parties separately for each guild when guild_split is enabled"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Group participants by guild
+    participants_by_guild = {}
+    for participant in participants:
+        guild = participant.player.guild
+        guild_name = guild.name if guild else "No Guild"
+        if guild_name not in participants_by_guild:
+            participants_by_guild[guild_name] = []
+        participants_by_guild[guild_name].append(participant)
+    
+    logger.info(f"🏰 Guilds found: {list(participants_by_guild.keys())}")
+    for guild_name, guild_participants in participants_by_guild.items():
+        logger.info(f"  - {guild_name}: {len(guild_participants)} participants")
+    
+    total_parties_created = 0
+    total_members_assigned = 0
+    guild_results = []
+    
+    # Process each guild separately
+    for guild_name, guild_participants in participants_by_guild.items():
+        logger.info(f"🏰 Processing guild: {guild_name}")
+        
+        # Group participants by role for this guild
+        participants_by_role = {}
+        for participant in guild_participants:
+            role = participant.player.game_role or 'unknown'
+            if role not in participants_by_role:
+                participants_by_role[role] = []
+            participants_by_role[role].append(participant)
+        
+        # Use the same party creation logic as the main function
+        guild_parties_created, guild_members_assigned = _create_parties_for_guild(
+            event, guild_participants, participants_by_role, required_roles, filler_config_roles, guild_name
+        )
+        
+        total_parties_created += guild_parties_created
+        total_members_assigned += guild_members_assigned
+        
+        guild_results.append({
+            'guild': guild_name,
+            'parties_created': guild_parties_created,
+            'members_assigned': guild_members_assigned
+        })
+    
+    return Response({
+        'success': True,
+        'message': f'Created {total_parties_created} parties with {total_members_assigned} members assigned (guild split mode)',
+        'parties_created': total_parties_created,
+        'members_assigned': total_members_assigned,
+        'guild_results': guild_results,
+        'guild_split': True
+    })
+
+
+def _create_parties_for_guild(event, guild_participants, participants_by_role, required_roles, filler_config_roles, guild_name):
+    """Create parties for a specific guild using the same logic as the main fill_parties function"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Filter roles to only those available in this guild
+    available_roles = {}
+    for role, required_count in required_roles.items():
+        available_count = len(participants_by_role.get(role, []))
+        if available_count > 0:
+            available_roles[role] = required_count
+            logger.info(f"DEBUG: Guild {guild_name} - Role {role} - Available: {available_count}, Required: {required_count}")
+    
+    if not available_roles:
+        logger.info(f"DEBUG: Guild {guild_name} - No available roles, skipping party creation")
+        return 0, 0
+    
+    # Calculate minimum party size
+    min_party_size = sum(available_roles.values())
+    logger.info(f"DEBUG: Guild {guild_name} - Using roles: {available_roles}, min_party_size: {min_party_size}")
+    
+    parties_created = 0
+    members_assigned = 0
+    
+    # Keep creating parties until we can't fill all available roles
+    while True:
+        # Check if we have enough participants for all available roles
+        can_create_party = True
+        for role, required_count in available_roles.items():
+            available_count = len(participants_by_role.get(role, []))
+            logger.info(f"DEBUG: Guild {guild_name} - Role {role} - Available: {available_count}, Required: {required_count}")
+            if available_count < required_count:
+                can_create_party = False
+                logger.info(f"DEBUG: Guild {guild_name} - Cannot create party - not enough {role}")
+                break
+        
+        if not can_create_party:
+            # Try to create parties with available roles (even if not complete)
+            logger.info(f"DEBUG: Guild {guild_name} - Cannot create complete party, trying to create incomplete parties with available roles")
+            
+            # Check if we have any participants left in any role
+            total_remaining = sum(len(participants_by_role.get(role, [])) for role in available_roles.keys())
+            if total_remaining >= 4:  # Minimum party size
+                logger.info(f"DEBUG: Guild {guild_name} - Creating incomplete parties with {total_remaining} remaining participants")
+                # Continue with incomplete party creation
+            else:
+                logger.info(f"DEBUG: Guild {guild_name} - Stopping party creation - insufficient participants for even incomplete parties")
+                break
+        
+        # Create new party
+        new_party = Party.objects.create(
+            event=event,
+            party_number=Party.objects.filter(event=event, is_active=True).count() + 1,
+            party_name=f"{guild_name} Party {parties_created + 1}",
+            max_members=15,
+            is_active=True
+        )
+        parties_created += 1
+        logger.info(f"DEBUG: Guild {guild_name} - Created party {parties_created}")
+        
+        # Assign available roles to this party
+        for role, required_count in available_roles.items():
+            available_participants = participants_by_role.get(role, [])
+            # For incomplete parties, assign what's available instead of requiring exact count
+            assign_count = min(required_count, len(available_participants))
+            for i in range(assign_count):
+                participant = available_participants.pop(0)  # Remove from available list
+                
+                # Create party member
+                is_first_member = new_party.member_count == 0
+                PartyMember.objects.create(
+                    party=new_party,
+                    event_participant=participant,
+                    player=participant.player,
+                    assigned_role=participant.player.game_role,
+                    is_leader=is_first_member
+                )
+                members_assigned += 1
+                logger.info(f"DEBUG: Guild {guild_name} - Assigned {participant.player.in_game_name} as {role}")
+            
+            if assign_count < required_count:
+                logger.info(f"DEBUG: Guild {guild_name} - Party {parties_created} incomplete - only {assign_count}/{required_count} {role} assigned")
+        
+        logger.info(f"DEBUG: Guild {guild_name} - Party {parties_created} complete. Remaining: {sum(len(participants_by_role.get(role, [])) for role in available_roles.keys())} total participants")
+    
+    # Add remaining participants as fillers
+    for role, required_count in available_roles.items():
+        remaining_participants = participants_by_role.get(role, [])
+        if remaining_participants:
+            logger.info(f"DEBUG: Guild {guild_name} - Adding remaining {len(remaining_participants)} {role} players as fillers to parties")
+            
+            created_parties = Party.objects.filter(event=event, is_active=True, party_name__startswith=guild_name).order_by('party_number')
+            
+            for participant in remaining_participants:
+                # Find a party that has space
+                assigned = False
+                for party in created_parties:
+                    if party.member_count < party.max_members:
+                        # Add to this party as filler
+                        PartyMember.objects.create(
+                            party=party,
+                            event_participant=participant,
+                            player=participant.player,
+                            assigned_role=participant.player.game_role,
+                            is_leader=False
+                        )
+                        members_assigned += 1
+                        logger.info(f"DEBUG: Guild {guild_name} - Added {participant.player.in_game_name} as {role} filler to Party {party.party_number}")
+                        assigned = True
+                        break
+                
+                if not assigned:
+                    logger.info(f"DEBUG: Guild {guild_name} - Could not assign {participant.player.in_game_name} as {role} filler - all parties at max capacity")
+    
+    # Add config filler roles to fill parties to max capacity
+    for role, _ in filler_config_roles.items():
+        participants = participants_by_role.get(role, [])
+        if participants:
+            logger.info(f"DEBUG: Guild {guild_name} - Adding {len(participants)} {role} players as fillers to reach max party size")
+            
+            created_parties = Party.objects.filter(event=event, is_active=True, party_name__startswith=guild_name).order_by('party_number')
+            
+            for participant in participants:
+                # Find a party that has space
+                assigned = False
+                for party in created_parties:
+                    if party.member_count < party.max_members:
+                        # Add to this party
+                        PartyMember.objects.create(
+                            party=party,
+                            event_participant=participant,
+                            player=participant.player,
+                            assigned_role=participant.player.game_role,
+                            is_leader=False
+                        )
+                        members_assigned += 1
+                        logger.info(f"DEBUG: Guild {guild_name} - Added {participant.player.in_game_name} as {role} filler to Party {party.party_number}")
+                        assigned = True
+                        break
+                
+                if not assigned:
+                    logger.info(f"DEBUG: Guild {guild_name} - Could not assign {participant.player.in_game_name} as {role} filler - all parties at max capacity")
+    
+    logger.info(f"DEBUG: Guild {guild_name} - Total members assigned: {members_assigned}")
+    
+    return parties_created, members_assigned
 
 
