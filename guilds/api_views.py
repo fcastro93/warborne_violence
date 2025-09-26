@@ -1796,10 +1796,24 @@ def fill_parties(request, event_id):
             logger.info("🏰 Using guild split mode - creating parties separately per guild")
             return _create_guild_split_parties(event, participants, required_roles, filler_config_roles)
         
-        # Group participants by role (non-guild split mode)
+        # Group participants by role (non-guild split mode) with role mapping
         participants_by_role = {}
+        
+        # Role mapping for common role variations
+        ROLE_MAPPING = {
+            'tank': 'defensive_tank',
+            'dps': 'ranged_dps',
+            'support': 'offensive_support'
+        }
+        
         for participant in participants:
             role = participant.player.game_role or 'unknown'
+            
+            # Apply role mapping if needed
+            if role in ROLE_MAPPING:
+                role = ROLE_MAPPING[role]
+                logger.info(f"DEBUG: Mapped role '{participant.player.game_role}' to '{role}' for {participant.player.in_game_name}")
+            
             if role not in participants_by_role:
                 participants_by_role[role] = []
             participants_by_role[role].append(participant)
@@ -3638,10 +3652,24 @@ def _create_guild_split_parties(event, participants, required_roles, filler_conf
     for guild_name, guild_participants in participants_by_guild.items():
         logger.info(f"🏰 Processing guild: {guild_name}")
         
-        # Group participants by role for this guild
+        # Group participants by role for this guild with role mapping
         participants_by_role = {}
+        
+        # Role mapping for common role variations
+        ROLE_MAPPING = {
+            'tank': 'defensive_tank',
+            'dps': 'ranged_dps',
+            'support': 'offensive_support'
+        }
+        
         for participant in guild_participants:
             role = participant.player.game_role or 'unknown'
+            
+            # Apply role mapping if needed
+            if role in ROLE_MAPPING:
+                role = ROLE_MAPPING[role]
+                logger.info(f"DEBUG: Guild {guild_name} - Mapped role '{participant.player.game_role}' to '{role}' for {participant.player.in_game_name}")
+            
             if role not in participants_by_role:
                 participants_by_role[role] = []
             participants_by_role[role].append(participant)
@@ -3755,11 +3783,11 @@ def _create_parties_for_guild(event, guild_participants, participants_by_role, r
         
         logger.info(f"DEBUG: Guild {guild_name} - Party {parties_created} complete. Remaining: {sum(len(participants_by_role.get(role, [])) for role in available_roles.keys())} total participants")
     
-    # Add remaining participants as fillers
+    # Phase 2: Add remaining participants as fillers to existing parties
     for role, required_count in available_roles.items():
         remaining_participants = participants_by_role.get(role, [])
         if remaining_participants:
-            logger.info(f"DEBUG: Guild {guild_name} - Adding remaining {len(remaining_participants)} {role} players as fillers to parties")
+            logger.info(f"DEBUG: Guild {guild_name} - Adding remaining {len(remaining_participants)} {role} players as fillers to existing parties")
             
             created_parties = Party.objects.filter(event=event, is_active=True, party_name__startswith=guild_name).order_by('party_number')
             
@@ -3783,6 +3811,56 @@ def _create_parties_for_guild(event, guild_participants, participants_by_role, r
                 
                 if not assigned:
                     logger.info(f"DEBUG: Guild {guild_name} - Could not assign {participant.player.in_game_name} as {role} filler - all parties at max capacity")
+    
+    # Phase 3: Consolidate small parties within this guild
+    created_parties = list(Party.objects.filter(event=event, is_active=True, party_name__startswith=guild_name).order_by('party_number'))
+    if len(created_parties) > 1:
+        logger.info(f"DEBUG: Guild {guild_name} - Starting party consolidation with {len(created_parties)} parties")
+        
+        # Multi-round consolidation
+        while True:
+            incomplete_parties = [party for party in created_parties if party.member_count < 15]
+            logger.info(f"DEBUG: Guild {guild_name} - Found {len(incomplete_parties)} incomplete parties")
+            
+            if len(incomplete_parties) <= 1:
+                logger.info(f"DEBUG: Guild {guild_name} - Consolidation complete - only {len(incomplete_parties)} incomplete party(ies) remaining")
+                break
+            
+            # Find the smallest incomplete party to consolidate
+            smallest_party = min(incomplete_parties, key=lambda p: p.member_count)
+            
+            # If the smallest party has very few members, consolidate it
+            if smallest_party.member_count <= 3:
+                logger.info(f"DEBUG: Guild {guild_name} - Consolidating small party {smallest_party.party_number} (has {smallest_party.member_count} members)")
+                
+                # Get all members from the smallest party
+                small_party_members = list(PartyMember.objects.filter(party=smallest_party, is_active=True))
+                members_moved = 0
+                
+                for member in small_party_members:
+                    # Find the first incomplete party that has space (excluding the smallest party)
+                    for target_party in incomplete_parties:
+                        if target_party != smallest_party and target_party.member_count < target_party.max_members:
+                            # Move this member to the target party
+                            member.party = target_party
+                            member.save()
+                            members_moved += 1
+                            logger.info(f"DEBUG: Guild {guild_name} - Moved {member.player.in_game_name} from Party {smallest_party.party_number} to Party {target_party.party_number}")
+                            break
+                
+                if members_moved == 0:
+                    logger.info(f"DEBUG: Guild {guild_name} - No members could be moved from party {smallest_party.party_number}")
+                    break
+                
+                # If the smallest party is now empty, remove it
+                smallest_party.refresh_from_db()
+                if smallest_party.member_count == 0:
+                    logger.info(f"DEBUG: Guild {guild_name} - Removing empty party {smallest_party.party_number}")
+                    smallest_party.delete()
+                    created_parties.remove(smallest_party)
+            else:
+                logger.info(f"DEBUG: Guild {guild_name} - Smallest party has {smallest_party.member_count} members, stopping consolidation")
+                break
     
     # Add config filler roles to fill parties to max capacity
     for role, _ in filler_config_roles.items():
