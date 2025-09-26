@@ -826,7 +826,24 @@ class EditPlayerView(discord.ui.View):
         async def callback(self, interaction: discord.Interaction):
             if self.values:
                 self.parent_view.selected_role = self.values[0]
-                await interaction.response.send_message(f"✅ Role selected: {self.values[0]}", ephemeral=True)
+                
+                # Save role to database immediately
+                @sync_to_async
+                def save_role():
+                    try:
+                        player = self.parent_view.player
+                        player.game_role = self.values[0]
+                        player.save()
+                        return True
+                    except Exception as e:
+                        print(f"Error saving role: {e}")
+                        return False
+                
+                success = await save_role()
+                if success:
+                    await interaction.response.send_message(f"✅ Role updated to: {self.values[0]}", ephemeral=True)
+                else:
+                    await interaction.response.send_message(f"❌ Error updating role", ephemeral=True)
             else:
                 self.parent_view.selected_role = None
                 await interaction.response.send_message("✅ No role selected", ephemeral=True)
