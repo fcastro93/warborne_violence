@@ -1942,7 +1942,7 @@ def fill_parties(request, event_id):
                 if total_remaining >= 4:  # Minimum party size
                     logger.info(f"DEBUG: Creating incomplete parties with {total_remaining} remaining participants")
                     # Continue with incomplete party creation
-        else:
+                else:
                     logger.info(f"DEBUG: Stopping party creation - insufficient participants for even incomplete parties")
                     break
             
