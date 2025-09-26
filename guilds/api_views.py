@@ -2044,10 +2044,10 @@ def fill_parties(request, event_id):
                         current_count = party.members.filter(assigned_role=role, is_active=True).count()
                         if current_count < required_count and party.member_count < party.max_members:
                             # Add to this party
-                PartyMember.objects.create(
+                            PartyMember.objects.create(
                                 party=party,
-                    event_participant=participant,
-                    player=participant.player,
+                                event_participant=participant,
+                                player=participant.player,
                                 assigned_role=participant.player.game_role,
                                 is_leader=False
                             )
