@@ -1241,6 +1241,108 @@ def join_event(request, event_id):
 
 
 @api_view(['POST'])
+def bulk_join_event(request, event_id):
+    """Join multiple participants to an event in bulk"""
+    try:
+        data = request.data
+        participants = data.get('participants', [])
+        
+        if not participants:
+            return Response({'error': 'Participants list is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not isinstance(participants, list):
+            return Response({'error': 'Participants must be a list'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        event = Event.objects.get(id=event_id)
+        
+        # Check if event is still active
+        if not event.is_active or event.is_cancelled:
+            return Response({'error': 'Event is not active'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Note: max_participants represents party size limit, not event participant limit
+        # Events can have unlimited participants (organized into parties)
+        
+        results = {
+            'successful': [],
+            'failed': [],
+            'already_participating': []
+        }
+        
+        for participant_data in participants:
+            try:
+                discord_user_id = participant_data.get('discord_user_id')
+                discord_name = participant_data.get('discord_name')
+                assigned_role = participant_data.get('assigned_role')
+                
+                if not discord_name:
+                    results['failed'].append({
+                        'discord_name': discord_name or 'Unknown',
+                        'error': 'Discord name is required'
+                    })
+                    continue
+                
+                # Check if already participating
+                if discord_user_id:
+                    existing_participant = EventParticipant.objects.filter(
+                        event=event,
+                        discord_user_id=discord_user_id
+                    ).first()
+                else:
+                    existing_participant = EventParticipant.objects.filter(
+                        event=event,
+                        discord_name=discord_name
+                    ).first()
+                
+                if existing_participant:
+                    results['already_participating'].append({
+                        'discord_name': discord_name,
+                        'discord_user_id': discord_user_id
+                    })
+                    continue
+                
+                # Get player if exists
+                if discord_user_id:
+                    player = Player.objects.filter(discord_user_id=discord_user_id).first()
+                else:
+                    player = Player.objects.filter(discord_name=discord_name).first()
+                
+                # Create new participant
+                final_discord_user_id = discord_user_id
+                if not final_discord_user_id and player and player.discord_user_id:
+                    final_discord_user_id = player.discord_user_id
+                
+                participant = EventParticipant.objects.create(
+                    event=event,
+                    discord_user_id=final_discord_user_id,
+                    discord_name=discord_name,
+                    player=player
+                )
+                
+                results['successful'].append({
+                    'id': participant.id,
+                    'discord_name': participant.discord_name,
+                    'discord_user_id': participant.discord_user_id,
+                    'joined_at': participant.joined_at.isoformat()
+                })
+                
+            except Exception as e:
+                results['failed'].append({
+                    'discord_name': participant_data.get('discord_name', 'Unknown'),
+                    'error': str(e)
+                })
+        
+        return Response({
+            'message': f'Bulk join completed. {len(results["successful"])} successful, {len(results["failed"])} failed, {len(results["already_participating"])} already participating',
+            'results': results
+        })
+        
+    except Event.DoesNotExist:
+        return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
 def leave_event(request, event_id):
     """Leave an event"""
     try:
