@@ -1187,11 +1187,8 @@ def join_event(request, event_id):
         if not event.is_active or event.is_cancelled:
             return Response({'error': 'Event is not active'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Check if event is full
-        if event.max_participants:
-            current_participants = EventParticipant.objects.filter(event=event).count()
-            if current_participants >= event.max_participants:
-                return Response({'error': 'Event is full'}, status=status.HTTP_400_BAD_REQUEST)
+        # Note: max_participants represents party size limit, not event participant limit
+        # Events can have unlimited participants (organized into parties)
         
         # Check if already participating (by discord_name if no discord_user_id)
         if discord_user_id:
