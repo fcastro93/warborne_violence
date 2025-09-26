@@ -1212,7 +1212,7 @@ class CommandMenuView(discord.ui.View):
                 
                 if token:
                     # Create profile URL with token
-                    base_url = "https://weareviolence.com"
+                    base_url = self.config.get('base_url', 'https://weareviolence.com')
                     profile_url = f"{base_url}/player/{player.id}/profile?token={token}"
                     
                     embed = discord.Embed(
@@ -2409,7 +2409,7 @@ def run_bot():
         import django
         from django.conf import settings
         if not settings.configured:
-            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warborne.settings')
+            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warborne_tools.settings_dev')
             django.setup()
         
         # Get bot configuration
