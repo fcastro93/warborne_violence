@@ -1824,8 +1824,7 @@ def event_participants(request, event_id):
         
         # Get all participants with their players and guilds
         participants = EventParticipant.objects.filter(
-            event=event,
-            player__isnull=False
+            event=event
         ).select_related('player', 'player__guild')
         
         participants_data = []
@@ -1843,7 +1842,7 @@ def event_participants(request, event_id):
                         'id': participant.player.guild.id if participant.player.guild else None,
                         'name': participant.player.guild.name if participant.player.guild else None
                     } if participant.player.guild else None
-                },
+                } if participant.player else None,
                 'joined_at': participant.joined_at.isoformat()
             })
         
