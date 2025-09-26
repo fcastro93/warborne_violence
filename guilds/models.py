@@ -596,6 +596,9 @@ class Event(models.Model):
     is_active = models.BooleanField(default=True, help_text="Whether the event is still active")
     is_cancelled = models.BooleanField(default=False, help_text="Whether the event was cancelled")
     
+    # CryptoTommys points system
+    points_per_participant = models.PositiveIntegerField(default=0, help_text="CryptoTommys points awarded to each participant")
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

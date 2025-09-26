@@ -399,7 +399,7 @@ class EventParticipantInline(admin.TabularInline):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ['title', 'event_type', 'event_datetime', 'participant_count_display', 'created_by_discord_name', 'is_active', 'is_cancelled']
+    list_display = ['title', 'event_type', 'event_datetime', 'participant_count_display', 'points_per_participant', 'created_by_discord_name', 'is_active', 'is_cancelled']
     list_filter = ['event_type', 'is_active', 'is_cancelled', 'created_at', 'event_datetime']
     search_fields = ['title', 'description', 'created_by_discord_name']
     ordering = ['event_datetime']
@@ -415,7 +415,7 @@ class EventAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Event Management', {
-            'fields': ('max_participants', 'is_active', 'is_cancelled')
+            'fields': ('max_participants', 'points_per_participant', 'is_active', 'is_cancelled')
         }),
         ('Dates', {
             'fields': ('created_at', 'updated_at'),
