@@ -12,6 +12,8 @@ from datetime import datetime, timedelta
 from .models import Player, PlayerGear, GearItem, GearMod, Drifter, DiscordBotConfig, Guild, Event, RecommendedBuild, Party, PartyMember
 import threading
 import json
+import jwt
+from django.conf import settings
 
 
 def discord_owner_or_staff_required(view_func):
@@ -51,6 +53,63 @@ def discord_owner_or_staff_required(view_func):
     return _wrapped_view
 
 
+def validate_discord_token(token, player_id):
+    """Validate Discord bot token for loadout access"""
+    try:
+        # Decode and validate token
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        
+        # Check token purpose (allow both profile_access and loadout_access)
+        if payload.get('purpose') not in ['profile_access', 'loadout_access']:
+            return False
+        
+        # Check if token is for the correct player
+        if payload.get('player_id') != player_id:
+            return False
+        
+        # Check if player exists and is active
+        try:
+            player = Player.objects.get(id=player_id, is_active=True)
+        except Player.DoesNotExist:
+            return False
+        
+        # Check if Discord user ID matches player owner
+        if payload.get('discord_user_id') != player.discord_user_id:
+            return False
+        
+        return True
+        
+    except Exception as e:
+        print(f"Token validation error: {e}")
+        return False
+
+
+def staff_or_token_required(view_func):
+    """
+    Decorator that allows access if user is staff OR has valid Discord bot token
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, player_id, *args, **kwargs):
+        # Check if user is staff
+        if hasattr(request, 'user') and request.user.is_authenticated and request.user.is_staff:
+            return view_func(request, player_id, *args, **kwargs)
+        
+        # Check for valid Discord bot token
+        token = request.GET.get('token')
+        if token:
+            if validate_discord_token(token, player_id):
+                return view_func(request, player_id, *args, **kwargs)
+        
+        # No valid access - return access denied response
+        return render(request, 'guilds/access_denied.html', {
+            'player_id': player_id,
+            'error_message': 'Access denied. This loadout is only accessible by staff members or through Discord bot.'
+        }, status=403)
+    
+    return _wrapped_view
+
+
+@staff_or_token_required
 def player_loadout(request, player_id):
     """View to display player's loadout with 3 drifter tabs"""
     player = get_object_or_404(Player, id=player_id)
@@ -263,6 +322,7 @@ def assign_drifter(request, player_id):
 
 @require_POST
 @csrf_exempt
+@staff_or_token_required
 def update_loadout(request, player_id):
     """AJAX view to update player's loadout"""
     

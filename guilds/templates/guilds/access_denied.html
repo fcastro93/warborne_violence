@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Denied - Warborne Guild Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .access-denied-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            max-width: 600px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            color: #ff6b6b;
+            margin-bottom: 1.5rem;
+        }
+        
+        .error-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ff6b6b, #ffa726);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .error-message {
+            font-size: 1.2rem;
+            color: #b0bec5;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .access-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-left: 4px solid #4a9eff;
+        }
+        
+        .access-info h3 {
+            color: #4a9eff;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .access-info p {
+            color: #e0e0e0;
+            margin-bottom: 0.5rem;
+        }
+        
+        .discord-info {
+            background: rgba(114, 137, 218, 0.1);
+            border: 1px solid rgba(114, 137, 218, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .discord-info h3 {
+            color: #7289da;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .discord-info p {
+            color: #e0e0e0;
+            margin-bottom: 0.5rem;
+        }
+        
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #4a9eff, #64b5f6);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 2rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(74, 158, 255, 0.3);
+        }
+        
+        .footer-info {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="access-denied-container">
+        <div class="error-icon">🚫</div>
+        <h1 class="error-title">Access Denied</h1>
+        <p class="error-message">
+            {{ error_message|default:"You don't have permission to access this player's loadout." }}
+        </p>
+        
+        <div class="access-info">
+            <h3>🔒 Who Can Access This?</h3>
+            <p>• <strong>Staff Members:</strong> Guild administrators and staff can access any loadout</p>
+            <p>• <strong>Player Owner:</strong> Only the Discord user who owns this player can access their loadout</p>
+        </div>
+        
+        <div class="discord-info">
+            <h3>🌐 How to Access Your Loadout</h3>
+            <p>1. Go to your guild's Discord server</p>
+            <p>2. Use the <strong>/myplayer</strong> command</p>
+            <p>3. Click the <strong>"🌐 My Profile"</strong> button</p>
+            <p>4. You'll get a secure link to access your loadout</p>
+        </div>
+        
+        <a href="javascript:history.back()" class="back-button">← Go Back</a>
+        
+        <div class="footer-info">
+            <p>Player ID: {{ player_id }}</p>
+            <p>If you believe this is an error, please contact a guild administrator.</p>
+        </div>
+    </div>
+</body>
+</html>
