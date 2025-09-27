@@ -1226,9 +1226,9 @@ def join_event(request, event_id):
         
         # Check if already participating (by discord_name if no discord_user_id)
         if discord_user_id:
-            existing_participant = EventParticipant.objects.filter(
-                event=event,
-                discord_user_id=discord_user_id
+        existing_participant = EventParticipant.objects.filter(
+            event=event,
+            discord_user_id=discord_user_id
             ).first()
         else:
             existing_participant = EventParticipant.objects.filter(
@@ -1242,7 +1242,7 @@ def join_event(request, event_id):
         else:
             # Get player if exists
             if discord_user_id:
-                player = Player.objects.filter(discord_user_id=discord_user_id).first()
+            player = Player.objects.filter(discord_user_id=discord_user_id).first()
             else:
                 player = Player.objects.filter(discord_name=discord_name).first()
             
@@ -1976,7 +1976,7 @@ def fill_parties(request, event_id):
                 if total_remaining >= 4:  # Minimum party size
                     logger.info(f"DEBUG: Creating incomplete parties with {total_remaining} remaining participants")
                     # Continue with incomplete party creation
-                else:
+        else:
                     logger.info(f"DEBUG: Stopping party creation - insufficient participants for even incomplete parties")
                     break
             
@@ -2078,10 +2078,10 @@ def fill_parties(request, event_id):
                         current_count = party.members.filter(assigned_role=role, is_active=True).count()
                         if current_count < required_count and party.member_count < party.max_members:
                             # Add to this party
-                            PartyMember.objects.create(
+                PartyMember.objects.create(
                                 party=party,
-                                event_participant=participant,
-                                player=participant.player,
+                    event_participant=participant,
+                    player=participant.player,
                                 assigned_role=participant.player.game_role,
                                 is_leader=False
                             )

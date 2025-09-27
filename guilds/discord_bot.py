@@ -1211,9 +1211,9 @@ class CommandMenuView(discord.ui.View):
                 token = await generate_profile_token(player, interaction.user.id)
                 
                 if token:
-                    # Create profile URL with token
+                    # Create player page URL with token
                     base_url = parent_view.bot_instance.config.get('base_url', 'https://weareviolence.com')
-                    profile_url = f"{base_url}/player/{player.id}/profile?token={token}"
+                    profile_url = f"{base_url}/player/{player.id}?token={token}"
                     
                     embed = discord.Embed(
                         title="🌐 My Profile",
@@ -1229,8 +1229,8 @@ class CommandMenuView(discord.ui.View):
                         inline=False
                     )
                     embed.add_field(
-                        name="🔗 Access Your Profile",
-                        value=f"[Click here to open your profile]({profile_url})\n\n"
+                        name="🔗 Access Your Player Page",
+                        value=f"[Click here to open your player page]({profile_url})\n\n"
                               f"⏰ **Token expires in 1 hour**\n"
                               f"🔒 **Only you can access this link**",
                         inline=False
@@ -1239,8 +1239,8 @@ class CommandMenuView(discord.ui.View):
                         name="ℹ️ What's Available",
                         value="• View your complete player information\n"
                               "• Access your loadouts and gear\n"
-                              "• View your event participation history\n"
-                              "• Check your CryptoTommys points",
+                              "• View your guild information\n"
+                              "• Quick access to all player features",
                         inline=False
                     )
                     
