@@ -731,11 +731,31 @@ def update_player_profile(request, player_id):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def get_guilds_list(request):
-    """Get list of all guilds for dropdown (staff only)"""
+    """Get list of all guilds for dropdown (staff or player editing their own profile)"""
     try:
-        # Check if user is staff
-        if not request.user.is_staff:
-            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+        # Check if user is staff OR if they're editing their own profile with a valid token
+        is_staff = request.user.is_staff or request.user.is_superuser
+        
+        # For non-staff users, check if they have a valid token for player editing
+        is_editing_own_profile = False
+        if not is_staff:
+            # Check for token in request headers
+            token = request.headers.get('X-Profile-Token')
+            if token:
+                try:
+                    # Validate the token
+                    import jwt
+                    from django.conf import settings
+                    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                    
+                    # Check if token is for profile access
+                    if payload.get('purpose') == 'profile_access':
+                        is_editing_own_profile = True
+                except Exception:
+                    pass
+        
+        if not is_staff and not is_editing_own_profile:
+            return Response({'error': 'Staff access or valid profile token required'}, status=status.HTTP_403_FORBIDDEN)
         
         guilds = Guild.objects.filter(is_active=True).order_by('name')
         guilds_data = []
