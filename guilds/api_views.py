@@ -638,13 +638,34 @@ def player_detail(request, player_id):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def update_player_profile(request, player_id):
-    """Update player profile information (staff only)"""
+    """Update player profile information (staff or player owner)"""
     try:
-        # Check if user is staff
-        if not request.user.is_staff:
-            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
-        
         player = get_object_or_404(Player, id=player_id)
+        
+        # Check if user is staff OR the player owner
+        is_staff = request.user.is_staff or request.user.is_superuser
+        is_owner = hasattr(request.user, 'player') and request.user.player.id == player_id
+        
+        # For non-staff users, check if they have a valid token for this player
+        if not is_staff and not is_owner:
+            # Check for token in request headers or body
+            token = request.headers.get('X-Profile-Token') or request.data.get('token')
+            if token:
+                try:
+                    # Validate the token
+                    import jwt
+                    from django.conf import settings
+                    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                    
+                    # Check if token is for this player and user
+                    if (payload.get('player_id') == player_id and 
+                        payload.get('discord_user_id') == player.discord_user_id):
+                        is_owner = True
+                except Exception:
+                    pass
+        
+        if not is_staff and not is_owner:
+            return Response({'error': 'Access denied. Staff access or player ownership required.'}, status=status.HTTP_403_FORBIDDEN)
         
         # Get data from request
         data = request.data
