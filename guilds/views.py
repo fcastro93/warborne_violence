@@ -103,13 +103,38 @@ def staff_or_token_required(view_func):
         # No valid access - return access denied response
         return render(request, 'guilds/access_denied.html', {
             'player_id': player_id,
-            'error_message': 'Access denied. This loadout is only accessible by staff members or through Discord bot.'
+            'error_message': 'Access denied. This page is only accessible by staff members or through Discord bot.'
         }, status=403)
     
     return _wrapped_view
 
 
-@staff_or_token_required
+def staff_or_profile_token_required(view_func):
+    """
+    Decorator for loadout page that allows access if user is staff OR has valid token from profile page
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, player_id, *args, **kwargs):
+        # Check if user is staff
+        if hasattr(request, 'user') and request.user.is_authenticated and request.user.is_staff:
+            return view_func(request, player_id, *args, **kwargs)
+        
+        # Check for valid Discord bot token (same as profile page)
+        token = request.GET.get('token')
+        if token:
+            if validate_discord_token(token, player_id):
+                return view_func(request, player_id, *args, **kwargs)
+        
+        # No valid access - return access denied response
+        return render(request, 'guilds/access_denied.html', {
+            'player_id': player_id,
+            'error_message': 'Access denied. Please access this page through your profile page or contact staff.'
+        }, status=403)
+    
+    return _wrapped_view
+
+
+@staff_or_profile_token_required
 def player_loadout(request, player_id):
     """View to display player's loadout with 3 drifter tabs"""
     player = get_object_or_404(Player, id=player_id)
@@ -322,7 +347,7 @@ def assign_drifter(request, player_id):
 
 @require_POST
 @csrf_exempt
-@staff_or_token_required
+@staff_or_profile_token_required
 def update_loadout(request, player_id):
     """AJAX view to update player's loadout"""
     

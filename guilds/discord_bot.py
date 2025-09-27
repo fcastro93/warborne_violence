@@ -1211,13 +1211,13 @@ class CommandMenuView(discord.ui.View):
                 token = await generate_profile_token(player, interaction.user.id)
                 
                 if token:
-                    # Create player loadout page URL with token
+                    # Create player profile page URL with token (React frontend)
                     base_url = parent_view.bot_instance.config.get('base_url', 'https://weareviolence.com')
-                    profile_url = f"{base_url}/guilds-legacy/player/{player.id}/loadout/?token={token}"
+                    profile_url = f"{base_url}/player/{player.id}?token={token}"
                     
                     embed = discord.Embed(
                         title="🌐 My Profile",
-                        description="Your personal loadout page is ready!",
+                        description="Your personal profile page is ready!",
                         color=0x4a9eff
                     )
                     embed.add_field(
@@ -1229,18 +1229,18 @@ class CommandMenuView(discord.ui.View):
                         inline=False
                     )
                     embed.add_field(
-                        name="🔗 Access Your Loadout Page",
-                        value=f"[Click here to open your loadout page]({profile_url})\n\n"
+                        name="🔗 Access Your Profile Page",
+                        value=f"[Click here to open your profile page]({profile_url})\n\n"
                               f"⏰ **Token expires in 1 hour**\n"
                               f"🔒 **Only you can access this link**",
                         inline=False
                     )
                     embed.add_field(
                         name="ℹ️ What's Available",
-                        value="• View and manage your equipment loadouts\n"
-                              "• Equip and unequip gear on your 3 drifters\n"
+                        value="• View your complete player information\n"
+                              "• Access your loadout management\n"
                               "• Browse your gear inventory\n"
-                              "• Optimize your character builds",
+                              "• Manage your equipment builds",
                         inline=False
                     )
                     
