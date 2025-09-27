@@ -664,13 +664,29 @@ def player_drifters(request, player_id):
                 # Define slot order: weapon, helmet, chest, boots, consumable, 4 mods
                 slot_order = ['weapon', 'helmet', 'chest', 'boots', 'consumable'] + ['mod'] * 4
                 
+                # Separate mods from other gear for proper slot assignment
+                # Sort mods by acquired_at to maintain equipment order
+                mod_gear = sorted(
+                    [gear for gear in equipped_list if gear.gear_item.gear_type.category == 'mod'],
+                    key=lambda x: x.acquired_at
+                )
+                non_mod_gear = [gear for gear in equipped_list if gear.gear_item.gear_type.category != 'mod']
+                
                 for slot_index in range(9):
                     # Find gear for this slot
                     slot_gear = None
-                    for gear in equipped_list:
-                        if gear.gear_item.gear_type.category == slot_order[slot_index]:
-                            slot_gear = gear
-                            break
+                    
+                    if slot_order[slot_index] == 'mod':
+                        # For mod slots, assign mods in order (one per slot)
+                        mod_index = slot_index - 5  # Convert to 0-based mod index (slots 5,6,7,8 -> indices 0,1,2,3)
+                        if mod_index < len(mod_gear):
+                            slot_gear = mod_gear[mod_index]
+                    else:
+                        # For non-mod slots, find the matching gear type
+                        for gear in non_mod_gear:
+                            if gear.gear_item.gear_type.category == slot_order[slot_index]:
+                                slot_gear = gear
+                                break
                     
                     if slot_gear:
                         gear_slots.append({
@@ -3458,9 +3474,12 @@ def gear_power_analytics(request):
                     main_slots = ['weapon', 'helmet', 'chest', 'boots', 'consumable']
                     equipped_list = list(equipped_gear)
                     
+                    # Separate mods from other gear for proper slot assignment
+                    non_mod_gear = [gear for gear in equipped_list if gear.gear_item.gear_type.category != 'mod']
+                    
                     for slot_type in main_slots:
                         slot_gear = None
-                        for gear in equipped_list:
+                        for gear in non_mod_gear:
                             if gear.gear_item.gear_type.category == slot_type:
                                 slot_gear = gear
                                 break
