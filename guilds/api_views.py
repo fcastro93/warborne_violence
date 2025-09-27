@@ -634,6 +634,116 @@ def player_detail(request, player_id):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def update_player_profile(request, player_id):
+    """Update player profile information (staff only)"""
+    try:
+        # Check if user is staff
+        if not request.user.is_staff:
+            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+        
+        player = get_object_or_404(Player, id=player_id)
+        
+        # Get data from request
+        data = request.data
+        in_game_name = data.get('in_game_name')
+        character_level = data.get('character_level')
+        game_role = data.get('game_role')
+        guild_id = data.get('guild_id')
+        
+        # Validate required fields
+        if not in_game_name:
+            return Response({'error': 'Player name is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if character_level is not None and (not isinstance(character_level, int) or character_level < 1):
+            return Response({'error': 'Character level must be a positive integer'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate game role
+        valid_roles = ['healer', 'defensive_tank', 'offensive_tank', 'ranged_dps', 'melee_dps', 'defensive_support', 'offensive_support', 'support']
+        if game_role and game_role not in valid_roles:
+            return Response({'error': 'Invalid game role'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update player
+        player.in_game_name = in_game_name
+        if character_level is not None:
+            player.character_level = character_level
+        if game_role is not None:
+            player.game_role = game_role
+        else:
+            player.game_role = None
+        
+        # Handle guild assignment
+        if guild_id:
+            if guild_id == 'none':
+                player.guild = None
+            else:
+                try:
+                    guild = Guild.objects.get(id=guild_id)
+                    player.guild = guild
+                except Guild.DoesNotExist:
+                    return Response({'error': 'Guild not found'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            player.guild = None
+        
+        player.save()
+        
+        return Response({
+            'success': True,
+            'message': 'Player updated successfully',
+            'player': {
+                'id': player.id,
+                'in_game_name': player.in_game_name,
+                'character_level': player.character_level,
+                'game_role': player.game_role,
+                'guild': player.guild.name if player.guild else None,
+                'guild_id': player.guild.id if player.guild else None
+            }
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def get_guilds_list(request):
+    """Get list of all guilds for dropdown (staff only)"""
+    try:
+        # Check if user is staff
+        if not request.user.is_staff:
+            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+        
+        guilds = Guild.objects.filter(is_active=True).order_by('name')
+        guilds_data = []
+        
+        # Add "No Guild" option
+        guilds_data.append({
+            'id': 'none',
+            'name': 'No Guild',
+            'member_count': 0
+        })
+        
+        # Add existing guilds
+        for guild in guilds:
+            member_count = Player.objects.filter(guild=guild, is_active=True).count()
+            guilds_data.append({
+                'id': guild.id,
+                'name': guild.name,
+                'member_count': member_count
+            })
+        
+        return Response({
+            'success': True,
+            'guilds': guilds_data
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def player_drifters(request, player_id):
