@@ -86,13 +86,29 @@ def player_loadout(request, player_id):
             # Define slot order: weapon, helmet, chest, boots, consumable, 4 mods
             slot_order = ['weapon', 'helmet', 'chest', 'boots', 'consumable'] + ['mod'] * 4
             
+            # Separate mods from other gear for proper slot assignment
+            # Sort mods by acquired_at to maintain equipment order
+            mod_gear = sorted(
+                [gear for gear in equipped_list if gear.gear_item.gear_type.category == 'mod'],
+                key=lambda x: x.acquired_at
+            )
+            non_mod_gear = [gear for gear in equipped_list if gear.gear_item.gear_type.category != 'mod']
+            
             for i in range(9):
                 # Find gear for this slot
                 slot_gear = None
-                for gear in equipped_list:
-                    if gear.gear_item.gear_type.category == slot_order[i]:
-                        slot_gear = gear
-                        break
+                
+                if slot_order[i] == 'mod':
+                    # For mod slots, assign mods in order (one per slot)
+                    mod_index = i - 5  # Convert to 0-based mod index (slots 5,6,7,8 -> indices 0,1,2,3)
+                    if mod_index < len(mod_gear):
+                        slot_gear = mod_gear[mod_index]
+                else:
+                    # For non-mod slots, find the matching gear type
+                    for gear in non_mod_gear:
+                        if gear.gear_item.gear_type.category == slot_order[i]:
+                            slot_gear = gear
+                            break
                 
                 gear_slots.append(slot_gear)
             
@@ -276,22 +292,56 @@ def update_loadout(request, player_id):
                 }
             )
             
-            # Unequip any other gear of the same type from the same drifter
-            PlayerGear.objects.filter(
-                player=player,
-                equipped_on_drifter=drifter_num,
-                gear_item__gear_type__category=slot_type,
-                is_equipped=True
-            ).update(is_equipped=False, equipped_on_drifter=None)
+            # Handle unequipping logic based on gear type
+            if slot_type == 'mod':
+                # For mods, check if all mod slots are full
+                current_mods = PlayerGear.objects.filter(
+                    player=player,
+                    equipped_on_drifter=drifter_num,
+                    gear_item__gear_type__category='mod',
+                    is_equipped=True
+                ).count()
+                
+                if current_mods >= 4:
+                    # All mod slots are full, unequip the oldest mod to make room
+                    oldest_mod = PlayerGear.objects.filter(
+                        player=player,
+                        equipped_on_drifter=drifter_num,
+                        gear_item__gear_type__category='mod',
+                        is_equipped=True
+                    ).order_by('acquired_at').first()
+                    
+                    if oldest_mod:
+                        oldest_mod.is_equipped = False
+                        oldest_mod.equipped_on_drifter = None
+                        oldest_mod.save()
+                        action_msg = f'Equipped {gear_item.name} to Drifter {drifter_num} (replaced {oldest_mod.gear_item.name})'
+                    else:
+                        return JsonResponse({
+                            'success': False,
+                            'message': 'Error equipping gear: All mod slots are full'
+                        })
+                else:
+                    action_msg = f'Equipped {gear_item.name} to Drifter {drifter_num}'
+            else:
+                # For non-mod gear, unequip any other gear of the same type from the same drifter
+                PlayerGear.objects.filter(
+                    player=player,
+                    equipped_on_drifter=drifter_num,
+                    gear_item__gear_type__category=slot_type,
+                    is_equipped=True
+                ).update(is_equipped=False, equipped_on_drifter=None)
             
             # Equip the new gear
             player_gear.is_equipped = True
             player_gear.equipped_on_drifter = drifter_num
             player_gear.save()
             
-            action_msg = f'Equipped {gear_item.name} to Drifter {drifter_num}'
-            if created:
-                action_msg += ' (added to inventory)'
+            # Set action message for non-mod gear
+            if slot_type != 'mod':
+                action_msg = f'Equipped {gear_item.name} to Drifter {drifter_num}'
+                if created:
+                    action_msg += ' (added to inventory)'
             
             return JsonResponse({
                 'success': True,
