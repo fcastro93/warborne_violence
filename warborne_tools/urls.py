@@ -40,6 +40,7 @@ urlpatterns = [
     path('analytics/', guilds_views.event_analytics, name='analytics'),
     path('bot/', guilds_views.bot_analytics, name='bot'),
     
+    
     # Legacy guilds URLs (for backward compatibility)
     path('guilds-legacy/', include('guilds.urls')),
 ]
