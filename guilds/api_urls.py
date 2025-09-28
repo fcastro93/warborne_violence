@@ -24,6 +24,7 @@ urlpatterns = [
     path('player/<int:player_id>/validate-profile-token/', api_views.validate_profile_token, name='validate_profile_token'),
     path('player/<int:player_id>/update-profile/', api_views.update_player_profile, name='update_player_profile'),
     path('guilds/list/', api_views.get_guilds_list, name='get_guilds_list'),
+    path('upload-image/', api_views.upload_image_to_s3, name='upload_image_to_s3'),
     
     # Event Management API endpoints
     path('events/', api_views.events_list, name='events_list'),

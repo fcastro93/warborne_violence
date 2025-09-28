@@ -727,6 +727,61 @@ def update_player_profile(request, player_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def upload_image_to_s3(request):
+    """Upload an image to S3 storage (staff only)"""
+    try:
+        # Check if user is staff
+        if not request.user.is_staff:
+            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if file was provided
+        if 'image' not in request.FILES:
+            return Response({'error': 'No image file provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        image_file = request.FILES['image']
+        filename = request.data.get('filename')
+        
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+        if image_file.content_type not in allowed_types:
+            return Response({'error': 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate file size (max 10MB)
+        max_size = 10 * 1024 * 1024  # 10MB
+        if image_file.size > max_size:
+            return Response({'error': 'File too large. Maximum size is 10MB.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Use provided filename or generate one
+        if not filename:
+            import uuid
+            extension = image_file.name.split('.')[-1] if '.' in image_file.name else 'png'
+            filename = f"{uuid.uuid4().hex}.{extension}"
+        
+        # Upload to S3
+        from warborne_tools.s3_utils import s3_manager
+        s3_url = s3_manager.upload_image(
+            image_file,
+            filename,
+            image_file.content_type
+        )
+        
+        if s3_url:
+            return Response({
+                'success': True,
+                'message': 'Image uploaded successfully',
+                'filename': filename,
+                'url': s3_url
+            })
+        else:
+            return Response({'error': 'Failed to upload image to S3'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
