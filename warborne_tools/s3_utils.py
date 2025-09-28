@@ -43,7 +43,8 @@ class S3Manager:
                 self.bucket_name,
                 s3_key,
                 ExtraArgs={
-                    'ContentType': content_type
+                    'ContentType': content_type,
+                    'ACL': 'public-read'
                 }
             )
             
