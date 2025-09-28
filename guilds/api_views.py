@@ -782,6 +782,96 @@ def upload_image_to_s3(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def upload_player_image(request, player_id):
+    """Upload profile or banner picture for a player (staff or player owner)"""
+    try:
+        player = get_object_or_404(Player, id=player_id)
+        
+        # Check if user is staff OR the player owner
+        is_staff = request.user.is_staff or request.user.is_superuser
+        is_owner = hasattr(request.user, 'player') and request.user.player.id == player_id
+        
+        # For non-staff users, check if they have a valid token for this player
+        if not is_staff and not is_owner:
+            # Check for token in request headers or body
+            token = request.headers.get('X-Profile-Token') or request.data.get('token')
+            if token:
+                try:
+                    # Validate the token
+                    import jwt
+                    from django.conf import settings
+                    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                    
+                    # Check if token is for this player and user
+                    if (payload.get('player_id') == player_id and 
+                        payload.get('discord_user_id') == player.discord_user_id):
+                        is_owner = True
+                except Exception:
+                    pass
+        
+        if not is_staff and not is_owner:
+            return Response({'error': 'Access denied. Staff access or player ownership required.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if image was provided
+        if 'image' not in request.FILES:
+            return Response({'error': 'No image file provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        image_file = request.FILES['image']
+        image_type = request.data.get('type', 'profile')  # 'profile' or 'banner'
+        
+        # Validate image type
+        if image_type not in ['profile', 'banner']:
+            return Response({'error': 'Invalid image type. Must be "profile" or "banner".'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+        if image_file.content_type not in allowed_types:
+            return Response({'error': 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate file size (max 5MB for profile, 10MB for banner)
+        max_size = 5 * 1024 * 1024 if image_type == 'profile' else 10 * 1024 * 1024
+        if image_file.size > max_size:
+            max_size_mb = 5 if image_type == 'profile' else 10
+            return Response({'error': f'File too large. Maximum size is {max_size_mb}MB for {image_type} pictures.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Generate filename
+        import uuid
+        extension = image_file.name.split('.')[-1] if '.' in image_file.name else 'png'
+        filename = f"player_{player_id}_{image_type}_{uuid.uuid4().hex}.{extension}"
+        
+        # Upload to S3
+        from warborne_tools.s3_utils import s3_manager
+        s3_url = s3_manager.upload_image(
+            image_file,
+            filename,
+            image_file.content_type
+        )
+        
+        if s3_url:
+            # Update player model
+            if image_type == 'profile':
+                player.profile_picture = s3_url
+            else:  # banner
+                player.banner_picture = s3_url
+            player.save()
+            
+            return Response({
+                'success': True,
+                'message': f'{image_type.capitalize()} picture uploaded successfully',
+                'filename': filename,
+                'url': s3_url,
+                'type': image_type
+            })
+        else:
+            return Response({'error': f'Failed to upload {image_type} picture to S3'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])

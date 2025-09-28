@@ -134,6 +134,10 @@ class Player(models.Model):
     # CryptoTommys points system
     crypto_tommys = models.PositiveIntegerField(default=0, help_text="CryptoTommys points earned by the player")
     
+    # Profile images
+    profile_picture = models.URLField(blank=True, null=True, help_text="URL to player's profile picture")
+    banner_picture = models.URLField(blank=True, null=True, help_text="URL to player's banner picture")
+    
     class Meta:
         ordering = ['in_game_name']
         verbose_name = "Player"
