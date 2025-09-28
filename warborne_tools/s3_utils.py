@@ -43,8 +43,7 @@ class S3Manager:
                 self.bucket_name,
                 s3_key,
                 ExtraArgs={
-                    'ContentType': content_type,
-                    'ACL': 'public-read'
+                    'ContentType': content_type
                 }
             )
             
@@ -54,7 +53,10 @@ class S3Manager:
             return s3_url
             
         except ClientError as e:
-            logger.error(f"Error uploading {filename} to S3: {e}")
+            error_code = e.response['Error']['Code']
+            error_message = e.response['Error']['Message']
+            logger.error(f"Error uploading {filename} to S3: {error_code} - {error_message}")
+            logger.error(f"Full error response: {e.response}")
             return None
         except Exception as e:
             logger.error(f"Unexpected error uploading {filename} to S3: {e}")
