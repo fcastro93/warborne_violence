@@ -149,6 +149,11 @@ AWS_S3_OBJECT_PARAMETERS = {
 ENVIRONMENT = config('ENVIRONMENT', default='dev')  # dev or prod
 S3_IMAGES_FOLDER = f'{ENVIRONMENT}/images'
 
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
