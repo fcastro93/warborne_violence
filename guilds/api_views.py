@@ -783,18 +783,21 @@ def upload_image_to_s3(request):
 
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def upload_player_image(request, player_id):
     """Upload profile or banner picture for a player (staff or player owner)"""
     try:
         player = get_object_or_404(Player, id=player_id)
         
-        # Check if user is staff OR the player owner
-        is_staff = request.user.is_staff or request.user.is_superuser
-        is_owner = hasattr(request.user, 'player') and request.user.player.id == player_id
+        # Check authentication - either JWT (staff) or profile token (player owner)
+        is_staff = False
+        is_owner = False
         
-        # For non-staff users, check if they have a valid token for this player
+        # First, try JWT authentication (for staff users)
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            is_staff = request.user.is_staff or request.user.is_superuser
+            is_owner = hasattr(request.user, 'player') and request.user.player.id == player_id
+        
+        # If not authenticated via JWT, try profile token authentication
         if not is_staff and not is_owner:
             # Check for token in request headers or body
             token = request.headers.get('X-Profile-Token') or request.data.get('token')
