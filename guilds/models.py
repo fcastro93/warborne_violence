@@ -613,6 +613,20 @@ class Event(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.event_datetime.strftime('%Y-%m-%d %H:%M')}"
+    
+    @property
+    def party_size_limit(self):
+        """Returns the party size limit for this event"""
+        return self.max_participants
+    
+    @property
+    def participant_count(self):
+        """Get the number of active participants"""
+        return self.participants.filter(is_active=True).count()
+    
+    def get_participant_count_sync(self):
+        """Sync version of participant count for use with sync_to_async"""
+        return self.participants.filter(is_active=True).count()
 
 
 class EventTemplate(models.Model):
