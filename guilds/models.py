@@ -613,6 +613,48 @@ class Event(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.event_datetime.strftime('%Y-%m-%d %H:%M')}"
+
+
+class EventTemplate(models.Model):
+    """Model for event templates to reuse event configurations"""
+    name = models.CharField(max_length=100, help_text="Template name")
+    description = models.TextField(blank=True, null=True, help_text="Template description")
+    
+    # Event configuration (copied from original event)
+    event_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('guild_war', 'Guild War'),
+            ('pvp_fight', 'PvP Fight'),
+            ('resource_farming', 'Resource Farming'),
+            ('boss_raid', 'Boss Raid'),
+            ('social_event', 'Social Event'),
+            ('training', 'Training'),
+            ('other', 'Other'),
+        ],
+        default='other'
+    )
+    max_participants = models.IntegerField(null=True, blank=True, help_text="Maximum party size for this template (null = default party size)")
+    points_per_participant = models.IntegerField(default=0, help_text="Points awarded per participant")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by_discord_id = models.BigIntegerField(default=0, help_text="Discord ID of template creator")
+    created_by_discord_name = models.CharField(max_length=100, default='Web User', help_text="Discord name of template creator")
+    is_active = models.BooleanField(default=True, help_text="Whether the template is active")
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Event Template"
+        verbose_name_plural = "Event Templates"
+    
+    def __str__(self):
+        return f"{self.name} ({self.event_type})"
+    
+    @property
+    def party_size_limit(self):
+        """Get the party size limit for this template"""
+        return self.max_participants
     
     @property
     def participant_count(self):

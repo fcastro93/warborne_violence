@@ -13,7 +13,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 import pytz
-from .models import Guild, Player, Drifter, Event, EventParticipant, Party, PartyMember, GearItem, GearType, RecommendedBuild, PlayerGear
+from .models import Guild, Player, Drifter, Event, EventParticipant, Party, PartyMember, GearItem, GearType, RecommendedBuild, PlayerGear, EventTemplate
 import json
 import asyncio
 import logging
@@ -1562,6 +1562,160 @@ def duplicate_event(request):
             }
         }, status=status.HTTP_201_CREATED)
         
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@csrf_exempt
+def save_event_template(request):
+    """Save an event as a template"""
+    try:
+        data = request.data
+        
+        # Validate required fields
+        if not data.get('event_id'):
+            return Response({'error': 'Event ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('name'):
+            return Response({'error': 'Template name is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the original event
+        try:
+            original_event = Event.objects.get(id=data['event_id'])
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Create template
+        template = EventTemplate.objects.create(
+            name=data['name'],
+            description=data.get('description', ''),
+            event_type=original_event.event_type,
+            max_participants=original_event.max_participants,
+            points_per_participant=original_event.points_per_participant,
+            created_by_discord_id=data.get('created_by_discord_id', 0),
+            created_by_discord_name=data.get('created_by_discord_name', 'Web User')
+        )
+        
+        return Response({
+            'id': template.id,
+            'message': 'Template saved successfully',
+            'template': {
+                'id': template.id,
+                'name': template.name,
+                'description': template.description,
+                'event_type': template.event_type,
+                'party_size_limit': template.party_size_limit,
+                'points_per_participant': template.points_per_participant,
+                'created_by_discord_name': template.created_by_discord_name,
+                'created_at': template.created_at.isoformat()
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def list_event_templates(request):
+    """List all event templates"""
+    try:
+        templates = EventTemplate.objects.filter(is_active=True).order_by('-created_at')
+        
+        templates_data = []
+        for template in templates:
+            templates_data.append({
+                'id': template.id,
+                'name': template.name,
+                'description': template.description,
+                'event_type': template.event_type,
+                'max_participants': template.max_participants,
+                'points_per_participant': template.points_per_participant,
+                'created_by_discord_name': template.created_by_discord_name,
+                'created_at': template.created_at.isoformat()
+            })
+        
+        return Response(templates_data)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@csrf_exempt
+def create_event_from_template(request, template_id):
+    """Create a new event from a template"""
+    try:
+        data = request.data
+        
+        # Get the template
+        try:
+            template = EventTemplate.objects.get(id=template_id, is_active=True)
+        except EventTemplate.DoesNotExist:
+            return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Validate required fields
+        if not data.get('title'):
+            return Response({'error': 'Title is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('event_datetime'):
+            return Response({'error': 'Event datetime is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Parse datetime (assuming it's in local time, we'll use a default timezone)
+        try:
+            local_datetime_str = data['event_datetime']
+            naive_dt = datetime.strptime(local_datetime_str, '%Y-%m-%dT%H:%M')
+            
+            # Use America/New_York as default timezone (can be made configurable)
+            default_tz = pytz.timezone('America/New_York')
+            local_dt = default_tz.localize(naive_dt)
+            utc_dt = local_dt.astimezone(pytz.UTC)
+        except ValueError:
+            return Response({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create the new event from template
+        new_event = Event.objects.create(
+            title=data['title'],
+            description=data.get('description', template.description),
+            event_type=template.event_type,
+            event_datetime=utc_dt,
+            timezone='America/New_York',  # Default timezone
+            max_participants=template.max_participants,
+            points_per_participant=template.points_per_participant,
+            created_by_discord_id=data.get('created_by_discord_id', 0),
+            created_by_discord_name=data.get('created_by_discord_name', 'Web User')
+        )
+        
+        return Response({
+            'id': new_event.id,
+            'message': 'Event created from template successfully',
+            'event': {
+                'id': new_event.id,
+                'title': new_event.title,
+                'description': new_event.description,
+                'event_type': new_event.event_type,
+                'event_datetime': new_event.event_datetime.isoformat(),
+                'timezone': new_event.timezone,
+                'party_size_limit': new_event.party_size_limit,
+                'points_per_participant': new_event.points_per_participant,
+                'created_by_discord_name': new_event.created_by_discord_name,
+                'created_at': new_event.created_at.isoformat()
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+def delete_event_template(request, template_id):
+    """Delete an event template"""
+    try:
+        template = EventTemplate.objects.get(id=template_id)
+        template.delete()
+        
+        return Response({'message': 'Template deleted successfully'})
+        
+    except EventTemplate.DoesNotExist:
+        return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

@@ -48,73 +48,127 @@
 </div>
 
 <div class="row">
-    <!-- Events Table -->
+    <!-- Events and Templates Tabs -->
     <div class="col-lg-8 mb-4">
         <div class="stats-card">
-            <h4><i class="fas fa-list text-primary"></i> All Events</h4>
-            <hr>
-            {% if events %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Event</th>
-                                <th>Type</th>
-                                <th>Date & Time</th>
-                                <th>Participants</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for event in events %}
-                            <tr>
-                                <td>
-                                    <strong>{{ event.title }}</strong>
-                                    {% if event.description %}
-                                        <br><small class="text-muted">{{ event.description|truncatechars:50 }}</small>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ event.event_type|title }}</span>
-                                </td>
-                                <td>
-                                    <strong>{{ event.event_datetime|date:"M d, Y" }}</strong>
-                                    <br><small class="text-muted">{{ event.event_datetime|time:"H:i" }}</small>
-                                </td>
-                                <td>
-                                    <span class="badge bg-primary">{{ event.participant_count }} participants</span>
-                                    {% if event.party_size_limit %}
-                                        <br><small class="text-muted">Party size: {{ event.party_size_limit }}</small>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if event.event_datetime > now %}
-                                        <span class="badge bg-success">Upcoming</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">Past</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <small class="text-muted">{{ event.created_at|date:"M d" }}</small>
-                                </td>
-                                <td>
-                                    <a href="/admin/guilds/event/{{ event.id }}/change/" class="btn btn-sm btn-outline-primary" target="_blank">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                    <button class="btn btn-sm btn-outline-success ms-1" onclick="duplicateEvent({{ event.id }})" title="Duplicate Event">
-                                        <i class="fas fa-copy"></i> Duplicate
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <!-- Tab Navigation -->
+            <ul class="nav nav-tabs" id="eventsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button" role="tab" aria-controls="events" aria-selected="true">
+                        <i class="fas fa-calendar-alt"></i> Events
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="templates-tab" data-bs-toggle="tab" data-bs-target="#templates" type="button" role="tab" aria-controls="templates" aria-selected="false">
+                        <i class="fas fa-layer-group"></i> Templates
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="eventsTabsContent">
+                <!-- Events Tab -->
+                <div class="tab-pane fade show active" id="events" role="tabpanel" aria-labelledby="events-tab">
+                    <div class="p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="fas fa-list text-primary"></i> Created Events</h5>
+                            <small class="text-muted">{{ events|length }} events</small>
+                        </div>
+                        
+                        {% if events %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Event</th>
+                                            <th>Type</th>
+                                            <th>Date & Time</th>
+                                            <th>Participants</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for event in events %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ event.title }}</strong>
+                                                {% if event.description %}
+                                                    <br><small class="text-muted">{{ event.description|truncatechars:50 }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ event.event_type|title }}</span>
+                                            </td>
+                                            <td>
+                                                <strong>{{ event.event_datetime|date:"M d, Y" }}</strong>
+                                                <br><small class="text-muted">{{ event.event_datetime|time:"H:i" }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ event.participant_count }} participants</span>
+                                                {% if event.party_size_limit %}
+                                                    <br><small class="text-muted">Party size: {{ event.party_size_limit }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if event.event_datetime > now %}
+                                                    <span class="badge bg-success">Upcoming</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Past</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">{{ event.created_at|date:"M d" }}</small>
+                                            </td>
+                                            <td>
+                                                <a href="/admin/guilds/event/{{ event.id }}/change/" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-success ms-1" onclick="duplicateEvent({{ event.id }})" title="Duplicate Event">
+                                                    <i class="fas fa-copy"></i> Duplicate
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-warning ms-1" onclick="saveAsTemplate({{ event.id }})" title="Save as Template">
+                                                    <i class="fas fa-layer-group"></i> Save Template
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No events found</p>
+                                <a href="/admin/guilds/event/add/" class="btn btn-primary" target="_blank">
+                                    <i class="fas fa-plus"></i> Create Your First Event
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-            {% else %}
-                <p class="text-muted text-center">No events found</p>
-            {% endif %}
+
+                <!-- Templates Tab -->
+                <div class="tab-pane fade" id="templates" role="tabpanel" aria-labelledby="templates-tab">
+                    <div class="p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="fas fa-layer-group text-warning"></i> Event Templates</h5>
+                            <small class="text-muted">0 templates</small>
+                        </div>
+                        
+                        <!-- Template Grid -->
+                        <div id="templatesGrid">
+                            <!-- Templates will be loaded here -->
+                            <div class="text-center py-4">
+                                <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No templates created yet</p>
+                                <p class="text-muted small">Save events as templates to reuse them later</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -287,6 +341,60 @@
     </div>
 </div>
 
+<!-- Save as Template Modal -->
+<div class="modal fade" id="saveTemplateModal" tabindex="-1" aria-labelledby="saveTemplateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="saveTemplateModalLabel">
+                    <i class="fas fa-layer-group text-warning"></i> Save as Template
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="saveTemplateForm">
+                    <input type="hidden" id="templateEventId" name="event_id">
+                    
+                    <div class="mb-3">
+                        <label for="templateName" class="form-label">
+                            <i class="fas fa-tag"></i> Template Name
+                        </label>
+                        <input type="text" class="form-control" id="templateName" name="name" required>
+                        <div class="form-text">Give your template a descriptive name</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="templateDescription" class="form-label">
+                            <i class="fas fa-align-left"></i> Template Description (Optional)
+                        </label>
+                        <textarea class="form-control" id="templateDescription" name="description" rows="3"></textarea>
+                        <div class="form-text">Describe when to use this template</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>What will be saved:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Event configuration and settings</li>
+                            <li>Party size limits and structure</li>
+                            <li>Event type and description</li>
+                            <li><strong>Note:</strong> Participants and parties are not saved</li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-warning" onclick="submitSaveTemplate()">
+                    <i class="fas fa-layer-group"></i> Save Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function duplicateEvent(eventId) {
     // Set the original event ID
@@ -365,6 +473,157 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+function saveAsTemplate(eventId) {
+    // Set the event ID
+    document.getElementById('templateEventId').value = eventId;
+    
+    // Set default template name
+    document.getElementById('templateName').value = 'Event Template';
+    
+    // Clear description
+    document.getElementById('templateDescription').value = '';
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('saveTemplateModal'));
+    modal.show();
+}
+
+async function submitSaveTemplate() {
+    const form = document.getElementById('saveTemplateForm');
+    const formData = new FormData(form);
+    
+    // Show loading state
+    const submitBtn = document.querySelector('#saveTemplateModal .btn-warning');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/events/save-template/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Success
+            alert('Template saved successfully!');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('saveTemplateModal'));
+            modal.hide();
+            
+            // Update templates count if we're on templates tab
+            updateTemplatesCount();
+        } else {
+            // Error
+            alert('Error: ' + (data.error || 'Failed to save template'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error: Failed to save template');
+    } finally {
+        // Reset button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+function updateTemplatesCount() {
+    // This would be called after saving a template to update the count
+    // For now, we'll just increment the displayed count
+    const countElement = document.querySelector('#templates-tab + small');
+    if (countElement) {
+        const currentCount = parseInt(countElement.textContent) || 0;
+        countElement.textContent = (currentCount + 1) + ' templates';
+    }
+}
+
+// Load templates when templates tab is shown
+document.getElementById('templates-tab').addEventListener('shown.bs.tab', function() {
+    loadTemplates();
+});
+
+async function loadTemplates() {
+    try {
+        const response = await fetch('/api/events/templates/');
+        const templates = await response.json();
+        
+        const templatesGrid = document.getElementById('templatesGrid');
+        
+        if (templates && templates.length > 0) {
+            templatesGrid.innerHTML = `
+                <div class="row">
+                    ${templates.map(template => `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-layer-group text-warning"></i>
+                                        ${template.name}
+                                    </h6>
+                                    <p class="card-text text-muted small">${template.description || 'No description'}</p>
+                                    <div class="small text-muted">
+                                        <div><strong>Type:</strong> ${template.event_type}</div>
+                                        <div><strong>Party Size:</strong> ${template.max_participants || 'Default'}</div>
+                                        <div><strong>Points:</strong> ${template.points_per_participant || 0}</div>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <button class="btn btn-primary btn-sm" onclick="createFromTemplate(${template.id})">
+                                        <i class="fas fa-plus"></i> Create Event
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm float-end" onclick="deleteTemplate(${template.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Update count
+            const countElement = document.querySelector('#templates-tab + small');
+            if (countElement) {
+                countElement.textContent = templates.length + ' templates';
+            }
+        } else {
+            templatesGrid.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No templates created yet</p>
+                    <p class="text-muted small">Save events as templates to reuse them later</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading templates:', error);
+        document.getElementById('templatesGrid').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <p class="text-danger">Error loading templates</p>
+            </div>
+        `;
+    }
+}
+
+function createFromTemplate(templateId) {
+    // This would open the create event modal with template data
+    alert('Create from template functionality coming soon!');
+}
+
+function deleteTemplate(templateId) {
+    if (confirm('Are you sure you want to delete this template?')) {
+        // This would call the delete template API
+        alert('Delete template functionality coming soon!');
+    }
 }
 </script>
 
