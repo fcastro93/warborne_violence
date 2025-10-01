@@ -1026,7 +1026,7 @@ class SimpleMenuView(discord.ui.View):
         if user_has_player:
             embed.add_field(
                 name="📋 Available Options",
-                value="• 📊 Player Details\n• ✏️ Edit Player\n• 🌐 My Profile",
+                value="• 🌐 My Profile",
                 inline=False
             )
             embed.add_field(
@@ -1066,9 +1066,7 @@ class CommandMenuView(discord.ui.View):
             # User doesn't have a player - show Create Player button
             self.add_item(self.CreatePlayerButton())
         else:
-            # User has a player - show Player Details, Edit Player, and My Profile buttons
-            self.add_item(self.PlayerDetailsButton())
-            self.add_item(self.EditPlayerButton())
+            # User has a player - show only My Profile button
             self.add_item(self.MyProfileButton())
     
     class CreatePlayerButton(discord.ui.Button):
@@ -1941,7 +1939,7 @@ class WarborneBot(commands.Bot):
                         return False, "no_player"  # User doesn't have a player
                     
                     # Check if player has a valid game role
-                    if not player.game_role or player.game_role not in ['ranged_dps', 'melee_dps', 'healer', 'defensive_tank', 'offensive_tank']:
+                    if not player.game_role or player.game_role not in ['ranged_dps', 'melee_dps', 'healer', 'defensive_tank', 'offensive_tank', 'offensive_support', 'defensive_support']:
                         return False, "invalid_role"  # User has invalid or missing role
                     
                     # Events have unlimited participants, so no need to check if "full"
@@ -1992,6 +1990,8 @@ class WarborneBot(commands.Bot):
                             f"   • Healer\n"
                             f"   • Defensive Tank\n"
                             f"   • Offensive Tank\n"
+                            f"   • Offensive Support\n"
+                            f"   • Defensive Support\n"
                             f"6. Then react with ✅ again to join the event!"
                         )
                 except Exception as e:

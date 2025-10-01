@@ -117,8 +117,7 @@ class Player(models.Model):
     game_role = models.CharField(
         max_length=20, 
         choices=GAME_ROLE_CHOICES, 
-        null=True, 
-        blank=True,
+        default='ranged_dps',
         help_text="Primary role/playstyle in the game"
     )
     
