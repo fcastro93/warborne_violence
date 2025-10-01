@@ -1967,7 +1967,11 @@ class WarborneBot(commands.Bot):
                         await user.send(
                             f"❌ **Cannot join event without a player!**\n\n"
                             f"You need to create a player first before joining **{event.title}**.\n\n"
-                            f"Use `!createplayer` to create your player, then react with ✅ again to join the event!"
+                            f"📋 **Instructions:**\n"
+                            f"1. Go to the **#talk-to-violence-bot** channel\n"
+                            f"2. Type `!menu`\n"
+                            f"3. Click on **Create Player**\n"
+                            f"4. Then react with ✅ again to join the event!"
                         )
                 except Exception as e:
                     print(f"Error removing reaction or sending DM: {e}")
