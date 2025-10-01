@@ -617,12 +617,12 @@ class Event(models.Model):
     
     @property
     def participant_count(self):
-        """Get the number of participants"""
-        return self.participants.count()
+        """Get the number of active participants"""
+        return self.participants.filter(is_active=True).count()
     
     def get_participant_count_sync(self):
         """Sync version of participant count for use with sync_to_async"""
-        return self.participants.count()
+        return self.participants.filter(is_active=True).count()
     
     @property
     def party_size_limit(self):
@@ -663,6 +663,7 @@ class EventParticipant(models.Model):
     player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='event_participations')
     
     # Participation status
+    is_active = models.BooleanField(default=True, help_text="Whether the participant is currently active in the event")
     joined_at = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True, help_text="Notes about the participant")
     

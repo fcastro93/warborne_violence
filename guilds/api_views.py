@@ -1224,7 +1224,8 @@ def events_list(request):
         events_data = []
         for event in events:
             participant_count = EventParticipant.objects.filter(
-                event=event
+                event=event,
+                is_active=True
             ).count()
             
             events_data.append({
@@ -1260,7 +1261,8 @@ def event_detail(request, event_id):
         
         # Get participants
         participants = EventParticipant.objects.filter(
-            event=event
+            event=event,
+            is_active=True
         ).select_related('player')
         
         participants_data = []
@@ -1655,7 +1657,8 @@ def publish_event(request, event_id):
         # Get participant count
         from .models import EventParticipant
         participant_count = EventParticipant.objects.filter(
-            event=event
+            event=event,
+            is_active=True
         ).count()
         logger.info(f"👥 Participant count: {participant_count}")
         
@@ -1796,7 +1799,8 @@ def give_rewards(request, event_id):
         # Get all participants with players
         participants = EventParticipant.objects.filter(
             event=event,
-            player__isnull=False
+            player__isnull=False,
+            is_active=True
         ).select_related('player')
         
         if not participants.exists():
@@ -1851,7 +1855,8 @@ def create_parties(request, event_id):
         # Get all participants with their players
         participants = list(EventParticipant.objects.filter(
             event=event,
-            player__isnull=False
+            player__isnull=False,
+            is_active=True
         ).select_related('player', 'player__guild'))
         
         logger.info(f"👥 Total participants found: {len(participants)}")
@@ -1994,7 +1999,8 @@ def create_guild_parties(request, event_id):
         # Get all participants with their players and guilds
         participants = list(EventParticipant.objects.filter(
             event=event,
-            player__isnull=False
+            player__isnull=False,
+            is_active=True
         ).select_related('player', 'player__guild'))
         
         if len(participants) < 2:
@@ -2073,7 +2079,8 @@ def event_participants(request, event_id):
         # Get all participants with their players and guilds
         participants = EventParticipant.objects.filter(
             event=event,
-            player__isnull=False
+            player__isnull=False,
+            is_active=True
         ).select_related('player', 'player__guild')
         
         participants_data = []
@@ -2219,7 +2226,8 @@ def fill_parties(request, event_id):
         # Get all event participants
         participants = list(EventParticipant.objects.filter(
             event=event,
-            player__isnull=False
+            player__isnull=False,
+            is_active=True
         ).select_related('player', 'player__guild'))
         
         if guild_split:
@@ -3898,7 +3906,7 @@ def event_participation_analytics(request):
         
         for event in events:
             # Get participant count for this event
-            participant_count = EventParticipant.objects.filter(event=event).count()
+            participant_count = EventParticipant.objects.filter(event=event, is_active=True).count()
             
             # Format date as YYYY-MM-DD
             event_date = event.event_datetime.date().strftime('%Y-%m-%d')

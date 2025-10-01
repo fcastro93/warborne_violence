@@ -392,7 +392,7 @@ class DiscordBotLogAdmin(admin.ModelAdmin):
 class EventParticipantInline(admin.TabularInline):
     model = EventParticipant
     extra = 0
-    fields = ['discord_name', 'player', 'joined_at']
+    fields = ['discord_name', 'player', 'is_active', 'joined_at']
     readonly_fields = ['discord_name', 'joined_at']
     fk_name = 'event'
 
@@ -450,8 +450,8 @@ class EventAdmin(admin.ModelAdmin):
 
 @admin.register(EventParticipant)
 class EventParticipantAdmin(admin.ModelAdmin):
-    list_display = ['discord_name', 'event_title', 'player', 'joined_at']
-    list_filter = ['event__event_type', 'joined_at']
+    list_display = ['discord_name', 'event_title', 'player', 'is_active', 'joined_at']
+    list_filter = ['event__event_type', 'is_active', 'joined_at']
     search_fields = ['discord_name', 'event__title']
     ordering = ['-joined_at']
     readonly_fields = ['joined_at']

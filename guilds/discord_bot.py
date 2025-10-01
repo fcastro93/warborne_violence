@@ -1478,7 +1478,7 @@ class WarborneBot(commands.Bot):
         def _get_active_guilds():
             # Force evaluation to detach from ORM before returning to async world
             return list(Guild.objects.filter(is_active=True))
-        
+
         @sync_to_async
         def _create_player(in_game_name, discord_user_id, discord_name, level=1, faction='none'):
             """Create a new player with Discord owner"""
