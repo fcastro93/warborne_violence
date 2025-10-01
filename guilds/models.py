@@ -627,6 +627,28 @@ class Event(models.Model):
     def get_participant_count_sync(self):
         """Sync version of participant count for use with sync_to_async"""
         return self.participants.filter(is_active=True).count()
+    
+    @property
+    def discord_epoch(self):
+        """Get Unix epoch timestamp for Discord timestamps"""
+        import calendar
+        # Ensure we have a timezone-aware datetime
+        if self.event_datetime.tzinfo is None:
+            # If naive, assume UTC
+            dt = self.event_datetime.replace(tzinfo=timezone.utc)
+        else:
+            dt = self.event_datetime
+        return int(dt.timestamp())
+    
+    @property
+    def discord_timestamp(self):
+        """Generate Discord timestamp for the event datetime"""
+        return f"<t:{self.discord_epoch}:F>"  # Full date and time format
+    
+    @property
+    def discord_timestamp_relative(self):
+        """Generate Discord relative timestamp for the event datetime"""
+        return f"<t:{self.discord_epoch}:R>"  # Relative time format
 
 
 class EventTemplate(models.Model):
