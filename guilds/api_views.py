@@ -10,6 +10,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db import models
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 import pytz
 from .models import Guild, Player, Drifter, Event, EventParticipant, Party, PartyMember, GearItem, GearType, RecommendedBuild, PlayerGear
@@ -1430,6 +1431,134 @@ def create_event(request):
                 'discord_epoch': event.discord_epoch,
                 'discord_timestamp': event.discord_timestamp,
                 'discord_timestamp_relative': event.discord_timestamp_relative
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@csrf_exempt
+def duplicate_event(request):
+    """Duplicate an existing event with new date/time and points"""
+    try:
+        data = request.data
+        
+        # Validate required fields
+        if not data.get('original_event_id'):
+            return Response({'error': 'Original event ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('title'):
+            return Response({'error': 'Title is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('event_datetime'):
+            return Response({'error': 'Event datetime is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('points_per_participant'):
+            return Response({'error': 'Points per participant is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the original event
+        try:
+            original_event = Event.objects.get(id=data['original_event_id'])
+        except Event.DoesNotExist:
+            return Response({'error': 'Original event not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Validate points
+        try:
+            points_per_participant = int(data['points_per_participant'])
+            if points_per_participant < 0:
+                raise ValueError()
+        except ValueError:
+            return Response({'error': 'Points per participant must be a non-negative number'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Parse datetime (assuming it's in local time, we'll use the original event's timezone)
+        try:
+            local_datetime_str = data['event_datetime']
+            # Parse as naive datetime first
+            naive_dt = datetime.strptime(local_datetime_str, '%Y-%m-%dT%H:%M')
+            
+            # Localize to the original event's timezone
+            original_tz = pytz.timezone(original_event.timezone)
+            local_dt = original_tz.localize(naive_dt)
+            
+            # Convert to UTC
+            utc_dt = local_dt.astimezone(pytz.UTC)
+        except ValueError:
+            return Response({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create the new event
+        new_event = Event.objects.create(
+            title=data['title'],
+            description=data.get('description', original_event.description),
+            event_type=original_event.event_type,
+            event_datetime=utc_dt,
+            timezone=original_event.timezone,
+            max_participants=original_event.max_participants,
+            points_per_participant=points_per_participant,
+            created_by_discord_id=data.get('created_by_discord_id', 0),
+            created_by_discord_name=data.get('created_by_discord_name', 'Web User')
+        )
+        
+        # Duplicate participants
+        original_participants = EventParticipant.objects.filter(event=original_event, is_active=True)
+        for participant in original_participants:
+            EventParticipant.objects.create(
+                event=new_event,
+                discord_user_id=participant.discord_user_id,
+                discord_name=participant.discord_name,
+                player=participant.player,
+                is_active=True
+            )
+        
+        # Duplicate parties and party members
+        original_parties = Party.objects.filter(event=original_event, is_active=True)
+        for party in original_parties:
+            new_party = Party.objects.create(
+                event=new_event,
+                party_number=party.party_number,
+                name=party.name,
+                is_active=True
+            )
+            
+            # Duplicate party members
+            original_members = PartyMember.objects.filter(party=party, is_active=True)
+            for member in original_members:
+                # Find the corresponding participant in the new event
+                new_participant = EventParticipant.objects.filter(
+                    event=new_event,
+                    discord_user_id=member.event_participant.discord_user_id,
+                    is_active=True
+                ).first()
+                
+                if new_participant:
+                    PartyMember.objects.create(
+                        party=new_party,
+                        event_participant=new_participant,
+                        player=member.player,
+                        assigned_role=member.assigned_role,
+                        is_active=True,
+                        is_leader=member.is_leader
+                    )
+        
+        return Response({
+            'id': new_event.id,
+            'message': 'Event duplicated successfully',
+            'event': {
+                'id': new_event.id,
+                'title': new_event.title,
+                'description': new_event.description,
+                'event_type': new_event.event_type,
+                'event_datetime': new_event.event_datetime.isoformat(),
+                'timezone': new_event.timezone,
+                'party_size_limit': new_event.party_size_limit,
+                'points_per_participant': new_event.points_per_participant,
+                'created_by_discord_name': new_event.created_by_discord_name,
+                'created_at': new_event.created_at.isoformat(),
+                'discord_epoch': new_event.discord_epoch,
+                'discord_timestamp': new_event.discord_timestamp,
+                'discord_timestamp_relative': new_event.discord_timestamp_relative
+            },
+            'duplicated': {
+                'participants': original_participants.count(),
+                'parties': original_parties.count()
             }
         }, status=status.HTTP_201_CREATED)
         

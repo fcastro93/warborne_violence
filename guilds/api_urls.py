@@ -31,6 +31,7 @@ urlpatterns = [
     path('events/', api_views.events_list, name='events_list'),
     path('events/<int:event_id>/', api_views.event_detail, name='event_detail'),
     path('events/create/', api_views.create_event, name='create_event'),
+    path('events/duplicate/', api_views.duplicate_event, name='duplicate_event'),
     path('events/<int:event_id>/update/', api_views.update_event, name='update_event'),
     path('events/<int:event_id>/delete/', api_views.delete_event, name='delete_event'),
     path('events/<int:event_id>/join/', api_views.join_event, name='join_event'),
