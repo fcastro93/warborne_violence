@@ -1940,6 +1940,10 @@ class WarborneBot(commands.Bot):
                     if not player:
                         return False, "no_player"  # User doesn't have a player
                     
+                    # Check if player has a valid game role
+                    if not player.game_role or player.game_role not in ['ranged_dps', 'melee_dps', 'healer', 'defensive_tank', 'offensive_tank']:
+                        return False, "invalid_role"  # User has invalid or missing role
+                    
                     # Events have unlimited participants, so no need to check if "full"
                     # The max_participants field represents party size limit, not event limit
                     
@@ -1972,6 +1976,23 @@ class WarborneBot(commands.Bot):
                             f"2. Type `!menu`\n"
                             f"3. Click on **Create Player**\n"
                             f"4. Then react with ✅ again to join the event!"
+                        )
+                    elif reason == "invalid_role":
+                        await user.send(
+                            f"❌ **Cannot join event without a valid role!**\n\n"
+                            f"Your player needs a valid game role to join **{event.title}**.\n\n"
+                            f"📋 **Instructions:**\n"
+                            f"1. Go to the **#talk-to-violence-bot** channel\n"
+                            f"2. Type `!menu`\n"
+                            f"3. Click on **My Profile**\n"
+                            f"4. Click on the **wheel icon** to edit your role\n"
+                            f"5. Select one of the valid roles:\n"
+                            f"   • Ranged DPS\n"
+                            f"   • Melee DPS\n"
+                            f"   • Healer\n"
+                            f"   • Defensive Tank\n"
+                            f"   • Offensive Tank\n"
+                            f"6. Then react with ✅ again to join the event!"
                         )
                 except Exception as e:
                     print(f"Error removing reaction or sending DM: {e}")
