@@ -85,6 +85,9 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-primary">{{ event.participant_count }} participants</span>
+                                    {% if event.party_size_limit %}
+                                        <br><small class="text-muted">Party size: {{ event.party_size_limit }}</small>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if event.event_datetime > now %}

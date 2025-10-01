@@ -596,7 +596,7 @@ class Event(models.Model):
     timezone = models.CharField(max_length=50, default='UTC', help_text="IANA timezone name (e.g., 'America/New_York')")
     
     # Event management
-    max_participants = models.IntegerField(null=True, blank=True, help_text="Maximum number of participants (null = unlimited)")
+    max_participants = models.IntegerField(null=True, blank=True, help_text="Maximum party size for this event (null = default party size). This is NOT the event participant limit.")
     is_active = models.BooleanField(default=True, help_text="Whether the event is still active")
     is_cancelled = models.BooleanField(default=False, help_text="Whether the event was cancelled")
     
@@ -623,6 +623,11 @@ class Event(models.Model):
     def get_participant_count_sync(self):
         """Sync version of participant count for use with sync_to_async"""
         return self.participants.count()
+    
+    @property
+    def party_size_limit(self):
+        """Get the party size limit for this event"""
+        return self.max_participants
     
     @property
     def discord_epoch(self):

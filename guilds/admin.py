@@ -415,7 +415,8 @@ class EventAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Event Management', {
-            'fields': ('max_participants', 'points_per_participant', 'is_active', 'is_cancelled')
+            'fields': ('max_participants', 'points_per_participant', 'is_active', 'is_cancelled'),
+            'description': 'Note: max_participants sets the party size limit, not the event participant limit. Events can have unlimited participants.'
         }),
         ('Dates', {
             'fields': ('created_at', 'updated_at'),
@@ -424,21 +425,16 @@ class EventAdmin(admin.ModelAdmin):
     )
     
     def participant_count_display(self, obj):
-        """Display participant count with color coding"""
+        """Display participant count with party size info"""
         count = obj.participant_count
-        if obj.max_participants:
-            if count >= obj.max_participants:
-                color = "#ff4444"  # Red if full
-            elif count >= obj.max_participants * 0.8:
-                color = "#ffaa00"  # Orange if almost full
-            else:
-                color = "#44ff44"  # Green if space available
+        party_size = obj.party_size_limit
+        if party_size:
             return format_html(
-                '<span style="color: {};">{}/{} participants</span>',
-                color, count, obj.max_participants
+                '<span style="color: #44ff44;">{} participants</span><br><small style="color: #666;">Party size limit: {}</small>',
+                count, party_size
             )
         else:
-            return format_html('<span style="color: #44ff44;">{} participants</span>', count)
+            return format_html('<span style="color: #44ff44;">{} participants</span><br><small style="color: #666;">Default party size</small>', count)
     participant_count_display.short_description = 'Participants'
     
     def discord_timestamp_display(self, obj):

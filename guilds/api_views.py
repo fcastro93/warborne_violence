@@ -1235,7 +1235,7 @@ def events_list(request):
                 'event_type_display': event.get_event_type_display(),
                 'event_datetime': event.event_datetime.isoformat(),
                 'timezone': event.timezone,
-                'max_participants': event.max_participants,
+                'party_size_limit': event.party_size_limit,
                 'points_per_participant': event.points_per_participant,
                 'participant_count': participant_count,
                 'created_by_discord_name': event.created_by_discord_name,
@@ -1421,7 +1421,7 @@ def create_event(request):
                 'event_type': event.event_type,
                 'event_datetime': event.event_datetime.isoformat(),
                 'timezone': event.timezone,
-                'max_participants': event.max_participants,
+                'party_size_limit': event.party_size_limit,
                 'points_per_participant': event.points_per_participant,
                 'created_by_discord_name': event.created_by_discord_name,
                 'created_at': event.created_at.isoformat(),
@@ -1486,7 +1486,7 @@ def update_event(request, event_id):
                 'event_type': event.event_type,
                 'event_datetime': event.event_datetime.isoformat(),
                 'timezone': event.timezone,
-                'max_participants': event.max_participants,
+                'party_size_limit': event.party_size_limit,
                 'points_per_participant': event.points_per_participant,
                 'updated_at': event.updated_at.isoformat()
             }

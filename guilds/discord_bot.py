@@ -1285,8 +1285,8 @@ class CommandMenuView(discord.ui.View):
     )
     
     max_participants_input = discord.ui.TextInput(
-        label="Max Participants (optional)",
-        placeholder="Leave empty for unlimited",
+        label="Max Party Size (optional)",
+        placeholder="Leave empty for default party size",
         max_length=3,
         required=False
     )
@@ -1326,15 +1326,15 @@ class CommandMenuView(discord.ui.View):
                 return
             
             # Validate max participants
-            max_participants = None
+            max_party_size = None
             if self.max_participants_input.value.strip():
                 try:
-                    max_participants = int(self.max_participants_input.value)
-                    if max_participants <= 0:
+                    max_party_size = int(self.max_participants_input.value)
+                    if max_party_size <= 0:
                         raise ValueError()
                 except ValueError:
                     await interaction.response.send_message(
-                        "❌ Max participants must be a positive number.",
+                        "❌ Max party size must be a positive number.",
                         ephemeral=True
                     )
                     return
@@ -1352,7 +1352,7 @@ class CommandMenuView(discord.ui.View):
                     created_by_discord_name=str(interaction.user),
                     event_datetime=event_datetime,
                     timezone=timezone_str,
-                    max_participants=max_participants
+                    max_participants=max_party_size
                 )
                 return event
             
@@ -1410,10 +1410,10 @@ class CommandMenuView(discord.ui.View):
                 inline=False
             )
             
-            if event.max_participants:
+            if event.party_size_limit:
                 embed.add_field(
-                    name="👥 Max Participants",
-                    value=str(event.max_participants),
+                    name="👥 Max Party Size",
+                    value=str(event.party_size_limit),
                     inline=True
                 )
             
@@ -1930,9 +1930,9 @@ class WarborneBot(commands.Bot):
                         existing.save()
                         return True
                 else:
-                    # Check if event is full
-                    if event.max_participants and event.participant_count >= event.max_participants:
-                        return False  # Event is full
+                    # Events have unlimited participants, so no need to check if "full"
+                    # The max_participants field represents party size limit, not event limit
+                    pass
                     
                     # Get or create player for this user
                     player = Player.objects.filter(discord_user_id=user.id).first()
@@ -1949,13 +1949,10 @@ class WarborneBot(commands.Bot):
             success = await add_participant()
             
             if not success:
-                # Try to remove the reaction if event is full or already participating
+                # Try to remove the reaction if already participating
                 try:
                     await reaction.remove(user)
-                    if event.max_participants and event.participant_count >= event.max_participants:
-                        await user.send(f"❌ **{event.title}** is full! ({event.participant_count}/{event.max_participants} participants)")
-                    else:
-                        await user.send(f"ℹ️ You're already participating in **{event.title}**!")
+                    await user.send(f"ℹ️ You're already participating in **{event.title}**!")
                 except:
                     pass  # Can't send DM, ignore
             
