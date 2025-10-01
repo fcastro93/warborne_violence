@@ -1897,13 +1897,17 @@ class WarborneBot(commands.Bot):
             
             if added:
                 # User is joining the event
-                await self.add_event_participant(event, user)
+                # Store the reaction so we can remove it if needed
+                self._current_reaction = reaction
+                success = await self.add_event_participant(event, user)
+                # Only update embed if participant was successfully added
+                if success:
+                    await self.update_event_embed(event, reaction.message)
             else:
                 # User is leaving the event
                 await self.remove_event_participant(event, user)
-            
-            # Update the embed with new participant count
-            await self.update_event_embed(event, reaction.message)
+                # Update the embed with new participant count
+                await self.update_event_embed(event, reaction.message)
             
         except Exception as e:
             print(f"Error handling event reaction: {e}")
@@ -1923,19 +1927,21 @@ class WarborneBot(commands.Bot):
                 
                 if existing:
                     if existing.is_active:
-                        return False  # Already participating
+                        return False, "already_participating"  # Already participating
                     else:
                         # Reactivate
                         existing.is_active = True
                         existing.save()
-                        return True
+                        return True, "reactivated"
                 else:
+                    # Check if user has a Player first
+                    player = Player.objects.filter(discord_user_id=user.id).first()
+                    
+                    if not player:
+                        return False, "no_player"  # User doesn't have a player
+                    
                     # Events have unlimited participants, so no need to check if "full"
                     # The max_participants field represents party size limit, not event limit
-                    pass
-                    
-                    # Get or create player for this user
-                    player = Player.objects.filter(discord_user_id=user.id).first()
                     
                     # Create new participant
                     EventParticipant.objects.create(
@@ -1944,20 +1950,35 @@ class WarborneBot(commands.Bot):
                         discord_name=str(user),
                         player=player
                     )
-                    return True
+                    return True, "created"
             
-            success = await add_participant()
+            success, reason = await add_participant()
             
             if not success:
-                # Try to remove the reaction if already participating
+                # Try to remove the reaction and send appropriate message
                 try:
-                    await reaction.remove(user)
-                    await user.send(f"ℹ️ You're already participating in **{event.title}**!")
-                except:
-                    pass  # Can't send DM, ignore
+                    # Find the reaction message to remove the reaction
+                    if hasattr(self, '_current_reaction'):
+                        await self._current_reaction.remove(user)
+                    
+                    if reason == "already_participating":
+                        await user.send(f"ℹ️ You're already participating in **{event.title}**!")
+                    elif reason == "no_player":
+                        await user.send(
+                            f"❌ **Cannot join event without a player!**\n\n"
+                            f"You need to create a player first before joining **{event.title}**.\n\n"
+                            f"Use `!createplayer` to create your player, then react with ✅ again to join the event!"
+                        )
+                except Exception as e:
+                    print(f"Error removing reaction or sending DM: {e}")
+                
+                return False  # Return False to indicate failure
+            else:
+                return True  # Return True to indicate success
             
         except Exception as e:
             print(f"Error adding event participant: {e}")
+            return False
     
     async def remove_event_participant(self, event, user):
         """Remove a participant from an event"""
