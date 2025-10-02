@@ -2030,134 +2030,35 @@ class WarborneBot(commands.Bot):
             print(f"Error removing event participant: {e}")
     
     async def update_event_embed(self, event, message):
-        """Update the event embed with current participant count"""
+        """Update the event embed with current participant count only - keep original format"""
         try:
             from asgiref.sync import sync_to_async
             
             @sync_to_async
-            def get_participants_with_roles_and_parties():
-                from .models import Party, PartyMember
-                
-                participants = EventParticipant.objects.filter(
+            def get_participant_count():
+                return EventParticipant.objects.filter(
                     event=event,
                     is_active=True
-                ).select_related('player')
-                
-                participant_data = []
-                role_counts = {}
-                parties_data = []
-                
-                # Get participants data
-                for participant in participants:
-                    name = participant.discord_name
-                    role = None
-                    
-                    if participant.player and participant.player.game_role:
-                        role = participant.player.get_game_role_display()
-                        role_counts[role] = role_counts.get(role, 0) + 1
-                    
-                    participant_data.append({
-                        'name': name,
-                        'role': role
-                    })
-                
-                # Get parties data
-                parties = Party.objects.filter(event=event, is_active=True).order_by('party_number')
-                for party in parties:
-                    party_members = PartyMember.objects.filter(
-                        party=party,
-                        is_active=True
-                    ).select_related('player', 'event_participant')
-                    
-                    members_list = []
-                    party_role_counts = {}
-                    
-                    for member in party_members:
-                        member_name = member.event_participant.discord_name
-                        member_role = member.player.get_game_role_display() if member.player.game_role else 'Unknown'
-                        members_list.append(f"• {member_name} ({member_role})")
-                        party_role_counts[member_role] = party_role_counts.get(member_role, 0) + 1
-                    
-                    # Create role summary
-                    role_summary = ", ".join([f"{role}: {count}" for role, count in party_role_counts.items()])
-                    
-                    parties_data.append({
-                        'party_number': party.party_number,
-                        'members': members_list,
-                        'member_count': len(members_list),
-                        'role_summary': role_summary
-                    })
-                
-                return participant_data, role_counts, parties_data
+                ).count()
             
-            participants_data, role_counts, parties_data = await get_participants_with_roles_and_parties()
-            participants = [p['name'] for p in participants_data]
+            participant_count = await get_participant_count()
             
-            # Create updated embed
+            # Get the original embed
             embed = message.embeds[0]
             
-            # Update participant count
-            participant_count = len(participants)
-            embed.set_field_at(
-                len(embed.fields) - 1,  # Last field is participants
-                name="✅ Participants",
-                value=str(participant_count),
-                inline=True
-            )
-            
-            # Add participant list if there are participants
-            if participants:
-                participant_list = "\n".join([f"• {name}" for name in participants[:10]])  # Show first 10
-                if len(participants) > 10:
-                    participant_list += f"\n• ... and {len(participants) - 10} more"
-                
-                # Add or update participant list field
-                if len(embed.fields) > 4:  # If participant list field exists
+            # Find and update only the participants field, keeping original format
+            for i, field in enumerate(embed.fields):
+                if "Participants" in field.name or "👥" in field.name:
+                    # Update only the participant count, keep the same field structure
                     embed.set_field_at(
-                        len(embed.fields) - 1,
-                        name="👥 Participant List",
-                        value=participant_list,
-                        inline=False
+                        i,
+                        name=field.name,  # Keep original field name
+                        value=f"{participant_count} participants",  # Update count only
+                        inline=field.inline
                     )
-                else:
-                    embed.add_field(
-                        name="👥 Participant List",
-                        value=participant_list,
-                        inline=False
-                    )
+                    break
             
-            # Add role statistics if there are roles
-            if role_counts:
-                role_stats = []
-                for role, count in role_counts.items():
-                    if count > 0:  # Only show roles with participants
-                        role_stats.append(f"**{role}**: {count}")
-                
-                if role_stats:
-                    role_stats_text = "\n".join(role_stats)
-                    embed.add_field(
-                        name="🎯 Role Distribution",
-                        value=role_stats_text,
-                        inline=True
-                    )
-            
-            # Add parties information if they exist
-            if parties_data:
-                for party_data in parties_data:
-                    party_title = f"⚔️ Party {party_data['party_number']} ({party_data['member_count']}/15)"
-                    
-                    # Show first 5 members to avoid embed field limits
-                    members_display = "\n".join(party_data['members'][:5])
-                    if len(party_data['members']) > 5:
-                        members_display += f"\n• ... and {len(party_data['members']) - 5} more"
-                    
-                    embed.add_field(
-                        name=party_title,
-                        value=f"**Roles:** {party_data['role_summary']}\n**Members:**\n{members_display}",
-                        inline=False
-                    )
-            
-            # Update the message
+            # Update the message with minimal changes
             await message.edit(embed=embed)
             
         except Exception as e:
