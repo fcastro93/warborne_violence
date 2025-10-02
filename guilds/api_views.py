@@ -1615,29 +1615,73 @@ def save_event_template(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def list_event_templates(request):
-    """List all event templates"""
-    try:
-        templates = EventTemplate.objects.filter(is_active=True).order_by('-created_at')
-        
-        templates_data = []
-        for template in templates:
-            templates_data.append({
+    """List all event templates or create a new template"""
+    if request.method == 'GET':
+        try:
+            templates = EventTemplate.objects.filter(is_active=True).order_by('-created_at')
+            
+            templates_data = []
+            for template in templates:
+                templates_data.append({
+                    'id': template.id,
+                    'name': template.name,
+                    'description': template.description,
+                    'event_type': template.event_type,
+                    'max_participants': template.max_participants,
+                    'points_per_participant': template.points_per_participant,
+                    'created_by_discord_name': template.created_by_discord_name,
+                    'created_at': template.created_at.isoformat()
+                })
+            
+            return Response(templates_data)
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    elif request.method == 'POST':
+        """Create a new event template"""
+        try:
+            # Validate required fields
+            required_fields = ['name']
+            for field in required_fields:
+                if not request.data.get(field):
+                    return Response({
+                        'error': f'Missing required field: {field}'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create the template
+            template = EventTemplate.objects.create(
+                name=request.data['name'],
+                description=request.data.get('description', ''),
+                event_type=request.data.get('event_type', 'other'),
+                max_participants=request.data.get('max_participants'),
+                points_per_participant=request.data.get('points_per_participant', 0),
+                created_by_discord_id=0,  # Web user
+                created_by_discord_name='Web User'
+            )
+            
+            return Response({
                 'id': template.id,
-                'name': template.name,
-                'description': template.description,
-                'event_type': template.event_type,
-                'max_participants': template.max_participants,
-                'points_per_participant': template.points_per_participant,
-                'created_by_discord_name': template.created_by_discord_name,
-                'created_at': template.created_at.isoformat()
-            })
-        
-        return Response(templates_data)
-        
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                'message': 'Template created successfully',
+                'template': {
+                    'id': template.id,
+                    'name': template.name,
+                    'description': template.description,
+                    'event_type': template.event_type,
+                    'max_participants': template.max_participants,
+                    'points_per_participant': template.points_per_participant,
+                    'created_by_discord_name': template.created_by_discord_name,
+                    'created_at': template.created_at.isoformat()
+                }
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            logger.error(f"Error creating event template: {str(e)}")
+            return Response({
+                'error': f'Error creating template: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
