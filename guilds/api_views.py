@@ -1723,7 +1723,7 @@ def create_event_from_template(request, template_id):
             event_datetime=utc_dt,
             timezone='America/New_York',  # Default timezone
             max_participants=template.max_participants,
-            points_per_participant=template.points_per_participant,
+            points_per_participant=data.get('points_per_participant', template.points_per_participant),
             created_by_discord_id=data.get('created_by_discord_id', 0),
             created_by_discord_name=data.get('created_by_discord_name', 'Web User')
         )
